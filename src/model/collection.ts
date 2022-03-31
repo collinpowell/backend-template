@@ -11,7 +11,7 @@ const schema = {
     required: true,
   },
   collectionData: [Object],
-  isDeleted: { type: Boolean, default: false },
+  status: { type: String, enum: ["Active","Inactive"], default: "Active" },
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
