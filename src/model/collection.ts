@@ -11,7 +11,6 @@ const schema = {
     required: true,
   },
   collectionData: [Object],
-  creator: [Object],
   isDeleted: { type: Boolean, default: false },
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
