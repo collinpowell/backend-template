@@ -37,11 +37,6 @@ export interface FileTypes {
 }
 
 const schema = {
-  artWorkId: {
-    type: String,
-    default: uuidv4,
-    index: true,
-  },
   userId: String,
   title: {
     type: String,
@@ -54,7 +49,7 @@ const schema = {
   numberOfCreations: { type: Number },
   formOfSale: {
     type: String,
-    enum: ["auction", "fixed_price", "waiting_for_sale"],
+    enum: ["auction", "fixedsale", "notForSale"],
   },
   saleQuantity: { type: Number },
   type: { type: Number },

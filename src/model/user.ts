@@ -41,13 +41,11 @@ export interface UserPWChangeInput {
 
 export interface UserData {
   _id: string;
-  userId: string;
   email: string;
   fullName: string;
   username: string;
   mobileNumber: string;
   password: string;
-  isDeleted: boolean;
   status: number;
   googleId?: string;
   authProvider?: string;
@@ -64,14 +62,9 @@ export interface UserData {
   kycStatus: string;
 }
 
-export type KycStatus = 'waiting' | 'verified' | 'unverified';
+export type KycStatus = 'PENDING' | 'VERIFIED' | 'UNVERIFIED';
 
 const schema = {
-  userId: {
-    type: String,
-    default: uuidv4,
-    index: true,
-  },
   email: {
     type: String,
     required: true,
@@ -92,17 +85,13 @@ const schema = {
     type: String,
     default: "null",
   },
-  isDeleted: {
-    type: Boolean,
-    default: false,
-  },
   role: {
     type: String,
     enum: ["user", "admin"],
     default: "user",
   },
   // Status 0 = Not verified, 1 = active, 2 = inactive
-  status: { type: Number, enum: [0, 1, 2], default: 0 },
+  status: { type: Number, enum: ["Active","Inactive","Deleted","Blocked","Not verified"], default: 0 },
   verificationCode: String,
   resetPasswordToken: String,
   tokenCreatedAt: { type: Date, default: null },
@@ -120,8 +109,8 @@ const schema = {
   coverImage: String,
   kycStatus: { 
     type: String,
-    enum: ["waiting", "verified", "unverified"],
-    default: "waiting"
+    enum: ["PENDIND", "VERIFIED", "UNVERIFIED"],
+    default: "PENDIND"
   }
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
