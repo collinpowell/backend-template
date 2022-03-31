@@ -60,7 +60,7 @@ export interface UserData {
   kycStatus: string;
 }
 
-export type KycStatus = 'PENDING' | 'VERIFIED' | 'UNVERIFIED';
+export type KycStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
 
 const schema = {
   email: {
@@ -95,7 +95,7 @@ const schema = {
   },
 
   // Status 0 = Not verified, 1 = active, 2 = inactive
-  status: { type: String, enum: ["ACTIVE","INACTIVE","DELETED","BLOCKED"], default: "ACTIVE" },
+  status: { type: String, enum: ["ACTIVE","INACTIVE","DELETED","BLOCKED"], default: "INACTIVE" },
   verificationCode: String,
   resetPasswordToken: String,
   tokenCreatedAt: { type: Date, default: null },
@@ -113,7 +113,7 @@ const schema = {
   coverImage: String,
   kycStatus: { 
     type: String,
-    enum: ["PENDIND", "ACTIVE", "INACTIVE"],
+    enum: ["PENDIND", "ACCEPTED", "REJECTED"],
     default: "PENDIND"
   },
   totalCreations: {

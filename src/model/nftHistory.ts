@@ -8,9 +8,9 @@ const schema = {
         enum: ["MINTED","LIKED","PURCHASED","BURNED","PUT_ON_AUCTION","WON_AUCTION"],
         default: "MINTED",
     },
-    meta: String
+    meta: [Object]
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
+const timestamps = { createdAt: "created_at"};
 
 const ownerHistorySchema = new Schema(schema, { timestamps });
 

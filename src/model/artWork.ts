@@ -24,11 +24,6 @@ export interface Royalty {
   walletAddress: string;
 }
 
-export interface Auction {
-  auctionEndHours: { type: Number },
-  auctionEndTime: { type: Date },
-  auctionStartPrice: { type: String },
-}
 
 export interface FileTypes {
   fieldname: string;
