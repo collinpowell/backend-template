@@ -1,5 +1,4 @@
 import { model, Schema } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 import { decryptText, encryptText } from "../utils/utility";
 
 export interface UserInput {
@@ -57,7 +56,6 @@ export interface UserData {
   connectedwallet: any;
   avatar: string;
   coverImage: string;
-  metamaskId: string;
   bio: string;
   kycStatus: string;
 }
@@ -87,8 +85,8 @@ const schema = {
   },
   role: {
     type: String,
-    enum: ["user", "admin"],
-    default: "user",
+    enum: ["USER", "ADMIN"],
+    default: "USER",
   },
   authProvider: { 
     type: String,
@@ -97,7 +95,7 @@ const schema = {
   },
 
   // Status 0 = Not verified, 1 = active, 2 = inactive
-  status: { type: String, enum: ["Active","Inactive","Deleted","Blocked"], default: "Active" },
+  status: { type: String, enum: ["ACTIVE","INACTIVE","DELETED","BLOCKED"], default: "ACTIVE" },
   verificationCode: String,
   resetPasswordToken: String,
   tokenCreatedAt: { type: Date, default: null },
@@ -117,7 +115,27 @@ const schema = {
     type: String,
     enum: ["PENDIND", "ACTIVE", "INACTIVE"],
     default: "PENDIND"
-  }
+  },
+  totalCreations: {
+    type: Number,
+    required: true,
+  },
+  totalNftOwned: {
+    type: Number,
+    required: true,
+  },
+  totalInSale: {
+    type: Number,
+    required: true,
+  },
+  totalInAuction: {
+    type: Number,
+    required: true,
+  },
+  totalCollections: {
+    type: Number,
+    required: true,
+  },
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 

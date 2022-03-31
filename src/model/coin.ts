@@ -1,13 +1,7 @@
 import { model, Schema } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 
 const schema = {
-  coinId: {
-    type: String,
-    default: uuidv4,
-    index: true,
-  },
-  coins: [{ _id: false, id: Number, coin_name: String }],
+  coins: [{ _id: false, id: Number, coinName: String }],
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 

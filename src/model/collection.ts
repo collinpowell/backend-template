@@ -1,5 +1,4 @@
 import { model, Schema } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 
 const schema = {
   userId: String,
@@ -11,7 +10,7 @@ const schema = {
     required: true,
   },
   collectionData: [Object],
-  status: { type: String, enum: ["Active","Inactive"], default: "Active" },
+  status: { type: String, enum: ["ACTIVE", "INACTIVE"], default: "ACTIVE" },
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 

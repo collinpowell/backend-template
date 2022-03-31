@@ -1,5 +1,4 @@
 import { model, Schema } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 
 export interface ArtWorkInput {
   files: [string];
@@ -25,6 +24,12 @@ export interface Royalty {
   walletAddress: string;
 }
 
+export interface Auction {
+  auctionEndHours: { type: Number },
+  auctionEndTime: { type: Date },
+  auctionStartPrice: { type: String },
+}
+
 export interface FileTypes {
   fieldname: string;
   originalname: string;
@@ -48,22 +53,19 @@ const schema = {
   },
   formOfSale: {
     type: String,
-    enum: ["auction", "fixedsale", "not_for_sale"],
+    enum: ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"],
   },
-
   contractType: {
     type: String,
     enum: ["ERC721", "ERC1155"],
     default: "ERC721",
   },
+  totalLike: Number,
   contractAddress: { type: String },
   files: String,
   saleCoin: { type: Number },
   mintNft: { type: Number },
   fixedPrice: { type: String },
-  auctionEndHours: { type: Number },
-  auctionEndTime: { type: Date },
-  auctionStartPrice: { type: String },
   currentOwnerId: String,
   images: String,
   description: { type: String },
@@ -71,9 +73,8 @@ const schema = {
   properties: [
     { _id: false, key: String, value: String },
   ],
+  status: { type: String, enum: ["ACTIVE", "DELETED"], default: "ACTIVE" },
   mintResponse: { type: Object },
-  sellingAvailable: { type: Boolean, default: true },
-  nftToken: Object,
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 

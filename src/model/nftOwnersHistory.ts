@@ -1,16 +1,10 @@
 import { model, Schema } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 
 const schema = {
-  ownerHistoryId: {
-    type: String,
-    default: uuidv4,
-    index: true,
-  },
   coin: { type: Number },
   price: { type: String },
   userId: String,
-  artWorkId: String,
+  nftId: String,
   nftFileId: String,
   transactionHash: Object,
   nftTransfer: Object,

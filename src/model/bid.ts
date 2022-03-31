@@ -1,19 +1,13 @@
 import { model, Schema } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 
 const schema = {
-  bidId: {
-    type: String,
-    default: uuidv4,
-    index: true,
-  },
-  artWorkId: String,
+  auctionID: String,
+  nftID: String,
   saleCoin: { type: Number },
-  salePrice: { type: String },
-  userId: String,
+  bidAmount: { type: String },
+  bidderID: String,
   transactionHash: Object,
-  isDeleted: { type: Boolean, default: false },
-  auctionEnded: { type: Boolean, default: false },
+  status: { type: String, enum: ["BID","ALLOTED","REFUNDED"], default: "BID" },
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 

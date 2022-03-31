@@ -1,19 +1,15 @@
 import { model, Schema } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 
 export interface ContactUsDetails {
   email: String;
-  name: String;
-  content: String;
-  userId?: String;
+  subject: String;
+  message: String;
 }
 
 const schema = {
-  contactId: { type: String, default: uuidv4, index: true },
-  userId: { type: String },
-  content: { type: String, required: true },
+  message: { type: String, required: true },
   email: { type: String, required: true },
-  name: { type: String, required: true },
+  subject: { type: String, required: true },
 };
 
 const contactUsSchema = new Schema(schema);
