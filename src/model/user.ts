@@ -90,8 +90,14 @@ const schema = {
     enum: ["user", "admin"],
     default: "user",
   },
+  authProvider: { 
+    type: String,
+    enum: ["GOOGLE", "EMAIL"],
+    default: null
+  },
+
   // Status 0 = Not verified, 1 = active, 2 = inactive
-  status: { type: Number, enum: ["Active","Inactive","Deleted","Blocked","Not verified"], default: 0 },
+  status: { type: String, enum: ["Active","Inactive","Deleted","Blocked"], default: "Active" },
   verificationCode: String,
   resetPasswordToken: String,
   tokenCreatedAt: { type: Date, default: null },
@@ -109,7 +115,7 @@ const schema = {
   coverImage: String,
   kycStatus: { 
     type: String,
-    enum: ["PENDIND", "VERIFIED", "UNVERIFIED"],
+    enum: ["PENDIND", "ACTIVE", "INACTIVE"],
     default: "PENDIND"
   }
 };
