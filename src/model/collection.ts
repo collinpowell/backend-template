@@ -5,6 +5,7 @@ const schema = {
   userId: String,
   totalLike: Number,
   nftCount: Number,
+  image:String,
   title: {
     type: String,
     required: true,
