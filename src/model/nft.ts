@@ -1,10 +1,10 @@
 import { model, Schema } from "mongoose";
 
-export interface ArtWorkInput {
+export interface nftInput {
   files: [string];
   title: string;
   description?: string;
-  artWorkCategory: number;
+  nftCategory: number;
   formOfSale: string;
   saleCoin?: number;
   type: number;
@@ -42,7 +42,7 @@ const schema = {
     type: String,
     required: true,
   },
-  artWorkCategory: {
+  nftCategory: {
     type: Number,
     required: true,
   },
@@ -73,6 +73,6 @@ const schema = {
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const artWorkSchema = new Schema(schema, { timestamps });
+const nftSchema = new Schema(schema, { timestamps });
 
-export default model("artWork", artWorkSchema);
+export default model("nft", nftSchema);

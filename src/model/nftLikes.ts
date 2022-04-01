@@ -7,6 +7,6 @@ const schema = {
 };
 const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const artWorkLikeSchema = new Schema(schema, { timestamps });
+const nftLikeSchema = new Schema(schema, { timestamps });
 
-export default model("art_work_like", artWorkLikeSchema);
+export default model("nft_like", nftLikeSchema);

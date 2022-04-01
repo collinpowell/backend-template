@@ -1,6 +1,9 @@
 import express from "express";
+
+
 import { config } from "dotenv";
-config()
+config() // Configure .env
+
 const app = express();
 const port = process.env.APP_PORT || 8000; // default port to listen
 
