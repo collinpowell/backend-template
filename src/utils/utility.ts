@@ -9,6 +9,8 @@ const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
 const iv = Buffer.from(process.env.IV_KEY, "hex");
 
 interface errorObject {
+  statuscode: number;
+  body: string;
   message: string;
 }
 
@@ -17,7 +19,7 @@ interface errorResponseJson {
 }
 
 export const createErrorResponseJSON = (error: errorObject) => {
-  const errorResponse = { error: error };
+  const errorResponse = { error };
   return errorResponse;
 };
 
@@ -26,7 +28,7 @@ export const sendJSONResponse = (
   statusCode: number,
   data: errorResponseJson
 ) => {
-  res.status(statusCode).json(data);
+  res.status(statusCode).json(data.error);
 };
 
 export const standardStructureStringToJson = (queryString: any) => {
@@ -67,19 +69,23 @@ export const getOptionsJson = (extraParams: any) => {
 
 export const serverError = (res: Response) => {
   let code: number, response: errorResponseJson;
+
+  code = HTTPStatus.INTERNAL_SERVER_ERROR;
   const data: errorObject = {
+    statuscode: code,
+    body: "",
     message: ERROR_CONST.ERROR_500_MESSAGE,
   };
-  code = HTTPStatus.INTERNAL_SERVER_ERROR;
   response = createErrorResponseJSON(data);
   return sendJSONResponse(res, code, response);
 };
 
 export const badRequestError = (res: Response, errors: string) => {
   let code: number, response: errorResponseJson;
-  const data = { message: errors };
   code = HTTPStatus.BAD_REQUEST;
+  const data = { statuscode: code, body: "", message: errors };
   response = createErrorResponseJSON(data);
+
   return sendJSONResponse(res, code, response);
 };
 
@@ -113,8 +119,13 @@ export const decryptText = (text: string) => {
 
 export const authError = (res: Response) => {
   let code: number, response: errorResponseJson;
-  const data = { message: ERROR_CONST.ERROR_401_MESSAGE };
+
   code = HTTPStatus.UNAUTHORIZED;
+  const data = {
+    statuscode: code,
+    body: "",
+    message: ERROR_CONST.ERROR_401_MESSAGE
+  };
   response = createErrorResponseJSON(data);
   return sendJSONResponse(res, code, response);
 };

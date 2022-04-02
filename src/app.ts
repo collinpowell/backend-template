@@ -4,13 +4,21 @@ import express from "express";
 import { config } from "dotenv";
 config() // Configure .env
 
-const app = express();
-const port = process.env.APP_PORT || 8000; // default port to listen
+import "./config/database";
 
-// define a route handler for the default home page
-app.get( "/", ( req, res ) => {
-    res.send( "Hello world!" );
-} );
+import apiRoutes from "./routes/index";
+
+import { constants as APP_CONST } from "./constant/application";
+const port = APP_CONST.PORT || 4000;
+
+const app = express();
+
+const PATH = {
+    API: "/api",
+    API_DOC: "/api-doc",
+};
+
+app.use(PATH.API, apiRoutes);
 
 // start the Express server
 app.listen( port, () => {
