@@ -12,8 +12,7 @@ const schema = {
   collectionData: [Object],
   status: { type: String, enum: ["ACTIVE", "INACTIVE","DELETED"], default: "ACTIVE" },
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const collectionSchema = new Schema(schema, { timestamps });
+const collectionSchema = new Schema(schema, { timestamps: true });
 
 export default model("collection", collectionSchema);

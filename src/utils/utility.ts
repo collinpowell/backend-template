@@ -10,9 +10,16 @@ const iv = Buffer.from(process.env.IV_KEY, "hex");
 
 interface errorObject {
   statuscode: number;
-  body: string;
+  body: any;
   message: string;
 }
+
+interface susObject {
+  error: boolean;
+  data?: [object];
+  message: string;
+}
+
 
 interface errorResponseJson {
   error: errorObject;
@@ -85,6 +92,15 @@ export const badRequestError = (res: Response, errors: string) => {
   code = HTTPStatus.BAD_REQUEST;
   const data = { statuscode: code, body: "", message: errors };
   response = createErrorResponseJSON(data);
+
+  return sendJSONResponse(res, code, response);
+};
+
+export const successfulRequest = (res: Response, data: susObject) => {
+  let code: number, response: errorResponseJson;
+  code = 200;
+  const ress = { statuscode: code, body: data.data ? data.data : "", message: data.message };
+  response = createErrorResponseJSON(ress);
 
   return sendJSONResponse(res, code, response);
 };

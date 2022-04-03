@@ -9,8 +9,7 @@ const schema = {
   transactionHash: Object,
   status: { type: String, enum: ["BID","ALLOTED","REFUNDED"], default: "BID" },
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const biddingSchema = new Schema(schema, { timestamps });
+const biddingSchema = new Schema(schema, { timestamps: true});
 
 export default model("bid", biddingSchema);

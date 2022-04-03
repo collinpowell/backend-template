@@ -5,8 +5,7 @@ const schema = {
   liked: { type: Boolean, default: false },
   userId: String,
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const nftLikeSchema = new Schema(schema, { timestamps });
+const nftLikeSchema = new Schema(schema, { timestamps:true });
 
 export default model("nft_like", nftLikeSchema);

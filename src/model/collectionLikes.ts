@@ -5,8 +5,7 @@ const schema = {
   liked: { type: Boolean, default: false },
   userId: String,
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const collectionLikeSchema = new Schema(schema, { timestamps });
+const collectionLikeSchema = new Schema(schema, { timestamps: true});
 
 export default model("collection_like", collectionLikeSchema);

@@ -3,8 +3,7 @@ import { model, Schema } from "mongoose";
 const schema = {
   coins: [{ _id: false, id: Number, coinName: String }],
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const coinSchema = new Schema(schema, { timestamps });
+const coinSchema = new Schema(schema, { timestamps: true});
 
 export default model("coin", coinSchema);

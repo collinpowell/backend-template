@@ -51,9 +51,10 @@ export interface UserData {
   verificationCode?: string;
   role: string;
   createdAt: string;
-  tokenCreatedAt: string;
-  verificationCreatedAt: string;
-  connectedwallet: any;
+  updatedAt: string;
+  //tokenCreatedAt: string;
+  //verificationCreatedAt: string;
+  connectedWallet: any;
   avatar: string;
   coverImage: string;
   bio: string;
@@ -72,12 +73,14 @@ const schema = {
     set: encryptText,
     get: decryptText,
   },
-  fullName: { type: String },
-  username: { type: String },
+  fullName: { type: String,
+    required: true, },
+  username: { type: String, required: true },
   mobileNumber: { type: String },
   bio: { type: String },
   password: {
     type: String,
+    required: true,
   },
   googleId: {
     type: String,
@@ -91,15 +94,15 @@ const schema = {
   authProvider: { 
     type: String,
     enum: ["GOOGLE", "EMAIL"],
-    default: null
+    default: "EMAIL"
   },
 
   // Status 0 = Not verified, 1 = active, 2 = inactive
   status: { type: String, enum: ["ACTIVE","INACTIVE","DELETED","BLOCKED"], default: "INACTIVE" },
   verificationCode: String,
   resetPasswordToken: String,
-  tokenCreatedAt: { type: Date, default: null },
-  verificationCreatedAt: { type: Date, default: null },
+  //tokenCreatedAt: { type: Date, default: null },
+  //verificationCreatedAt: { type: Date, default: null },
   newEmail: {
     type: String,
     unique: true,
@@ -113,36 +116,35 @@ const schema = {
   coverImage: String,
   kycStatus: { 
     type: String,
-    enum: ["PENDIND", "ACCEPTED", "REJECTED"],
-    default: "PENDIND"
+    enum: ["PENDING", "ACCEPTED", "REJECTED"],
+    default: "PENDING"
   },
   totalCreations: {
     type: Number,
-    required: true,
+    //required: true,
   },
   totalNftOwned: {
     type: Number,
-    required: true,
+    //required: true,
   },
   totalInSale: {
     type: Number,
-    required: true,
+    //required: true,
   },
   totalInAuction: {
     type: Number,
-    required: true,
+    //required: true,
   },
   totalCollections: {
     type: Number,
-    required: true,
+    //required: true,
   },
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
 const userSchema = new Schema(schema, {
   toObject: { getters: true },
   toJSON: { getters: true },
-  timestamps,
+  timestamps: true ,
 });
 
 export default model<UserData>("user", userSchema);

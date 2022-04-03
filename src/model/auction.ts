@@ -8,8 +8,7 @@ const schema = {
   auctionStartPrice: { type: String },
   auctionEnded: { type: Boolean, default: false },
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const auctionSchema = new Schema(schema, { timestamps });
+const auctionSchema = new Schema(schema, { timestamps:true });
 
 export default model("auction", auctionSchema);

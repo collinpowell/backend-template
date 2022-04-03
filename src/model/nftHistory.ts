@@ -10,7 +10,7 @@ const schema = {
     },
     meta: [Object]
 };
-const timestamps = { createdAt: "created_at"};
+const timestamps = { createdAt: "createdAt"};
 
 const ownerHistorySchema = new Schema(schema, { timestamps });
 

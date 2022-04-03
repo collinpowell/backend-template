@@ -46,8 +46,7 @@ const schema = {
     }
   ]
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const feeSchema = new Schema(schema, { timestamps });
+const feeSchema = new Schema(schema, { timestamps : true});
 
 export default model("fee", feeSchema);

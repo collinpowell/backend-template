@@ -15,7 +15,7 @@ const schema = {
 };
 
 const noticeSchema = new Schema(schema, {
-  timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+  timestamps: true,
 });
 
 export default model<Notice>("notice", noticeSchema);

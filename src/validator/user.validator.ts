@@ -35,7 +35,7 @@ export const validate = (method: string) => {
     case VALIDATOR.VERIFY_USER: {
       error = [
         body("email", "Email is required").isEmail(),
-        body("verification_code", "Verification Code is required")
+        body("verificationCode", "Verification Code is required")
           .not()
           .isEmpty(),
       ];

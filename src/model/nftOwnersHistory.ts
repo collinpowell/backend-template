@@ -13,8 +13,7 @@ const schema = {
   sellerUserId: String,
   purchaseType: String,
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const ownerHistorySchema = new Schema(schema, { timestamps });
+const ownerHistorySchema = new Schema(schema, { timestamps: true});
 
 export default model("owner_history", ownerHistorySchema);

@@ -13,9 +13,8 @@ const schema = {
   name: { type: String, required: true },
   subject: { type: String, required: true },
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
 
-const contactUsSchema = new Schema(schema, { timestamps });
+const contactUsSchema = new Schema(schema, { timestamps: true});
 
 export default model<ContactUsDetails>("contactUsDetails", contactUsSchema);

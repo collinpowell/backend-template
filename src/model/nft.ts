@@ -71,8 +71,7 @@ const schema = {
   status: { type: String, enum: ["ACTIVE", "DELETED"], default: "ACTIVE" },
   mintResponse: { type: Object },
 };
-const timestamps = { createdAt: "created_at", updatedAt: "updated_at" };
 
-const nftSchema = new Schema(schema, { timestamps });
+const nftSchema = new Schema(schema, { timestamps: true});
 
 export default model("nft", nftSchema);
