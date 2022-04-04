@@ -52,8 +52,9 @@ export interface UserData {
   role: string;
   createdAt: string;
   updatedAt: string;
-  //tokenCreatedAt: string;
-  //verificationCreatedAt: string;
+  resetPasswordToken?: string;
+  tokenCreatedAt?: string;
+  verificationCreatedAt?: string;
   connectedWallet: any;
   avatar: string;
   coverImage: string;
@@ -101,8 +102,8 @@ const schema = {
   status: { type: String, enum: ["ACTIVE","INACTIVE","DELETED","BLOCKED"], default: "INACTIVE" },
   verificationCode: String,
   resetPasswordToken: String,
-  //tokenCreatedAt: { type: Date, default: null },
-  //verificationCreatedAt: { type: Date, default: null },
+  tokenCreatedAt: { type: Date, default: null },
+  verificationCreatedAt: { type: Date, default: null },
   newEmail: {
     type: String,
     unique: true,

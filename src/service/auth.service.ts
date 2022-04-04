@@ -12,7 +12,7 @@ interface AddUserInput {
     username: string;
     email: string;
     googleId: string;
-    status: number;
+    status: string;
     authProvider: string;
   }
 

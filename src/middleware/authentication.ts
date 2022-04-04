@@ -14,7 +14,6 @@ const CURRENT_USER = "currentUser";
 
 export interface DecodedToken {
   id?: string;
-  user_id?: string;
   email?: string;
   role?: string;
 }
@@ -30,24 +29,28 @@ export const UserAuthenticationMiddleware = async (
 ) => {
   const authorization = req.headers[AUTHORIZATION_HEADER_NAME];
   if (authorization) {
+
     let token = authorization.split(tokenSplitBy);
     let length = token.length;
 
     if (length == tokenLength && token[0].toLowerCase() === AUTH_TYPE) {
       let accessToken = token[1];
       try {
+
         const userData: DecodedToken = await auth.verifyToken(accessToken);
         logger.log(level.debug, `UserAuthenticationMiddleware()`);
 
         const [userDoc] = await userModel.find({ email: userData.email });
 
-        if (userDoc && userDoc.status === 1) {
+        if (userDoc && userDoc.status.toString() === "ACTIVE") {
           httpContext.set("email", userData.email);
 
           req[CURRENT_USER] = userData;
           next();
+
           return;
         } else {
+
           logger.log(
             level.debug,
             `appAuthMiddleware userDoc=${JSON.stringify(userDoc)}`
@@ -55,7 +58,7 @@ export const UserAuthenticationMiddleware = async (
         }
       } catch (error) {
         if (error.toString().includes("jwt expired")) {
-          res.status(410).json({ error: { message: "Token is expired" } });
+          res.status(410).json({ statuscode: 410, body: "", message: "Token is expired" });
         }
         logger.log(level.error, `appAuthMiddleware ${error}`);
       }

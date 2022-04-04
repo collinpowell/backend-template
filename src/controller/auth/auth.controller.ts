@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import { level, logger } from "../../config/logger";
 import * as authRepo from "../../repository/auth/auth.repo";
 
+import { IGetUserAuthInfoRequest } from "../../middleware/authentication";
 
 import { validationResult } from "express-validator";
-import { UserInput,VerificationInput,LoginInput } from "../../model/user";
+import { UserInput, VerificationInput, LoginInput } from "../../model/user";
 
 import {
   badRequestError,
@@ -17,7 +18,6 @@ import {
 
 export const registerUser = async (req: Request, res: Response) => {
   logger.log(level.debug, `>> registerUser()`);
-  console.log(req)
   const errors = validationResult(req);
   try {
     if (!errors.isEmpty()) {
@@ -110,6 +110,152 @@ export const googleLogin = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< googleLogin() error=${error}`);
+    serverError(res);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  logger.log(level.debug, `>> resetPassword()`);
+  const { email } = req.body;
+  try {
+    const result = await authRepo.forgotPassword(email);
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result)
+  } catch (error) {
+    logger.log(level.error, `<< resetPassword() error=${error}`);
+    serverError(res);
+  }
+};
+
+export const checkUsername = async (
+  req: Request, res: Response
+) => {
+  logger.log(level.debug, `>> checkUsername()`);
+  const errors = validationResult(req);
+  try {
+
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
+
+    const result = await authRepo.checkUsername(
+      req.query.username.toString(),
+    );
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    return successfulRequest(res, result)
+  } catch (error) {
+    logger.log(level.error, `<< checkUsername() error=${error}`);
+    serverError(res);
+  }
+
+};
+
+export const resetPasswordChange = async (req: Request, res: Response) => {
+  logger.log(level.debug, `>> resetPasswordChange()`);
+  const { newPassword, confirmPassword, resetPasswordToken } = req.body;
+  const errors = validationResult(req);
+  try {
+
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
+    const result = await authRepo.resetPassword(
+      newPassword,
+      confirmPassword,
+      resetPasswordToken
+    );
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result)
+  } catch (error) {
+    logger.log(level.error, `<< resetPasswordChange() error=${error}`);
+    serverError(res);
+  }
+};
+
+export const changePassword = async (req: IGetUserAuthInfoRequest, res: Response) => {
+  logger.log(level.debug, `>> passwordChange()`);
+  const { id } = req.currentUser;
+  const { newPassword, confirmPassword, currentPassword } = req.body;
+  const errors = validationResult(req);
+  try {
+
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
+    const result = await authRepo.changePassword(
+      id,
+      currentPassword,
+      newPassword,
+      confirmPassword
+    );
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result)
+  } catch (error) {
+    logger.log(level.error, `<< passwordChange() error=${error}`);
+    serverError(res);
+  }
+};
+
+
+export const sendChangeEmail = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response
+) => {
+  logger.log(level.debug, `>> sendChangeEmail()`);
+  const { id } = req.currentUser;
+  const { newEmail } = req.body;
+  const errors = validationResult(req);
+  try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
+    const result = await authRepo.sendChangeEmail(id, newEmail);
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result)
+  } catch (error) {
+    logger.log(level.error, `<< sendChangeEmail() error=${error}`);
+    serverError(res);
+  }
+};
+
+export const verifyChangeEmail = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response
+) => {
+  logger.log(level.debug, `>> verifyChangeEmail()`);
+  const { id } = req.currentUser;
+  const { newEmail, verificationCode } = req.body;
+  const errors = validationResult(req);
+  try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
+    const result = await authRepo.verifyChangeEmail(
+      id,
+      newEmail,
+      verificationCode
+    );
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result)
+  } catch (error) {
+    logger.log(level.error, `<< verifyChangeEmail() error=${error}`);
     serverError(res);
   }
 };
