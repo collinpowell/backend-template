@@ -112,7 +112,7 @@ const schema = {
     set: encryptText,
     get: decryptText,
   },
-  connectedwallet: [Object],
+  connectedWallet: [Object],
   avatar: String,
   coverImage: String,
   kycStatus: { 

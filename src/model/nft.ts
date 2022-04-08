@@ -37,7 +37,7 @@ export interface FileTypes {
 }
 
 const schema = {
-  userId: String,
+  ownerId: String,
   title: {
     type: String,
     required: true,
@@ -61,7 +61,7 @@ const schema = {
   saleCoin: { type: Number },
   mintNft: { type: Number },
   fixedPrice: { type: String },
-  currentOwnerId: String,
+  creatorId: String,
   images: String,
   description: { type: String },
   royalty: [{ _id: false, percentage: Number, walletAddress: String }],

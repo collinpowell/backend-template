@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
 
 const schema = {
-  userId: String,
+  ownerId: String,
   totalLike: Number,
   nftCount: Number,
   image:String,
