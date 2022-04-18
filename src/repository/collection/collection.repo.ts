@@ -6,6 +6,7 @@ import collectionLikesModel from "../../model/collectionLikes";
 import {
   addUserCollection,
   getMyCollectionListPipeline,
+  getMyCollectionListPipeline1
 } from "../../service/collection.service";
 import * as fs from "fs";
 import { Storage } from "@google-cloud/storage";
@@ -25,7 +26,6 @@ const profileBucket = googleCloud.bucket(process.env.GOOGLE_BUCKET);
 
 export const createCollection = async (id: string, body: any, file: any) => {
   logger.log(level.info, `>> createCollection()`);
-  const collectionData = body.collectionData;
   let data = { error: false, message: "" };
   if (body.title.trim().length > 20) {
     data = {
@@ -35,41 +35,6 @@ export const createCollection = async (id: string, body: any, file: any) => {
     };
     return data;
   }
-  if (collectionData) {
-    await Promise.all(
-      collectionData.map(async (collection) => {
-        const [artWorkExist, artWorkInUse] = await Promise.all([
-          nftModel.find({
-            $or: [
-              {
-                $and: [
-                  { ownerId: { $eq: id } },
-                ],
-              },
-            ],
-            nftId: collection.nftId,
-          }),
-          collectionModel.find({
-            id,
-            status: "ACTIVE",
-            collectionData: {
-              $elemMatch: { nftId: collection.nftId },
-            },
-          }),
-        ]);
-        if (!artWorkExist || artWorkExist.length <= 0) {
-          data = { error: true, message: "Art work does not exist" };
-          return data;
-        }
-
-        if (artWorkInUse && artWorkInUse.length > 0) {
-          data = { error: true, message: "Art work Already in use" };
-          return data;
-        }
-        return data;
-      })
-    )
-  }
 
   if (data.error) {
     return data;
@@ -77,12 +42,11 @@ export const createCollection = async (id: string, body: any, file: any) => {
 
   let createData = {};
 
-  createData = await uploadProfilePromise(id, file);
+  createData = await uploadProfilePromise(file);
 
   createData = {
     ...createData,
     title: body.title,
-    collectionData,
     ownerId: id
   }
 
@@ -92,7 +56,7 @@ export const createCollection = async (id: string, body: any, file: any) => {
   return data;
 };
 
-export const uploadProfilePromise = async (user_id, file) => {
+export const uploadProfilePromise = async (file: any) => {
   let updateData = {};
   const profileData = fs.readFileSync(file.path);
   const blobProfile = profileBucket.file(`profile-${file.filename}`);
@@ -110,7 +74,6 @@ export const uploadProfilePromise = async (user_id, file) => {
         ...updateData,
         image: `https://storage.googleapis.com/${profileBucket.name}/${blobProfile.name}`,
       };
-      await userModel.findOneAndUpdate({ user_id }, { $set: updateData });
       resolve(updateData);
     });
     blobStream.end(profileData);
@@ -120,40 +83,20 @@ export const uploadProfilePromise = async (user_id, file) => {
   });
 };
 
-export const getAllUsersCollection = async (query: any, options: any) => {
-  logger.log(level.info, `>> getAllUsersCollection()`);
-  let filter = {};
-  if (query.auth_user_id) {
-    filter = { ...filter, auth_user_id: query.auth_user_id };
-  }
-
-  if (query.user_id) {
-    filter = { ...filter, user_id: query.user_id };
-  }
-  if (query.sortBy) {
-    filter = { ...filter, sortBy: query.sortBy };
-  }
-  if (query.orderBy) {
-    filter = { ...filter, orderBy: query.orderBy };
-  }
-  if (query.search) {
-    const search = regexSpecialChar(query.search);
-    filter = { ...filter, search };
-  }
-
-  return await commonGetCollectionFunction(filter, options, query);
-};
-
 export const getMyCollection = async (
   user_id: string,
   query: any,
-  options: any
+  options: any,
+  collectionId?: any
 ) => {
   logger.log(level.info, `>> getMyCollection()`);
   let filter = {};
-  filter = { ...filter, ownerId: user_id };
+  filter = { ...filter, ownerId: user_id, authUserId: user_id };
   if (query.sortBy) {
     filter = { ...filter, sortBy: query.sortBy };
+  }
+  if (collectionId) {
+    filter = { ...filter, _id: collectionId };
   }
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
@@ -173,12 +116,15 @@ const commonGetCollectionFunction = async (
 ) => {
   const pipeline = getMyCollectionListPipeline(filter, options, false);
   let collectionList = await collectionModel.aggregate(pipeline).exec();
+
+
   collectionList = collectionList.map((data) => {
-    data.creator_email = decryptText(data.creator_email);
+    data.creator.email = decryptText(data.creator.email);
     return data;
   });
   let data = {};
   const count = await collectionModel.find({ ...filter }).count();
+  console.log(collectionList.length)
   if (collectionList && collectionList.length > 0) {
     data = {
       error: false,
@@ -217,6 +163,30 @@ const commonGetCollectionFunction = async (
   };
   return data;
 };
+export const getAllUsersCollection = async (query: any, options: any) => {
+  logger.log(level.info, `>> getAllUsersCollection()`);
+  let filter = {};
+  if (query.authUserId) {
+    filter = { ...filter, authUserId: query.authUserId };
+  }
+
+  if (query.userId) {
+    filter = { ...filter, userId: query.userId };
+  }
+  if (query.sortBy) {
+    filter = { ...filter, sortBy: query.sortBy };
+  }
+  if (query.orderBy) {
+    filter = { ...filter, orderBy: query.orderBy };
+  }
+  if (query.search) {
+    const search = regexSpecialChar(query.search);
+    filter = { ...filter, search };
+  }
+
+  return await commonGetCollectionFunction(filter, options, query);
+};
+
 
 export const getCollectionDetails = async (query: any) => {
   logger.log(level.info, `>> getCollectionDetails()`);
@@ -305,7 +275,7 @@ export const getCollectionDetails = async (query: any) => {
             user_id: "$artWorkData.user_id",
             title: "$artWorkData.title",
             art_work_category: "$artWorkData.art_work_category",
-            form_of_sale: "$artWorkData.form_of_sale",
+            formOfSale: "$artWorkData.formOfSale",
             total_sale_quantity: "$artWorkData.total_sale_quantity",
             contract_type: "$artWorkData.contract_type",
             contract_address: "$artWorkData.contract_address",
@@ -428,59 +398,50 @@ export const getCollectionDetails = async (query: any) => {
 export const editCollection = async (
   ownerId: string,
   _id: any,
-  body: any
+  body: any,
+  file?: any
 ) => {
-  logger.log(level.info, `>> editCollection()`) ;
-  
+  logger.log(level.info, `>> editCollection()`);
+  console.log(ownerId)
+  console.log(_id)
 
   const collectionExist = await collectionModel.find({
     ownerId,
     _id,
-    status: "ACTIVE",
+    status: "ACTIVE"
   });
   let data = { error: false, message: "" };
   if (!collectionExist || collectionExist.length <= 0) {
     data = { error: true, message: "Collection Not Found" };
     return data;
   }
-  const collectionData = body.collectionData;
-  await Promise.all(
-    collectionData.map(async (collection) => {
-      const [artWorkExist, artWorkInUse] = await Promise.all([
-        nftModel.find({
-          ownerId,
-          _id: collection.nftId,
-        }),
-        collectionModel.find({
-          ownerId,
-          status: "ACTIVE",
-          _id: { $ne: _id },
-          collectionData: {
-            $elemMatch: { nftId: collection.nftId },
-          },
-        }),
-      ]);
+  let createData = {};
+  if (file) {
+    createData = await uploadProfilePromise(file);
+  }
 
-      if (!artWorkExist || artWorkExist.length <= 0) {
-        data = { error: true, message: "Art work does not exist" };
-        return data;
-      }
-      if (artWorkInUse && artWorkInUse.length > 1) {
-        data = { error: true, message: "Art work Already in use" };
-        return data;
-      }
-      return data;
-    })
-  );
+  if (!body.title) {
+    body.title = collectionExist[0].title;
+  }
+  if (!createData || createData == {}) {
+    createData = {
+      image: collectionExist[0].image,
+    }
+  }
 
   if (data.error) {
     return data;
   }
+
+  createData = {
+    ...createData,
+    title: body.title
+  }
   await collectionModel.findOneAndUpdate(
     { ownerId, _id },
-    { $set: { title: body.title, collectionData } }
+    { $set: createData },
   );
-  data = { error: false, message: "Collection Added Successfully" };
+  data = { error: false, message: "Collection Edited Successfully" };
   return data;
 };
 
@@ -505,11 +466,11 @@ export const deleteCollection = async (ownerId: string, _id: any) => {
   return data;
 };
 
-export const likeCollection = async (user_id: string, collection_id: any) => {
+export const likeCollection = async (userId: string, collectionId: any) => {
   logger.log(level.info, `>> likeCollection()`);
   const [collectionData, collectionLiked] = await Promise.all([
-    collectionModel.find({ collection_id }),
-    collectionLikesModel.find({ collection_id, user_id }),
+    collectionModel.find({ _id: collectionId }),
+    collectionLikesModel.find({ collectionId, userId }),
   ]);
   let data = { error: false, message: "" };
   if (!collectionData && collectionData.length < 0) {
@@ -518,8 +479,8 @@ export const likeCollection = async (user_id: string, collection_id: any) => {
   }
   if (!collectionLiked || collectionLiked.length <= 0) {
     const likeAdded = new collectionLikesModel({
-      collection_id,
-      user_id,
+      collectionId,
+      userId,
       liked: true,
     });
     Promise.resolve(likeAdded.save());
@@ -527,7 +488,7 @@ export const likeCollection = async (user_id: string, collection_id: any) => {
     return data;
   } else {
     await collectionLikesModel.findOneAndUpdate(
-      { user_id, collection_id },
+      { userId, collectionId },
       { $set: { liked: !collectionLiked[0].liked } }
     );
     if (!collectionLiked[0].liked === false) {
@@ -537,4 +498,135 @@ export const likeCollection = async (user_id: string, collection_id: any) => {
     }
     return data;
   }
+};
+
+export const addNFT = async (
+  userId: string,
+  collectionId: any,
+  body: any
+) => {
+  logger.log(level.info, `>> editCollection()`);
+  const collectionExist = await collectionModel.find({
+    ownerId: userId,
+    _id: collectionId,
+    status: "ACTIVE"
+  });
+  let data = { error: false, message: "" };
+  if (!collectionExist || collectionExist.length <= 0) {
+    data = { error: true, message: "Collection Not Found" };
+    return data;
+  }
+  const collectionData = body;
+  await Promise.all(
+    collectionData.map(async (collection) => {
+      const [artWorkExist, artWorkInUse] = await Promise.all([
+        nftModel.find({
+          ownerId: userId,
+          _id: collection.nftId,
+        }),
+        collectionModel.find({
+          ownerId: userId,
+          status: "ACTIVE",
+          $or: [
+            { _id: { $ne: collectionId } },
+            { _id: { $eq: collectionId } },
+          ],
+          collectionData: {
+            $elemMatch: { nftId: collection.nftId },
+          },
+        }),
+      ]);
+
+      if (!artWorkExist || artWorkExist.length <= 0) {
+        data = { error: true, message: "Art work does not exist" };
+        return data;
+      }
+      if (artWorkInUse && artWorkInUse.length >= 1) {
+        data = { error: true, message: "Art work Already in use or Already Added" };
+        return data;
+      }
+      return data;
+    })
+  );
+
+  if (data.error) {
+    return data;
+  }
+
+  await Promise.all(
+    collectionData.map(async (collection) => {
+      await collectionModel.findOneAndUpdate(
+        { userId, _id: collectionId },
+        { $push: { collectionData: { nftId: collection.nftId } } }
+      );
+    }));
+
+
+  data = { error: false, message: "NFT Added Successfully" };
+  return data;
+};
+
+export const removeNFT = async (
+  userId: string,
+  collectionId: any,
+  nftId: any
+) => {
+  logger.log(level.info, `>> editCollection()`);
+  const collectionExist = await collectionModel.find({
+    ownerId: userId,
+    _id: collectionId,
+    status: "ACTIVE",
+    collectionData: {
+      $elemMatch: { nftId },
+    },
+  });
+  let data = { error: false, message: "" };
+  if (!collectionExist || collectionExist.length <= 0) {
+    data = { error: true, message: "NFT Not Found" };
+    return data;
+  }
+
+  if (data.error) {
+    return data;
+  }
+
+  await collectionModel.findOneAndUpdate(
+    { userId, _id: collectionId },
+    { $pull: { collectionData: { nftId } } }
+  );
+
+
+
+  data = { error: false, message: "NFT deleted Successfully " };
+  return data;
+};
+
+export const getUserCollection = async (param: any,) => {
+  logger.log(level.info, `>> getAllUsersCollection()`);
+
+  let data = { error: false, message: "", data: {} };
+  if (!param) {
+    data = { error: true, message: "Collection ID is required", data: {} };
+    return data;
+  }
+
+  const pipeline = getMyCollectionListPipeline1(param);
+  let collectionList = await collectionModel.aggregate(pipeline).exec();
+
+  if (!collectionList || collectionList.length <= 0) {
+    data = { error: true, message: "Collection Not Found", data: {} };
+    return data;
+  }
+  collectionList = collectionList.map((data) => {
+    data.creator.email = decryptText(data.creator.email);
+    return data;
+  });
+  data = {
+    error: false,
+    message: "Collection Found",
+    data: collectionList[0]
+  };
+  return data;
+
+
 };

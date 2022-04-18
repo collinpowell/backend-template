@@ -1,12 +1,12 @@
 import { model, Schema } from "mongoose";
 
 const schema = {
-  auctionID: String,
-  nftID: String,
+  nftId: String,
   saleCoin: { type: Number },
   bidAmount: { type: String },
-  bidderID: String,
+  bidderId: String,
   transactionHash: Object,
+  auctionEnded:{ type:Boolean, default: false},
   status: { type: String, enum: ["BID","ALLOTED","REFUNDED"], default: "BID" },
 };
 

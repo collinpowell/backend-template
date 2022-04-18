@@ -28,16 +28,22 @@ export const UserAuthenticationMiddleware = async (
   next: NextFunction
 ) => {
   const authorization = req.headers[AUTHORIZATION_HEADER_NAME];
+
+
   if (authorization) {
 
     let token = authorization.split(tokenSplitBy);
     let length = token.length;
 
+
     if (length == tokenLength && token[0].toLowerCase() === AUTH_TYPE) {
       let accessToken = token[1];
+
       try {
 
+
         const userData: DecodedToken = await auth.verifyToken(accessToken);
+
         logger.log(level.debug, `UserAuthenticationMiddleware()`);
 
         const [userDoc] = await userModel.find({ email: userData.email });

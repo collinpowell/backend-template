@@ -8,4 +8,4 @@ const schema = {
 
 const nftLikeSchema = new Schema(schema, { timestamps: true});
 
-export default model("nft_like", nftLikeSchema);
+export default model("nftBookmarks", nftLikeSchema);

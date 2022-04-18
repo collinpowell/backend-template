@@ -1,29 +1,30 @@
 import { model, Schema } from "mongoose";
 
-export interface nftInput {
-  files: [string];
-  title: string;
-  description?: string;
-  nftCategory: number;
+export interface NftInput {
   formOfSale: string;
-  saleCoin?: number;
-  type: number;
+  saleCoin: number;
+  contractType: {
+    type: String,
+    enum: ["ERC721", "ERC1155"],
+    default: "ERC721",
+  };
   fixedPrice?: string;
   auctionEndHours?: number;
   auctionStartPrice?: string;
-  royalty: string;
-  properties: string;
+  royalty?: string;
   mintResponse: any;
   mintNft?: number;
-  images?: [string];
+  metaData: string;
+  nftCategory: number;
 }
 
-
-export interface Royalty {
-  percentage: number;
-  walletAddress: string;
+export interface UploadInput {
+  files: [string];
+  title: string;
+  description?: string;
+  nftCategory: string;
+  properties: any;
 }
-
 
 export interface FileTypes {
   fieldname: string;
@@ -36,12 +37,23 @@ export interface FileTypes {
   size: number;
 }
 
+
+export interface Royalty {
+  percentage: number;
+  walletAddress: string;
+}
+
 const schema = {
-  ownerId: String,
   title: {
     type: String,
     required: true,
   },
+  file: String,
+  description: { type: String },
+  properties: [
+    { _id: false, key: String, value: String },
+  ],
+  ownerId: String,
   nftCategory: {
     type: Number,
     required: true,
@@ -55,23 +67,22 @@ const schema = {
     enum: ["ERC721", "ERC1155"],
     default: "ERC721",
   },
+  nftToken: Object,
   totalLike: Number,
   contractAddress: { type: String },
-  files: String,
   saleCoin: { type: Number },
   mintNft: { type: Number },
   fixedPrice: { type: String },
   creatorId: String,
-  images: String,
-  description: { type: String },
+  auctionEndHours: { type: Number },
+  auctionEndTime: { type: Date },
+  auctionStartPrice: { type: String },
   royalty: [{ _id: false, percentage: Number, walletAddress: String }],
-  properties: [
-    { _id: false, key: String, value: String },
-  ],
   status: { type: String, enum: ["ACTIVE", "DELETED"], default: "ACTIVE" },
   mintResponse: { type: Object },
 };
 
-const nftSchema = new Schema(schema, { timestamps: true});
+const nftSchema = new Schema(schema, { timestamps: true });
 
 export default model("nft", nftSchema);
+

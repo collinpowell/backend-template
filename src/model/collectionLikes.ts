@@ -8,4 +8,4 @@ const schema = {
 
 const collectionLikeSchema = new Schema(schema, { timestamps: true});
 
-export default model("collection_like", collectionLikeSchema);
+export default model("collectionLike", collectionLikeSchema);

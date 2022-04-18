@@ -16,4 +16,4 @@ const schema = {
 
 const ownerHistorySchema = new Schema(schema, { timestamps: true});
 
-export default model("owner_history", ownerHistorySchema);
+export default model("ownerHistory", ownerHistorySchema);

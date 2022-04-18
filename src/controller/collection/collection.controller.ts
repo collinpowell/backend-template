@@ -9,6 +9,8 @@ import {
   standardStructureStringToJson,
 } from "../../utils/utility";
 import * as fs from "fs";
+import collectionModel from "../../model/collection";
+
 import * as collectionRepo from "../../repository/collection/collection.repo";
 import {
   DecodedToken,
@@ -16,6 +18,11 @@ import {
 } from "../../middleware/authentication";
 import { validationResult } from "express-validator";
 import { MulterRequest } from "../../service/multer/profile";
+import {
+  addUserCollection,
+  getMyCollectionListPipeline,
+} from "../../service/collection.service";
+import { decryptText, regexSpecialChar } from "../../utils/utility";
 
 import JWTAuth from "../../service/jwt_auth/jwt_auth";
 const auth = new JWTAuth();
@@ -87,10 +94,20 @@ export const editCollection = async (
   logger.log(level.debug, `>> editCollection()`);
   const { id } = req.currentUser;
   try {
+    const file: any = (req as MulterRequest).file;
+    if (
+      file &&
+      file.mimetype !== "image/webp" &&
+      file.mimetype !== "image/jpeg" &&
+      file.mimetype !== "image/png"
+    ) {
+      return badRequestError(res, "Only webp, jpeg ,png");
+    }
     const result = await collectionRepo.editCollection(
       id,
-      req.query.collectionid,
-      req.body
+      req.params.collectionid,
+      req.body,
+      (req as MulterRequest).file
     );
     if (result.error) {
       return badRequestError(res, result.message);
@@ -134,19 +151,154 @@ export const likeCollection = async (
 ) => {
   logger.log(level.debug, `>> likeCollection()`);
   const { id } = req.currentUser;
-  const errors = validationResult(req);
 
   try {
-    if (!errors.isEmpty()) {
-      return badRequestError(res, errors.array()[0].msg);
-    }
     const result = await collectionRepo.likeCollection(
       id,
-      req.query.collection_id
+      req.params.collectionid
     );
-    return res.status(201).json({ data: result });
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result)
+
   } catch (error) {
     logger.log(level.error, `<< likeCollection() error=${error}`);
     serverError(res);
   }
 };
+
+export const addNFT = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response
+) => {
+  logger.log(level.debug, `>> likeCollection()`);
+  const { id } = req.currentUser;
+
+  console.log(req.body)
+  console.log(req.params.collectionid)
+  console.log(req.params.nftid)
+
+
+  try {
+    const result = await collectionRepo.addNFT(
+      id,
+      req.params.collectionid,
+      req.body
+    );
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result)
+
+  } catch (error) {
+    logger.log(level.error, `<< likeCollection() error=${error}`);
+    serverError(res);
+  }
+};
+
+export const removeNFT = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response
+) => {
+  logger.log(level.debug, `>> likeCollection()`);
+  const { id } = req.currentUser;
+  console.log(req.body)
+  console.log(req.params.collectionid)
+  console.log(req.params.nftid)
+  try {
+    const result = await collectionRepo.removeNFT(
+      id,
+      req.params.collectionid,
+      req.params.nftid
+    );
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result)
+
+  } catch (error) {
+    logger.log(level.error, `<< likeCollection() error=${error}`);
+    serverError(res);
+  }
+};
+
+export const getAllUsersCollection = async (req: Request, res: Response) => {
+  logger.log(level.debug, `>> getMyCollection()`);
+  const extraParams = standardStructureStringToJson(req.query);
+  const options = getOptionsPipelineJson(extraParams);
+  if (
+    req.headers["authorization"] === undefined ||
+    !req.headers["authorization"]
+  ) {
+    try {
+      const result = await collectionRepo.getAllUsersCollection(
+        req.query,
+        options
+      );
+
+      //res.status(201).json({ data: result });
+      return successfulRequest(res, Object(result))
+
+    } catch (error) {
+      logger.log(level.error, `<< getMyCollection()`);
+      serverError(res);
+    }
+  } else {
+    const authorization = req.headers["authorization"];
+    const tokenSplitBy = " ";
+    if (authorization) {
+      let token = authorization.split(tokenSplitBy);
+      let length = token.length;
+      const tokenLength = 2;
+
+      if (length == tokenLength && token[0].toLowerCase() === "bearer") {
+        let accessToken = token[1];
+        try {
+          const userData: DecodedToken = await auth.verifyToken(accessToken);
+          logger.log(level.debug, `UserAuthenticationMiddleware()`);
+
+          const [userDoc] = await userModel.find({ email: userData.email });
+
+          if (userDoc && userDoc.status === 1) {
+            let query = { ...req.query, authUserId: userDoc.id };
+            const result = await collectionRepo.getAllUsersCollection(
+              query,
+              options
+            );
+            //return res.status(201).json({ data: result });
+            return successfulRequest(res, Object(result))
+
+          }
+        } catch (error) {
+          if (error.toString().includes("jwt expired")) {
+            //res.status(410).json({ error: { message: "Token is expired" } });
+            res.status(410).json({ statuscode: 410, body: "", message: "Token is expired" });
+
+          }
+          logger.log(level.error, `appAuthMiddleware ${error}`);
+        }
+        authError(res);
+      }
+    }
+  }
+};
+
+
+export const getUserCollection = async (
+  req: Request,
+  res: Response
+) => {
+  logger.log(level.debug, `>> getMyCollection()`);
+  const extraParams = standardStructureStringToJson(req.query);
+  const options = getOptionsPipelineJson(extraParams);
+  try {
+    const result = await collectionRepo.getUserCollection(
+      req.params.collectionid
+    );
+
+    //res.status(201).json({ data: result });
+    return successfulRequest(res, Object(result))
+  } catch (error) {
+    logger.log(level.error, `<< getMyCollection()`);
+    serverError(res);
+  }
+};
+
+
+
+

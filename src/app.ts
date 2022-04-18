@@ -7,10 +7,16 @@ import { config } from "dotenv";
 config() // Configure .env
 
 import "./config/database";
+import swaggerUI from "swagger-ui-express";
+import swaggerJsDoc from "swagger-jsdoc";
+import { constants as SWAGGER } from "./constant/swagger";
 
 import apiRoutes from "./routes/index";
 
 import { constants as APP_CONST } from "./constant/application";
+import "./pre-data/category";
+const options = SWAGGER;
+const specs = swaggerJsDoc(options);
 
 const app = express();
 
@@ -37,6 +43,7 @@ const PATH = {
 };
 
 app.use(PATH.API, apiRoutes);
+app.use(PATH.API_DOC, swaggerUI.serve, swaggerUI.setup(specs));
 
 // start the Express server
 app.listen( port, () => {

@@ -1,1 +1,1 @@
-export const constants = { NFT_ID: "nftId" };
+export const constants = { NFTID: "nftid" };
