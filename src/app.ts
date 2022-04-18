@@ -49,3 +49,16 @@ app.use(PATH.API_DOC, swaggerUI.serve, swaggerUI.setup(specs));
 app.listen( port, () => {
     console.log( `server started at http://localhost:${ port }` );
 });
+
+
+/**
+ * 
+ * git remote add origin https://gitlab.com/minto-nft-marketplace/minto-nft-marketplace-backend.git
+git branch -M main
+git push -uf origin main
+
+git remote add origin1 https://github.com/collinpowell/minto-backend.git
+git branch -M main
+git push -u origin1 main
+
+ */
