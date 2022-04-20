@@ -25,5 +25,4 @@ const PATH = {
   routes.use(PATH.NFT, nftRoutes);
   routes.use(PATH.STATS, statsRoutes);
 
-
   export default routes;

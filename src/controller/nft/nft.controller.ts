@@ -17,7 +17,7 @@ import {
   standardStructureStringToJson,
   authError,
 } from "../../utils/utility";
-import { FileTypes } from "../../model/nft"
+import nft, { FileTypes } from "../../model/nft"
 import JWTAuth from "../../service/jwt_auth/jwt_auth";
 const auth = new JWTAuth();
 
@@ -44,7 +44,7 @@ export const addArtWork = async (
 
   } catch (error) {
     logger.log(level.error, `<< addArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -72,7 +72,7 @@ export const editArtWork = async (
     return successfulRequest(res, result);
   } catch (error) {
     logger.log(level.error, `<< editArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -100,7 +100,7 @@ export const stopArtWorkSale = async (
 
   } catch (error) {
     logger.log(level.error, `<< stopArtWorkSale() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -128,7 +128,7 @@ export const burnNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< stopArtWorkSale() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -147,7 +147,7 @@ export const getMyAllArtWork = async (
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -166,7 +166,7 @@ export const getMyAllCreatedArtWork = async (
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -185,7 +185,7 @@ export const getUserCreatedArtWork = async (
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -204,7 +204,7 @@ export const getUserAllOwnedNFT = async (
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -257,7 +257,7 @@ export const uploadToIPFS = async (
     return successfulRequest(res, result);
   } catch (error) {
     logger.log(level.error, `<< addArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -282,7 +282,7 @@ export const likeNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -307,7 +307,7 @@ export const bookmarkNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -330,7 +330,7 @@ export const purchaseArtWork = async (
     console.log({ error });
 
     logger.log(level.error, `<< purchaseArtWork() error=${error}`);
-    serverError(error);
+    serverError(res,error);
   }
 };
 
@@ -348,7 +348,7 @@ export const browseByCollection = async (
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -377,7 +377,7 @@ export const getAllArtWork = async (
 
     } catch (error) {
       logger.log(level.error, `<< getAllWithoutUserIdArtWork() error=${error}`);
-      serverError(res);
+      serverError(res,error);
     }
   } else {
     const authorization = req.headers["authorization"];
@@ -412,6 +412,72 @@ export const getAllArtWork = async (
           if (error.toString().includes("jwt expired")) {
             //res.status(410).json({ error: { message: "Token is expired" } });
             res.status(410).json({ statuscode: 410, body: "", message: "Token is expired" });
+          }
+          logger.log(level.error, `appAuthMiddleware ${error}`);
+        }
+        authError(res);
+      }
+    }
+  }
+};
+
+export const getArtWorkDetails = async (req: Request, res: Response) => {
+  logger.log(level.debug, `>> getArtWorkDetails()`);
+
+  if (
+    req.headers["authorization"] === undefined ||
+    !req.headers["authorization"]
+  ) {
+    try {
+     
+      let filter = {};
+      filter = { ...filter, _id: req.params.nftid };
+      const result = await nftRepo.getArtWorkDetails(filter);
+
+      if (result.error) {
+        return badRequestError(res, result.message);
+      }
+
+      const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.params.nftid);
+      return res.status(201).json({ data: { ...result, seller_other_artworks: sellerOtherArtworks } });
+    } catch (error) {
+      logger.log(level.error, `<< getArtWorkDetails() error=${error}`);
+      serverError(res,error);
+    }
+  } else {
+    const authorization = req.headers["authorization"];
+    const tokenSplitBy = " ";
+    if (authorization) {
+      let token = authorization.split(tokenSplitBy);
+      let length = token.length;
+      const tokenLength = 2;
+
+      if (length == tokenLength && token[0].toLowerCase() === "bearer") {
+        let accessToken = token[1];
+        try {
+          const userData: DecodedToken = await auth.verifyToken(accessToken);
+          logger.log(level.debug, `UserAuthenticationMiddleware()`);
+
+          const [userDoc] = await userModel.find({ email: userData.email });
+
+          if (userDoc && userDoc.status === 1) {
+            let filter = {};
+            filter = {
+              ...filter,
+              _id: req.params.nftid,
+              user_id: userDoc.id,
+            };
+
+            const result = await nftRepo.getArtWorkDetails(filter);
+            if (result.error) {
+              return badRequestError(res, result.message);
+            }
+            const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.query.art_work_id);
+            return res.status(201).json({ data: { ...result, seller_other_artworks: sellerOtherArtworks } });
+          }
+        } catch (error) {
+          if (error.toString().includes("jwt expired")) {
+            res.status(410).json({ error: { message: "Token is expired" } });
           }
           logger.log(level.error, `appAuthMiddleware ${error}`);
         }

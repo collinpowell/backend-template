@@ -40,7 +40,7 @@ export const validate = (method: string) => {
 
     case VALIDATOR.LOGIN: {
       error = [
-        body("email", "Email is required").isEmail(),
+        body("email", "Invalid Email").isEmail(),
         body("password", "Password is required")
           .isLength({ min: 6 })
           .withMessage("Password length must be greater than 6 characters"),
@@ -50,7 +50,7 @@ export const validate = (method: string) => {
 
     case VALIDATOR.VERIFY_USER: {
       error = [
-        body("email", "Email is required").isEmail(),
+        body("email", "Invalid Email").isEmail(),
         body("verificationCode", "Verification Code is required")
           .not()
           .isEmpty(),
@@ -76,12 +76,12 @@ export const validate = (method: string) => {
     }
 
     case VALIDATOR.SEND_CHANGE_EMAIL: {
-      error = [body("newEmail", "Email is required").isEmail()];
+      error = [body("newEmail", "Invalid Email").isEmail()];
       break;
     }
 
     case VALIDATOR.VERIFY_CHANGE_EMAIL: {
-      error = [body("newEmail", "Email is required").isEmail()];
+      error = [body("newEmail", "Invalid Email").isEmail()];
       break;
     }
     case VALIDATOR.RESETCHANGEPASSWORD: {

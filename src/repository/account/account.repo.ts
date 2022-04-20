@@ -176,6 +176,13 @@ export const editProfile = async (_id: string, body: any) => {
   let updateData = {};
 
   if (body.username) {
+    if (body.username.indexOf(' ') >= 0) {
+      const data = {
+        error: true,
+        message: "Username cannot have spaces",
+      };
+      return data;
+    }
     const usernameAvailable = await checkUsername(body.username)
     if (!usernameAvailable.body.available) {
       const data = {
@@ -188,7 +195,7 @@ export const editProfile = async (_id: string, body: any) => {
     updateData = { ...updateData, username: body.username };
   }
 
-  if (body.bio && body.bio.length > 200) {
+  if (body.bio && body.bio.length > 500) {
     const data = {
       error: true,
       message: "About me length must be less than 200 characters",
@@ -212,6 +219,15 @@ export const editProfile = async (_id: string, body: any) => {
   }
 
   if (body.mobileNumber && body.mobileNumber.length > 0) {
+    const regex = new RegExp('^[+\\(\\)\\[\\]]*([0-9][ +-pw\\(\\)\\[\\]]*){6,45}$', '')
+
+    if(!body.mobileNumber.match(regex)){
+      const data = {
+        error: true,
+        message: "Invalid Mobile Number (Unsupported Character)",
+      };
+      return data;
+    }
     updateData = {
       ...updateData,
       mobileNumber: body.mobileNumber,

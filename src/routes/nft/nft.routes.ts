@@ -9,6 +9,7 @@ import { constants as VALIDATOR } from "../../constant/validator/nft.constant";
 
 const PATH = {
     ROOT: "/",
+    EXPLORE: "/explore",
     ADDNFT: "/generation",
     IPFSUPLOAD: "/ipfsupload",
     UPDATE: "/update",
@@ -60,6 +61,12 @@ routes
 .route(PATH.USERSNFTARTWORK + "/:userid")
 .get(nftController.getUserAllOwnedNFT)
 
+/**
+ * @api {GET} /api/nft/explore
+ * @desc Fetch Art work
+ * @access Public
+ * **/
+ routes.route(PATH.EXPLORE).get(nftController.getAllArtWork);
 
 /**
  * * User Authorization middleware
@@ -163,6 +170,6 @@ routes
  * @access Private
  * **/
  routes.route(PATH.FIXEDSALE).post(nftController.purchaseArtWork);
+ 
 
-   
 export default routes;

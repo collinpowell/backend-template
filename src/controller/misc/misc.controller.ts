@@ -15,7 +15,7 @@ export const getCategory = async (req: Request, res: Response) => {
 
     } catch (error) {
         logger.log(level.error, `<< getCategory() error=${error}`);
-        serverError(res);
+        serverError(res,error);
     }
 };
 
@@ -28,7 +28,7 @@ export const getCoin = async (req: Request, res: Response) => {
 
     } catch (error) {
         logger.log(level.error, `<< getCoin() error=${error}`);
-        serverError(res);
+        serverError(res,error);
     }
 };
 
@@ -44,6 +44,6 @@ export const saveContactUsDetails = async (
 
     } catch (error) {
         logger.log(level.error, `<< saveContactUsDetails() error=${error}`);
-        serverError(res);
+        serverError(res,error);
     }
 };

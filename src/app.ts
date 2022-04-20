@@ -15,6 +15,7 @@ import apiRoutes from "./routes/index";
 
 import { constants as APP_CONST } from "./constant/application";
 import "./pre-data/category";
+
 const options = SWAGGER;
 const specs = swaggerJsDoc(options);
 
@@ -44,6 +45,10 @@ const PATH = {
 
 app.use(PATH.API, apiRoutes);
 app.use(PATH.API_DOC, swaggerUI.serve, swaggerUI.setup(specs));
+
+app.get('*', function (req, res) {
+  res.status(400).json({ statuscode: 400, body: "", message: "Bad Request" });
+})
 
 // start the Express server
 app.listen( port, () => {

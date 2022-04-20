@@ -16,13 +16,7 @@ import {
   DecodedToken,
   IGetUserAuthInfoRequest,
 } from "../../middleware/authentication";
-import { validationResult } from "express-validator";
 import { MulterRequest } from "../../service/multer/profile";
-import {
-  addUserCollection,
-  getMyCollectionListPipeline,
-} from "../../service/collection.service";
-import { decryptText, regexSpecialChar } from "../../utils/utility";
 
 import JWTAuth from "../../service/jwt_auth/jwt_auth";
 const auth = new JWTAuth();
@@ -34,6 +28,7 @@ export const createCollection = async (
 ) => {
   logger.log(level.debug, `>> createCollection()`);
   const { id } = req.currentUser;
+
   try {
     const file: any = (req as MulterRequest).file;
     if (
@@ -60,7 +55,7 @@ export const createCollection = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< createCollection() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -83,7 +78,7 @@ export const getMyCollection = async (
     return successfulRequest(res, Object(result))
   } catch (error) {
     logger.log(level.error, `<< getMyCollection()`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -117,7 +112,7 @@ export const editCollection = async (
 
   } catch (error) {
     logger.log(level.error, `<< editCollection() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -141,7 +136,7 @@ export const deleteCollection = async (
 
   } catch (error) {
     logger.log(level.error, `<< deleteCollection() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -162,7 +157,7 @@ export const likeCollection = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeCollection() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -189,7 +184,7 @@ export const addNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeCollection() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -213,7 +208,7 @@ export const removeNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeCollection() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -236,7 +231,7 @@ export const getAllUsersCollection = async (req: Request, res: Response) => {
 
     } catch (error) {
       logger.log(level.error, `<< getMyCollection()`);
-      serverError(res);
+      serverError(res,error);
     }
   } else {
     const authorization = req.headers["authorization"];
@@ -295,7 +290,7 @@ export const getUserCollection = async (
     return successfulRequest(res, Object(result))
   } catch (error) {
     logger.log(level.error, `<< getMyCollection()`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 

@@ -3,6 +3,8 @@ const routes = Router({ mergeParams: true });
 import { upload } from "../../service/multer/profile";
 import { UserAuthenticationMiddleware } from "../../middleware/authentication";
 import * as collectionController from "../../controller/collection/collection.controller";
+import { validate } from "../../validator/collection.validator";
+import { constants as VALIDATOR } from "../../constant/validator/collection.constant";
 const PATH = {
   ROOT: "/",
   ROOTX: "/root",

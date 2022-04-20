@@ -74,8 +74,14 @@ export const getOptionsJson = (extraParams: any) => {
   return json;
 };
 
-export const serverError = (res: Response) => {
+export const serverError = (res: Response, errors: any) => {
   let code: number, response: errorResponseJson;
+  console.log(errors)
+  if (processMongooseError(errors)) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (" + errors.message + ")"});
+
+  }
+
 
   code = HTTPStatus.INTERNAL_SERVER_ERROR;
   const data: errorObject = {
@@ -185,3 +191,18 @@ export const regexSpecialChar = (search: string) => {
   }
   return search;
 };
+
+const processMongooseError = function (err) {
+  if (err.name == "MongoError") {
+    // mongo db error
+    return true;
+  } else if (err.name == "ValidationError") {
+    // mongoose error
+    return true;
+  } else if (err.name == "CastError") {
+    // mongoose error
+    return true;
+  } else {
+    return false;
+  }
+}

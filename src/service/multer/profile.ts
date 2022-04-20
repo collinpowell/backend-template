@@ -3,7 +3,11 @@ import multer, { StorageEngine } from "multer";
 import { resolve } from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-
+// const errors = validationResult(req);
+//   try {
+//     if (!errors.isEmpty()) {
+//       return badRequestError(res, errors.array()[0].msg);
+//     }
 export interface MulterRequest extends Request {
   file: any;
 }
@@ -15,6 +19,7 @@ const MIME_TYPES = {
 };
 const storage: StorageEngine = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb): void => {
+    console.log("Storage")
     if (!file) {
       cb(new Error("Upload file error"), null);
     } else {
@@ -42,7 +47,8 @@ const fileFilter = (
   ) {
     cb(null, true);
   } else {
-    cb(new Error("Image uploaded is not of type webp,jpeg, png, mp3"), false);
+    cb(null, true);
+    //cb(new Error("Image uploaded is not of type webp,jpeg, png, mp3"), false);
     // throw new Error("Image uploaded is not of type webp,jpeg, png");
   }
 };

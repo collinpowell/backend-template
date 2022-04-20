@@ -36,9 +36,20 @@ export const createCollection = async (id: string, body: any, file: any) => {
     return data;
   }
 
+
   if (data.error) {
     return data;
   }
+
+  if (body.title) {
+
+    const existTitle = await collectionModel.findOne({ title: body.title.toLocaleLowerCase() });
+    if (existTitle) {
+      const data = { error: true, message: "Collection title is taken" };
+      return data;
+    }
+  }
+
 
   let createData = {};
 
@@ -46,7 +57,7 @@ export const createCollection = async (id: string, body: any, file: any) => {
 
   createData = {
     ...createData,
-    title: body.title,
+    title: body.title.toLocaleLowerCase(),
     ownerId: id
   }
 
@@ -422,6 +433,12 @@ export const editCollection = async (
 
   if (!body.title) {
     body.title = collectionExist[0].title;
+  } else {
+    const existTitle = await collectionModel.findOne({ title: body.title.toLocaleLowerCase() });
+    if (existTitle) {
+      const data = { error: true, message: "Collection title is taken choose another" };
+      return data;
+    }
   }
   if (!createData || createData == {}) {
     createData = {
@@ -435,7 +452,7 @@ export const editCollection = async (
 
   createData = {
     ...createData,
-    title: body.title
+    title: body.title.toLocaleLowerCase()
   }
   await collectionModel.findOneAndUpdate(
     { ownerId, _id },

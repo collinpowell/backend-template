@@ -29,7 +29,7 @@ export const myAccount = async (
 
   } catch (error) {
     logger.log(level.error, `<< myAccount() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -43,7 +43,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< getUserDetails() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -71,7 +71,7 @@ export const editProfile = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< editProfile() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -89,7 +89,7 @@ export const connectWallet = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< editProfile() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 

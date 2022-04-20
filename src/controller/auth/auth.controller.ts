@@ -41,7 +41,7 @@ export const registerUser = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< registerUser() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -66,7 +66,7 @@ export const verifyUser = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< verifyUser() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -90,7 +90,7 @@ export const loginUser = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< loginUser() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -110,7 +110,7 @@ export const googleLogin = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< googleLogin() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -126,7 +126,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< resetPassword() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -150,7 +150,7 @@ export const checkUsername = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< checkUsername() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 
 };
@@ -176,7 +176,7 @@ export const resetPasswordChange = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< resetPasswordChange() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -203,7 +203,7 @@ export const changePassword = async (req: IGetUserAuthInfoRequest, res: Response
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< passwordChange() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -228,7 +228,7 @@ export const sendChangeEmail = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< sendChangeEmail() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
 
@@ -256,6 +256,6 @@ export const verifyChangeEmail = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< verifyChangeEmail() error=${error}`);
-    serverError(res);
+    serverError(res,error);
   }
 };
