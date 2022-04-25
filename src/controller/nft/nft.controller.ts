@@ -352,6 +352,25 @@ export const browseByCollection = async (
   }
 };
 
+export const browseByBookmarkedNFT = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response
+) => {
+  logger.log(level.debug, `>> browseByBookmarkedNFT()`);
+  const { id } = req.currentUser;
+  const extraParams = standardStructureStringToJson(req.query);
+  const options = getOptionsPipelineJson(extraParams);
+  try {
+    const result = await nftRepo.browseByBookmarkedNFT(id, req.query, options);
+    //return res.status(201).json({ data: result });
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, Object(result));
+  } catch (error) {
+    logger.log(level.error, `<< browseByBookmarkedNFT() error=${error}`);
+    serverError(res,error);
+  }
+};
+
 export const getAllArtWork = async (
   req: IGetUserAuthInfoRequest,
   res: Response

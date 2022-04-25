@@ -10,13 +10,13 @@ export const wethContract = process.env.WRAPPED_ETH_CONTRACT;
 export const eth1155Contract = process.env.ERC_1155_ETH_CONTRACT;
 
  export const ethProvider = new ethers.providers.JsonRpcProvider(
-   "https://rinkeby.infura.io/v3/d5d3a7fb66484c5ea0bf4d0fc6c07d3c"
+   "https://data-seed-prebsc-1-s1.binance.org:8545"
  );
 
-// export const signerEther = new ethers.Wallet(
-//   process.env.ADMIN_PRIVATE_ADDRESS,
-//   ethProvider
-// );
+ export const signerEther = new ethers.Wallet(
+   process.env.ADMIN_PRIVATE_ADDRESS,
+   ethProvider
+);
 
 // // const getBaseNonce1 = async () => {
 // //   let baseNonce = await ethProvider.getBalance(

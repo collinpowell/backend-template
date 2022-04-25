@@ -196,7 +196,7 @@ const processMongooseError = function (err) {
   if (err.name == "MongoError") {
     // mongo db error
     return true;
-  } else if (err.name == "ValidationError") {
+  } else if (err.name == "MongoServerError") {
     // mongoose error
     return true;
   } else if (err.name == "CastError") {

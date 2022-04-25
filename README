@@ -1,0 +1,4 @@
+rm -f .env
+git add .
+git commit -m "remove .env file from git"
+git push origin dev

@@ -587,7 +587,233 @@ export const browseByCollectionPipeline = (
             },
         },
     ]
+    if (count) {
+        pipeline.push({ $count: "total" });
+    }
+    if (extraParams) {
+        if (extraParams.skip) pipeline.push({ $skip: Number(extraParams.skip) });
+        if (extraParams.limit) pipeline.push({ $limit: Number(extraParams.limit) });
+    }
+    return pipeline;
 
+}
+
+export const browseByBookmarkPipeline = (
+    filter: any,
+    extraParams: any,
+    count: boolean,
+) => {
+    logger.log(level.info, `>> browseByCollectionPipeline()`);
+    let search = filter.search;
+    if (!filter.search) {
+        search = "";
+    }
+    let pipeline = [];
+
+    pipeline = [
+        ...pipeline,
+       
+        { $match: { userId: filter.userId } },
+        { $match: { bookmarked: true } },
+
+        {
+            $lookup: {
+                let: { "nftObjId": { "$toObjectId": "$nftId" } },
+                from: "nfts",
+                pipeline: [
+                    { $match: { "$expr": { "$eq": ["$_id", "$$nftObjId"] } } }
+                ],
+                as: "nftData"
+            }
+        },
+        { $unwind: "$nftData" },
+        {
+            $lookup: {
+                from: "nftlikes",
+                let: { "nftId": { "$toString": "$nftData._id" } },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$nftId", "$$nftId"] },
+                                    { $eq: ["$liked", true] },
+                                    { $eq: ["$userId", filter.userId] },
+                                ],
+                            },
+                        },
+                    },
+                ],
+                as: "isLiked",
+            },
+        },
+        {
+            $addFields: {
+                isLiked: {
+                    $cond: {
+                        if: { $gt: [{ $size: "$isLiked" }, 0] },
+                        then: true,
+                        else: false,
+                    },
+                },
+            },
+        },
+
+        {
+
+            $match: {
+                $or: [
+                    { "nftData.contractType": "ERC721" },
+                    {
+                        $and: [{ "nftData.contractType": "ERC1155" }, { "nftData.saleQuantity": { $gt: 0 } }],
+                    },
+                ],
+            },
+        },
+        {
+            $lookup: {
+                let: { "userObjId": { "$toObjectId": "$nftData.ownerId" } },
+                from: "users",
+                pipeline: [
+                    { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+                ],
+                as: "currentOwnerData"
+            }
+        },
+        {
+            $lookup: {
+                let: { "userObjId": { "$toObjectId": "$nftData.creatorId" } },
+                from: "users",
+                pipeline: [
+                    { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+                ],
+                as: "userData"
+            }
+        },
+        {
+            $lookup: {
+                from: "nftlikes",
+                let: { "nftId": { "$toString": "$nftData._id" } },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$nftId", "$$nftId"] },
+                                    { $eq: ["$liked", true] },
+                                ],
+                            },
+                        },
+                    },
+                ],
+                as: "nftLikes",
+            },
+        },
+        {
+            $lookup: {
+                from: "categories",
+                let: { categoryId: "$nftData.nftCategory" },
+                pipeline: [
+                    { $match: { $expr: { $in: ["$$categoryId", "$category.id"] } } },
+                    { $unwind: "$category" },
+                    { $match: { $expr: { $eq: ["$category.id", "$$categoryId"] } } },
+                ],
+                as: "categoryData",
+            },
+        },
+        { $unwind: "$categoryData" },
+        {
+            $lookup: {
+                from: "coins",
+                let: { coinId: "$nftData.saleCoin" },
+                pipeline: [
+                    { $match: { $expr: { $in: ["$$coinId", "$coins.id"] } } },
+                    { $unwind: "$coins" },
+                    { $match: { $expr: { $eq: ["$coins.id", "$$coinId"] } } },
+                ],
+                as: "coinData",
+            },
+        },
+        {
+            $project: {
+                _id: "$nftData._id",
+                title: "$nftData.title",
+                nftCategory: "$nftData.nftCategory",
+                totalLikes: { $size: "$nftLikes" },
+                formOfSale: "$nftData.formOfSale",
+                file: "$nftData.file",
+                nftToken: "$nftData.nftToken",
+                fixedPrice: { $toDouble: "$nftData.fixedPrice" },
+                ownerId: "$nftData.ownerId",
+                auctionEndTime: "$nftData.auctionEndTime",
+                auctionStartPrice: { $toDouble: "$nftData.auctionStartPrice" },
+                description: "$nftData.description",
+                royalty: "$nftData.royalty",
+                createdAt: "$nftData.createdAt",
+                categoryId: "$categoryData.category.id",
+                categoryName: "$categoryData.category.categoryName",
+                coinId: { $arrayElemAt: ["$coinData.coins.id", 0] },
+                coinName: { $arrayElemAt: ["$coinData.coins.coinName", 0] },
+                contractType: "$nftData.contractType",
+                saleQuantity: "$nftData.saleQuantity",
+                contractAddress: "$nftData.contractAddress",
+                mintNft: "$nftData.mintNft",
+                creator: {
+                    userId: { $arrayElemAt: ["$userData._id", 0] },
+                    fullName: { $arrayElemAt: ["$userData.fullName", 0] },
+                    username: { $arrayElemAt: ["$userData.username", 0] },
+                    avatar: { $arrayElemAt: ["$userData.avatar", 0] },
+                    bio: { $arrayElemAt: ["$userData.bio", 0] },
+                    coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
+                    email: { $arrayElemAt: ["$userData.email", 0] },
+                },
+                currentOwner: {
+                    userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
+                    fullName: { $arrayElemAt: ["$currentOwnerData.fullName", 0] },
+                    username: { $arrayElemAt: ["$currentOwnerData.username", 0] },
+                    avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
+                    bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
+                    coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
+                    email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
+                },
+                isCreator: {
+                    $cond: {
+                        if: {
+                            $and: [{ $eq: ["$nftData.creatorId", filter.userId] }],
+                        },
+                        then: true,
+                        else: false,
+                    },
+                },
+                differance: {
+                    $subtract: [
+                        "$nftData.auctionEndHours",
+                        {
+                            $divide: [
+                                { $subtract: [new Date(), "$nftData.createdAt"] },
+                                60 * 1000 * 60,
+                            ],
+                        },
+                    ],
+                },
+            },
+        },
+        {
+            $match: {
+                $or: [
+                    { title: { $regex: search, $options: "i" } },
+                    { coinName: { $regex: search, $options: "i" } },
+                ],
+            },
+        },
+    ]
+    if (count) {
+        pipeline.push({ $count: "total" });
+    }
+    if (extraParams) {
+        if (extraParams.skip) pipeline.push({ $skip: Number(extraParams.skip) });
+        if (extraParams.limit) pipeline.push({ $limit: Number(extraParams.limit) });
+    }
     return pipeline;
 
 }
@@ -619,20 +845,20 @@ export const getAllArtWorkPipeline = (
     if (filter.sortBy === "latest" || filter.sortBy === "price") {
 
         pipeline = [...pipeline, {
-            $match:{
+            $match: {
                 $or: [
-                    { formOfSale: "FIXEDPRICE" } ,
-                    { formOfSale: "AUCTION" } 
+                    { formOfSale: "FIXEDPRICE" },
+                    { formOfSale: "AUCTION" }
                 ]
             }
-           
+
         }];
 
     }
 
-    if(filter.formOfSale){
+    if (filter.formOfSale) {
         console.log(filter.formOfSale)
-        pipeline = [...pipeline, { $match:  { formOfSale: filter.formOfSale }  }];
+        pipeline = [...pipeline, { $match: { formOfSale: filter.formOfSale } }];
     }
 
     /* if (filter.auth && filter.form_of_sale === "my_selling_work") {
@@ -857,173 +1083,176 @@ export const getAllArtWorkPipeline = (
     return pipeline;
 };
 
+
+
 export const getArtWorkDetailsPipeline = (filter: any) => {
     logger.log(level.info, `>> getArtWorkDetailsPipeline()`);
     let pipeline = [];
     if (filter.user_id) {
-      pipeline = [
-        ...pipeline,
-        {
-          $lookup: {
-            from: "art_work_likes",
-            let: { art_work_id: "$art_work_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $eq: ["$art_work_id", "$$art_work_id"] },
-                      { $eq: ["$liked", true] },
-                      { $eq: ["$user_id", filter.user_id] },
+        pipeline = [
+            ...pipeline,
+            {
+                $lookup: {
+                    from: "art_work_likes",
+                    let: { art_work_id: "$art_work_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$art_work_id", "$$art_work_id"] },
+                                        { $eq: ["$liked", true] },
+                                        { $eq: ["$user_id", filter.user_id] },
+                                    ],
+                                },
+                            },
+                        },
                     ],
-                  },
+                    as: "isLiked",
                 },
-              },
-            ],
-            as: "isLiked",
-          },
-        },
-        {
-          $addFields: {
-            is_liked: {
-              $cond: {
-                if: { $gt: [{ $size: "$isLiked" }, 0] },
-                then: true,
-                else: false,
-              },
             },
-          },
-        },
-      ];
+            {
+                $addFields: {
+                    is_liked: {
+                        $cond: {
+                            if: { $gt: [{ $size: "$isLiked" }, 0] },
+                            then: true,
+                            else: false,
+                        },
+                    },
+                },
+            },
+        ];
     }
     pipeline = [
-      ...pipeline,
-      { $match: { art_work_id: filter.art_work_id } },
-      ...commonArtworkPipeline,
-      {
-        $project: {
-          is_liked: 1,
-          totalLikes: { $size: "$artworkLikes" },
-          current_owner_id: 1,
-          title: 1,
-          art_work_category: 1,
-          form_of_sale: 1,
-          files: 1,
-          nft_token: 1,
-          sale_coin: 1,
-          sale_price: { $toDouble: "$sale_price" },
-          auction_end_time: 1,
-          auction_start_price: { $toDouble: "$auction_start_price" },
-          description: 1,
-          royalty: 1,
-          contract_type: 1,
-          sale_quantity: 1,
-          total_sale_quantity: 1,
-          parent_total_sale_quantity: 1,
-          contract_address: 1,
-          art_work_id: 1,
-          created_at: 1,
-          selling_available: 1,
-          category_id: "$categoryData.category.id",
-          category_name: "$categoryData.category.category_name",
-          coin_id: { $arrayElemAt: ["$coinData.coins.id", 0] },
-          coin_name: { $arrayElemAt: ["$coinData.coins.coin_name", 0] },
-          mint_nft: 1,
-          creator: {
-            creator_nickname: { $arrayElemAt: ["$userData.nickname", 0] },
-            creator_about: { $arrayElemAt: ["$userData.about_me", 0] },
-            user_id: { $arrayElemAt: ["$userData.user_id", 0] },
-            user_profile: { $arrayElemAt: ["$userData.profile_image", 0] },
-            user_cover: { $arrayElemAt: ["$userData.cover_image", 0] },
-            creator_email: { $arrayElemAt: ["$userData.email", 0] },
-          },
-          current_owner: {
-            current_owner_nickname: {
-              $arrayElemAt: ["$currentOwnerData.nickname", 0],
+        ...pipeline,
+        { $match: { art_work_id: filter.art_work_id } },
+        ...commonArtworkPipeline,
+        {
+            $project: {
+                is_liked: 1,
+                totalLikes: { $size: "$artworkLikes" },
+                current_owner_id: 1,
+                title: 1,
+                art_work_category: 1,
+                form_of_sale: 1,
+                files: 1,
+                nft_token: 1,
+                sale_coin: 1,
+                sale_price: { $toDouble: "$sale_price" },
+                auction_end_time: 1,
+                auction_start_price: { $toDouble: "$auction_start_price" },
+                description: 1,
+                royalty: 1,
+                contract_type: 1,
+                sale_quantity: 1,
+                total_sale_quantity: 1,
+                parent_total_sale_quantity: 1,
+                contract_address: 1,
+                art_work_id: 1,
+                created_at: 1,
+                selling_available: 1,
+                category_id: "$categoryData.category.id",
+                category_name: "$categoryData.category.category_name",
+                coin_id: { $arrayElemAt: ["$coinData.coins.id", 0] },
+                coin_name: { $arrayElemAt: ["$coinData.coins.coin_name", 0] },
+                mint_nft: 1,
+                creator: {
+                    creator_nickname: { $arrayElemAt: ["$userData.nickname", 0] },
+                    creator_about: { $arrayElemAt: ["$userData.about_me", 0] },
+                    user_id: { $arrayElemAt: ["$userData.user_id", 0] },
+                    user_profile: { $arrayElemAt: ["$userData.profile_image", 0] },
+                    user_cover: { $arrayElemAt: ["$userData.cover_image", 0] },
+                    creator_email: { $arrayElemAt: ["$userData.email", 0] },
+                },
+                current_owner: {
+                    current_owner_nickname: {
+                        $arrayElemAt: ["$currentOwnerData.nickname", 0],
+                    },
+                    current_owner_profile: {
+                        $arrayElemAt: ["$currentOwnerData.profile_image", 0],
+                    },
+                    current_owner_id: { $arrayElemAt: ["$currentOwnerData.user_id", 0] },
+                    current_owner_email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
+                },
             },
-            current_owner_profile: {
-              $arrayElemAt: ["$currentOwnerData.profile_image", 0],
-            },
-            current_owner_id: { $arrayElemAt: ["$currentOwnerData.user_id", 0] },
-            current_owner_email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
-          },
         },
-      },
     ];
     return pipeline;
-  };
-  
-  export const getSellerOtherArtworkPipeline = (art_work_id, seller_id, maxCount) => {
-    let pipeline = [
-      {
-        $match: {
-          $and: [
-            { current_owner_id: { $eq: seller_id } },
-            { art_work_id: { $ne: art_work_id } }
-          ]
-        }
-      },
-      {
-        $limit: maxCount
-      },
-      {
-        $project: {
-          title: 1,
-          nft_token: 1
-        }
-      }
-    ];
-  
-    return pipeline;
-  }
-  
+};
 
-  export const getPipelineForPurchaseHistory = (art_work_id: string) => {
+export const getSellerOtherArtworkPipeline = (art_work_id, seller_id, maxCount) => {
+    let pipeline = [
+        {
+            $match: {
+                $and: [
+                    { current_owner_id: { $eq: seller_id } },
+                    { art_work_id: { $ne: art_work_id } }
+                ]
+            }
+        },
+        {
+            $limit: maxCount
+        },
+        {
+            $project: {
+                title: 1,
+                nft_token: 1
+            }
+        }
+    ];
+
+    return pipeline;
+}
+
+
+export const getPipelineForPurchaseHistory = (art_work_id: string) => {
     let pipeline = [];
     pipeline = [
-      { $match: { art_work_id } },
-      {
-        $lookup: {
-          from: "users",
-          localField: "user_id",
-          foreignField: "user_id",
-          as: "userData",
+        { $match: { art_work_id } },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user_id",
+                foreignField: "user_id",
+                as: "userData",
+            },
         },
-      },
-      {
-        $lookup: {
-          from: "coins",
-          let: { coin_id: "$coin" },
-          pipeline: [
-            { $match: { $expr: { $in: ["$$coin_id", "$coins.id"] } } },
-            { $unwind: "$coins" },
-            { $match: { $expr: { $eq: ["$coins.id", "$$coin_id"] } } },
-          ],
-          as: "coinData",
+        {
+            $lookup: {
+                from: "coins",
+                let: { coin_id: "$coin" },
+                pipeline: [
+                    { $match: { $expr: { $in: ["$$coin_id", "$coins.id"] } } },
+                    { $unwind: "$coins" },
+                    { $match: { $expr: { $eq: ["$coins.id", "$$coin_id"] } } },
+                ],
+                as: "coinData",
+            },
         },
-      },
-      {
-        $project: {
-          owner_history_id: 1,
-          owner_history_1155_id: 1,
-          coin: 1,
-          price: 1,
-          user_id: 1,
-          art_work_id: 1,
-          created_at: 1,
-          parent_art_work_id: 1,
-          quantity: 1,
-          transactionHash: 1,
-          nickname: { $arrayElemAt: ["$userData.nickname", 0] },
-          email: { $arrayElemAt: ["$userData.email", 0] },
-          about_me: { $arrayElemAt: ["$userData.about_me", 0] },
-          user_profile: { $arrayElemAt: ["$userData.profile_image", 0] },
-          user_cover: { $arrayElemAt: ["$userData.cover_image", 0] },
-          coin_id: { $arrayElemAt: ["$coinData.coins.id", 0] },
-          coin_name: { $arrayElemAt: ["$coinData.coins.coin_name", 0] },
-          mint_nft: 1,
+        {
+            $project: {
+                owner_history_id: 1,
+                owner_history_1155_id: 1,
+                coin: 1,
+                price: 1,
+                user_id: 1,
+                art_work_id: 1,
+                created_at: 1,
+                parent_art_work_id: 1,
+                quantity: 1,
+                transactionHash: 1,
+                nickname: { $arrayElemAt: ["$userData.nickname", 0] },
+                email: { $arrayElemAt: ["$userData.email", 0] },
+                about_me: { $arrayElemAt: ["$userData.about_me", 0] },
+                user_profile: { $arrayElemAt: ["$userData.profile_image", 0] },
+                user_cover: { $arrayElemAt: ["$userData.cover_image", 0] },
+                coin_id: { $arrayElemAt: ["$coinData.coins.id", 0] },
+                coin_name: { $arrayElemAt: ["$coinData.coins.coin_name", 0] },
+                mint_nft: 1,
+            },
         },
-      },
     ];
+
     return pipeline;
-  };
+};

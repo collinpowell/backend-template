@@ -10,6 +10,7 @@ import { constants as VALIDATOR } from "../../constant/validator/nft.constant";
 const PATH = {
     ROOT: "/",
     EXPLORE: "/explore",
+    NFT: "/nft",
     ADDNFT: "/generation",
     IPFSUPLOAD: "/ipfsupload",
     UPDATE: "/update",
@@ -170,6 +171,13 @@ routes
  * @access Private
  * **/
  routes.route(PATH.FIXEDSALE).post(nftController.purchaseArtWork);
+
+ /**
+ * @api {GET} /api/nft/browsebookmarked
+ * @desc Bookmarked nft
+ * @access Private
+ * **/
+  routes.route(PATH.BROWSEBOOKMARKED).get(nftController.browseByBookmarkedNFT);
  
 
 export default routes;

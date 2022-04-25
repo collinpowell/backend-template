@@ -5,6 +5,8 @@ import { ethContract, ethProvider } from "../../service/web3/web3_eth";
 import bidModel from "../../model/bid";
 import ownerHistoryModel from "../../model/nftOwnersHistory";
 import ownerHistory1155Model from "../../model/nftOwnersHistory";
+import nftBookmarks from "../../model/nftBookmarks";
+
 import {
   addNFTService,
   uploadToIPFSService,
@@ -14,6 +16,7 @@ import {
   getArtWorkDetailsPipeline,
   getPipelineForPurchaseHistory,
   getSellerOtherArtworkPipeline,
+  browseByBookmarkPipeline
 } from "../../service/nft.service";
 import { decryptText, regexSpecialChar } from "../../utils/utility";
 import moment from "moment-timezone";
@@ -1191,7 +1194,7 @@ export const getArtWorkDetails = async (filter: any) => {
 };
 
 export const getSellerOtherArtworks = async (art_work_id) => {
-  let artWork = await nftModel.findOne({art_work_id});
+  let artWork = await nftModel.findOne({ art_work_id });
   const pipeline = getSellerOtherArtworkPipeline(art_work_id, artWork.ownerId, 3);
   let similarArtWork = await nftModel.aggregate(pipeline).exec();
   return similarArtWork;
@@ -1242,4 +1245,245 @@ export const getArtWorkPurchaseHistory = async (art_work_id: any) => {
     };
     return data;
   }
+};
+
+
+export const browseByBookmarkedNFT = async (
+  id: string,
+  query: any,
+  options: any,
+) => {
+  logger.log(level.info, `>> browseByBookmarkedNFT`);
+  let filter = {};
+  if (query.sortBy) {
+    filter = { ...filter, sortBy: query.sortBy };
+  }
+  if (query.orderBy) {
+    filter = { ...filter, orderBy: query.orderBy };
+  }
+  if (query.formOfSale) {
+    filter = { ...filter, formOfSale: query.formOfSale };
+  }
+  if (query.search) {
+    console.log(query.search)
+    const search = regexSpecialChar(query.search);
+    filter = { ...filter, search };
+  }
+  filter = { ...filter, userId: id };
+
+  const pipeline = browseByBookmarkPipeline(filter, options, false);
+  let artWorkList = await nftBookmarks.aggregate(pipeline).exec();
+
+  console.log(artWorkList.length)
+  artWorkList = artWorkList.map((data) => {
+
+    if (data.formOfSale === "AUCTION") {
+      if (
+        !moment(data.auctionEndTime).isAfter(moment(new Date().toISOString()))
+      ) {
+        data.auctionEnded = true;
+      } else {
+        data.auctionEnded = false;
+      }
+    }
+    // data.creator.creator_email = decryptText(data.creator.creator_email);
+    // if (data.currentOwner.currentOwnerEmail !== undefined) {
+    //     data.currentOwner.currentOwnerEmail = decryptText(
+    //         data.currentOwner.currentOwnerEmail
+    //     );
+    // } else {
+    //     data.currentOwner = {
+    //         currentOwnerUsername: data.creator.creatorUsername,
+    //         currentOwnerAvatar: data.creator.userProfile,
+    //         currentOwnerId: data.creator.Id,
+    //         currentOwnerEmail: data.creator.creatorEmail,
+    //     };
+    // }
+
+    // if (
+    //     data.currentOwnerId === null ||
+    //     data.currentOwnerId === undefined ||
+    //     id === data.currentOwnerId ||
+    //     data.userId === data.currentOwnerId
+    // ) {
+    //     data.isOwner = true;
+    // } else {
+    //     data.isOwner = false;
+    // }
+    return data;
+  });
+  let data = {};
+  let count = 0;
+  if (artWorkList && artWorkList.length > 0) {
+    let countPipeline = browseByBookmarkPipeline(filter, {}, true);
+    const totalCount = await nftBookmarks.aggregate(countPipeline);
+    count = totalCount[0]?.total;
+
+    data = {
+      error: false,
+      message: "Users All Bookmarked NFT Fetched Successfully",
+      data: {
+        totalItems: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: artWorkList.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: artWorkList,
+      }
+    };
+    return data;
+  }
+  data = {
+    error: false,
+    message: "Users All Bookmarked NFT Fetched Successfully",
+    data: {
+      totalItems: 0,
+      currentPage: Number(query.page),
+      itemPerPage: Number(query.limit),
+      totalPages:
+        Math.round(count / Number(query.limit)) < count / Number(query.limit)
+          ? Math.round(count / Number(query.limit)) + 1
+          : Math.round(count / Number(query.limit)),
+      currentItemCount: artWorkList.length,
+      lastPage: count / Number(query.limit) <= Number(query.page),
+      data: []
+    }
+  };
+  return data;
+};
+
+
+export const getMyAllBids = async (
+  userId: string,
+  query: any,
+  options: any
+) => {
+  logger.log(level.info, `>> getMyAllBids()`);
+  let search = "";
+  if (query.search) {
+    search = regexSpecialChar(query.search);
+  }
+  let filter = {};
+  if (query.sortBy) {
+    filter = { ...filter, sortBy: query.sortBy };
+  }
+  if (query.orderBy) {
+    filter = { ...filter, orderBy: query.orderBy };
+  }
+  let pipeline = pipelineForBidList(userId, search, filter, options, false);
+  let myBidsList = await bidModel.aggregate(pipeline);
+  let count = 0;
+  if (myBidsList && myBidsList.length > 0) {
+    let countPipeline = pipelineForBidList(userId, search, filter, {}, true);
+    const totalCount = await bidModel.aggregate(countPipeline);
+
+    count = totalCount[0].total;
+    let data = {
+      message: "All bids fetched successfully",
+      totalItems: count,
+      currentPage: Number(query.page),
+      itemPerPage: Number(query.limit),
+      totalPages:
+        Math.round(count / Number(query.limit)) < count / Number(query.limit)
+          ? Math.round(count / Number(query.limit)) + 1
+          : Math.round(count / Number(query.limit)),
+      currentItemCount: myBidsList.length,
+      lastPage: count / Number(query.limit) <= Number(query.page),
+      data: myBidsList,
+    };
+    return data;
+  }
+  let data = {
+    message: "All bids fetched successfully",
+    totalItems: 0,
+    currentPage: Number(query.page),
+    itemPerPage: Number(query.limit),
+    totalPages:
+      Math.round(count / Number(query.limit)) < count / Number(query.limit)
+        ? Math.round(count / Number(query.limit)) + 1
+        : Math.round(count / Number(query.limit)),
+    currentItemCount: myBidsList.length,
+    lastPage: count / Number(query.limit) <= Number(query.page),
+    data: [],
+  };
+  return data;
+};
+
+export const pipelineForBidList = (
+  user_id: string,
+  search: string,
+  filter: any,
+  extraParams: any,
+  count: boolean
+) => {
+
+  let pipeline = [];
+  pipeline = [
+    ...pipeline,
+    { $match: { user_id, auctionEnded: false } },
+    {
+      $lookup: {
+        let: { "nftObjId": { "$toObjectId": "nftId" } },
+        from: "nfts",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$_id", "$$nftObjId"] } } }
+        ],
+        as: "nftData"
+      }
+    },
+    { $unwind: "$nftData" },
+    {
+      $project: {
+        art_work_id: 1,
+        sale_coin: 1,
+        sale_price: { $toDouble: "$bidAmount" },
+        user_id: 1,
+        transactionHash: 1,
+        is_deleted: 1,
+        auction_ended: 1,
+        bid_id: 1,
+        created_at: 1,
+        nftData: 1,
+      },
+    },
+  ];
+  if (search.trim().length > 0) {
+    pipeline = [
+      ...pipeline,
+      {
+        $match: {
+          $or: [
+            { "nftData.title": { $regex: search, $options: "i" } },
+          ],
+        },
+      },
+    ];
+  }
+  if (filter.sortBy === "latest") {
+    if (!filter.orderBy || Number(filter.orderBy) === 0) {
+      filter.orderBy = -1;
+    }
+    pipeline = [...pipeline, { $sort: { createdAt: Number(filter.orderBy) } }];
+  }
+
+  if (filter.sortBy === "price") {
+    if (!filter.orderBy || Number(filter.orderBy) === 0) {
+      filter.orderBy = -1;
+    }
+    pipeline = [...pipeline, { $sort: { fixedPrice: Number(filter.orderBy) } }];
+  }
+
+  if (count) {
+    pipeline.push({ $count: "total" });
+  }
+  if (extraParams) {
+    if (extraParams.skip) pipeline.push({ $skip: Number(extraParams.skip) });
+    if (extraParams.limit) pipeline.push({ $limit: Number(extraParams.limit) });
+  }
+
+  return pipeline;
 };

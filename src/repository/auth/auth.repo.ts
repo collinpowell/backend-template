@@ -80,7 +80,7 @@ export const registerUser = async (registerInput: UserInput) => {
   } else {
     const encryptPassword = await encrypt(registerInput.password);
     if (userData && userData.length > 0 && userData[0].status.toString() == 'ACTIVE') {
-      data = { error: false, message: "Email already exists" };
+      data = { error: true, message: "Email already exists" };
       return data;
     }
     await userModel.findOneAndUpdate(
@@ -116,7 +116,10 @@ export const verifyUser = async (verificationData: VerificationInput) => {
     return data;
   }
 
-  if (userData[0].verificationCode !== verificationData.verificationCode) {
+  if (userData[0].verificationCode != verificationData.verificationCode) {
+    console.log(userData[0].verificationCode)
+    console.log(verificationData.verificationCode)
+
     const data = { error: true, message: "Verification code is not correct" };
     return data;
   }
@@ -172,8 +175,13 @@ export const loginUser = async (loginInput: LoginInput) => {
     return data;
   }
 
-  if (userData[0].status === 0) {
-    const data = { error: true, message: "User does not exist" };
+  if (userData[0].status.toString() === "INACTIVE") {
+    try {
+      await verificationEmail(loginInput.email, userData[0].verificationCode);
+    } catch (error) {
+      console.log(error.message);
+    }
+    const data = { error: true, message: "Verify you email" };
     return data;
   }
 
