@@ -10,7 +10,6 @@ import { constants as VALIDATOR } from "../../constant/validator/nft.constant";
 const PATH = {
     ROOT: "/",
     EXPLORE: "/explore",
-    NFT: "/nft",
     ADDNFT: "/generation",
     IPFSUPLOAD: "/ipfsupload",
     UPDATE: "/update",
@@ -50,8 +49,8 @@ routes
 * @access PUBLIC
 * **/
 routes
-.route(PATH.USERCREATEDNFT + "/:userid")
-.get(nftController.getUserCreatedArtWork)
+    .route(PATH.USERCREATEDNFT + "/:userid")
+    .get(nftController.getUserCreatedArtWork)
 
 /**
 * @api {GET} /api/nft/usersnftartwork
@@ -59,15 +58,19 @@ routes
 * @access PUBLIC
 * **/
 routes
-.route(PATH.USERSNFTARTWORK + "/:userid")
-.get(nftController.getUserAllOwnedNFT)
+    .route(PATH.USERSNFTARTWORK + "/:userid")
+    .get(nftController.getUserAllOwnedNFT)
+
+routes
+    .route(PATH.ROOT + ":nftid")
+    .get(nftController.getArtWorkDetails)
 
 /**
  * @api {GET} /api/nft/explore
  * @desc Fetch Art work
  * @access Public
  * **/
- routes.route(PATH.EXPLORE).get(nftController.getAllArtWork);
+routes.route(PATH.EXPLORE).get(nftController.getAllArtWork);
 
 /**
  * * User Authorization middleware
@@ -79,18 +82,18 @@ routes.use(UserAuthenticationMiddleware);
  * @desc Users Likes an art work
  * @access Private
  * **/
- routes
- .route(PATH.LIKE +"/:nftid")
- .put(nftController.likeNFT);
+routes
+    .route(PATH.LIKE + "/:nftid")
+    .put(nftController.likeNFT);
 
- /**
- * @api {PUT} /api/user/nft/bookmark
- * @desc Users Bookmarks an art work
- * @access Private
- * **/
-  routes
-  .route(PATH.BOOKMARK +"/:nftid")
-  .put(nftController.bookmarkNFT);
+/**
+* @api {PUT} /api/user/nft/bookmark
+* @desc Users Bookmarks an art work
+* @access Private
+* **/
+routes
+    .route(PATH.BOOKMARK + "/:nftid")
+    .put(nftController.bookmarkNFT);
 
 /**
  * @api {POST} /api/nft/generation
@@ -138,14 +141,14 @@ routes
     .route(PATH.MYNFTARTWORK)
     .get(nftController.getMyAllArtWork)
 
-    /**
+/**
 * @api {GET} /api/nft/mycreatednft
 * @desc Get mynftartwork
 * @access PRIVATE
 * **/
 routes
-.route(PATH.MYCREATEDNFT)
-.get(nftController.getMyAllCreatedArtWork)
+    .route(PATH.MYCREATEDNFT)
+    .get(nftController.getMyAllCreatedArtWork)
 
 
 /**
@@ -154,8 +157,8 @@ routes
  * @access Private
  * **/
 routes
-.route(PATH.IPFSUPLOAD)
-.post(upload.array("file"), nftController.uploadToIPFS)
+    .route(PATH.IPFSUPLOAD)
+    .post(upload.array("file"), nftController.uploadToIPFS)
 
 
 /**
@@ -163,21 +166,21 @@ routes
  * @desc Bid for NFT 
  * @access Private
  * **/
- routes.route(PATH.AUCTION).post(nftController.purchaseArtWork);
+routes.route(PATH.AUCTION).post(nftController.purchaseArtWork);
 
 /**
  * @api {POST} /api/nft/fixedsale/purchase
  * @desc Purchase Art 
  * @access Private
  * **/
- routes.route(PATH.FIXEDSALE).post(nftController.purchaseArtWork);
+routes.route(PATH.FIXEDSALE).post(nftController.purchaseArtWork);
 
- /**
- * @api {GET} /api/nft/browsebookmarked
- * @desc Bookmarked nft
- * @access Private
- * **/
-  routes.route(PATH.BROWSEBOOKMARKED).get(nftController.browseByBookmarkedNFT);
- 
+/**
+* @api {GET} /api/nft/browsebookmarked
+* @desc Bookmarked nft
+* @access Private
+* **/
+routes.route(PATH.BROWSEBOOKMARKED).get(nftController.browseByBookmarkedNFT);
+
 
 export default routes;

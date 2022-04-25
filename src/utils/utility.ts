@@ -78,7 +78,7 @@ export const serverError = (res: Response, errors: any) => {
   let code: number, response: errorResponseJson;
   console.log(errors)
   if (processMongooseError(errors)) {
-    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (" + errors.message + ")"});
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request"});
 
   }
 

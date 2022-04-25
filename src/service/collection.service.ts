@@ -435,18 +435,14 @@ export const getMyCollectionListPipeline = (
     search = "";
   }
   let pipeline = [];
-  if (filter.ownerId) {
-    console.log("sdasdasdasd")
-    console.log(filter.ownerId)
+  if (filter.userId) {
 
     pipeline = [
       ...pipeline,
-      { $match: { ownerId: filter.ownerId, status: "ACTIVE" } },
+      { $match: { ownerId: filter.userId} },
     ];
   }
   if (filter._id) {
-    console.log("aksdasjdakjsdkajs")
-    console.log(filter._id)
 
     pipeline = [
       ...pipeline,
@@ -494,7 +490,6 @@ export const getMyCollectionListPipeline = (
   pipeline = [
     ...pipeline,
     { $match: { status: "ACTIVE" } },
-
     {
       $lookup: {
         let: { "userObjId": { "$toObjectId": "$ownerId" } },
@@ -599,6 +594,7 @@ export const getMyCollectionListPipeline1 = (
 
   pipeline = [
     ...pipeline,
+    { $match: {  status: "ACTIVE" }},
 
     {
       $lookup: {

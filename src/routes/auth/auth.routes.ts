@@ -60,7 +60,7 @@ routes
  * @desc User Reset Password API
  * @access Public
  * **/
-routes.route(PATH.RESETPASSWORD).put(authController.resetPassword);
+routes.route(PATH.RESETPASSWORD).put(validate(VALIDATOR.RESETEMAIL),authController.resetPassword);
 
 /**
 * @api {PUT} /api/auth/resetpassword-changepassword

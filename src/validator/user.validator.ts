@@ -5,6 +5,12 @@ export const validate = (method: string) => {
   let error = [];
 
   switch (method) {
+    case VALIDATOR.RESETEMAIL:{
+      error = [
+        body("email", "Email Address is Required").isEmail()
+      ];
+      break;
+    }
     case VALIDATOR.REGISTER_USER: {
       error = [
         body("email", "Invalid Email").

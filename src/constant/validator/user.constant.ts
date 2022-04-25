@@ -6,5 +6,6 @@ export const constants = {
   VERIFY_CHANGE_EMAIL: "verifyChangeEmail",
   CHECKUSERNAME: "checkUsername",
   RESETCHANGEPASSWORD:"resetChangePassword",
-  VERIFY_CHANGE_PASSWORD:"changePassword"
+  VERIFY_CHANGE_PASSWORD:"changePassword",
+  RESETEMAIL:"resetemail"
 };

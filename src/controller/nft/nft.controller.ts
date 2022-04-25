@@ -414,7 +414,7 @@ export const getAllArtWork = async (
 
           const [userDoc] = await userModel.find({ email: userData.email });
 
-          if (userDoc && userDoc.status === 1) {
+          if (userDoc && userDoc.status.toString() === "ACTIVE") {
             const result = await nftRepo.getAllArtWork(
               userDoc.id,
               req.query,
@@ -479,7 +479,7 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
 
           const [userDoc] = await userModel.find({ email: userData.email });
 
-          if (userDoc && userDoc.status === 1) {
+          if (userDoc && userDoc.status.toString() === "ACTIVE") {
             let filter = {};
             filter = {
               ...filter,

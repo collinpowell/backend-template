@@ -181,7 +181,7 @@ export const loginUser = async (loginInput: LoginInput) => {
     } catch (error) {
       console.log(error.message);
     }
-    const data = { error: true, message: "Verify you email" };
+    const data = { error: true, message: "Cannot Login Email Not Verified, OTP send to your email" };
     return data;
   }
 

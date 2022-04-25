@@ -26,7 +26,9 @@ const profileBucket = googleCloud.bucket(process.env.GOOGLE_BUCKET);
 
 export const createCollection = async (id: string, body: any, file: any) => {
   logger.log(level.info, `>> createCollection()`);
+  
   let data = { error: false, message: "" };
+
   if (body.title.trim().length > 20) {
     data = {
       error: true,

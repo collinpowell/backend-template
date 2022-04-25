@@ -117,7 +117,11 @@ export const googleLogin = async (req: Request, res: Response) => {
 export const resetPassword = async (req: Request, res: Response) => {
   logger.log(level.debug, `>> resetPassword()`);
   const { email } = req.body;
+  const errors = validationResult(req);
   try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
     const result = await authRepo.forgotPassword(email);
     if (result.error) {
       return badRequestError(res, result.message);

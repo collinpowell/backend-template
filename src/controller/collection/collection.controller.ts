@@ -9,7 +9,8 @@ import {
   standardStructureStringToJson,
 } from "../../utils/utility";
 import * as fs from "fs";
-import collectionModel from "../../model/collection";
+import { validationResult } from "express-validator";
+//import collectionModel from "../../model/collection";
 
 import * as collectionRepo from "../../repository/collection/collection.repo";
 import {
@@ -39,7 +40,9 @@ export const createCollection = async (
     ) {
       return badRequestError(res, "Only webp, jpeg ,png");
     }
-
+    if (!file) {
+      return badRequestError(res, "No file Found");
+    }
     const result = await collectionRepo.createCollection(
       id,
       req.body,
@@ -55,7 +58,7 @@ export const createCollection = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< createCollection() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -67,7 +70,12 @@ export const getMyCollection = async (
   const { id } = req.currentUser;
   const extraParams = standardStructureStringToJson(req.query);
   const options = getOptionsPipelineJson(extraParams);
+  const errors = validationResult(req);
   try {
+
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
     const result = await collectionRepo.getMyCollection(
       id,
       req.query,
@@ -78,7 +86,7 @@ export const getMyCollection = async (
     return successfulRequest(res, Object(result))
   } catch (error) {
     logger.log(level.error, `<< getMyCollection()`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -112,7 +120,7 @@ export const editCollection = async (
 
   } catch (error) {
     logger.log(level.error, `<< editCollection() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -136,7 +144,7 @@ export const deleteCollection = async (
 
   } catch (error) {
     logger.log(level.error, `<< deleteCollection() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -157,7 +165,7 @@ export const likeCollection = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeCollection() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -184,7 +192,7 @@ export const addNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeCollection() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -208,7 +216,7 @@ export const removeNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeCollection() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -220,7 +228,12 @@ export const getAllUsersCollection = async (req: Request, res: Response) => {
     req.headers["authorization"] === undefined ||
     !req.headers["authorization"]
   ) {
+    const errors = validationResult(req);
     try {
+
+      if (!errors.isEmpty()) {
+        return badRequestError(res, errors.array()[0].msg);
+      }
       const result = await collectionRepo.getAllUsersCollection(
         req.query,
         options
@@ -231,30 +244,41 @@ export const getAllUsersCollection = async (req: Request, res: Response) => {
 
     } catch (error) {
       logger.log(level.error, `<< getMyCollection()`);
-      serverError(res,error);
+      serverError(res, error);
     }
   } else {
     const authorization = req.headers["authorization"];
     const tokenSplitBy = " ";
     if (authorization) {
+
       let token = authorization.split(tokenSplitBy);
       let length = token.length;
       const tokenLength = 2;
 
       if (length == tokenLength && token[0].toLowerCase() === "bearer") {
         let accessToken = token[1];
+        const errors = validationResult(req);
         try {
+
+          if (!errors.isEmpty()) {
+            return badRequestError(res, errors.array()[0].msg);
+          }
+          console.log(authorization)
+
           const userData: DecodedToken = await auth.verifyToken(accessToken);
+
           logger.log(level.debug, `UserAuthenticationMiddleware()`);
 
           const [userDoc] = await userModel.find({ email: userData.email });
+          console.log(userDoc)
 
-          if (userDoc && userDoc.status === 1) {
+          if (userDoc && userDoc.status.toString() === "ACTIVE") {
             let query = { ...req.query, authUserId: userDoc.id };
             const result = await collectionRepo.getAllUsersCollection(
               query,
               options
             );
+      
             //return res.status(201).json({ data: result });
             return successfulRequest(res, Object(result))
 
@@ -290,7 +314,7 @@ export const getUserCollection = async (
     return successfulRequest(res, Object(result))
   } catch (error) {
     logger.log(level.error, `<< getMyCollection()`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 

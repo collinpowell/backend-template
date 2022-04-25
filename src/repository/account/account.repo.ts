@@ -198,7 +198,7 @@ export const editProfile = async (_id: string, body: any) => {
   if (body.bio && body.bio.length > 500) {
     const data = {
       error: true,
-      message: "About me length must be less than 200 characters",
+      message: "About me length must be less than 500 characters",
     };
     return data;
   }

@@ -1,4 +1,4 @@
-import { body, query } from "express-validator";
+import { body,query } from "express-validator";
 import { constants as VALIDATOR } from "../constant/validator/collection.constant";
 
 export const validate = (method: string) => {
@@ -12,6 +12,18 @@ export const validate = (method: string) => {
           .isEmpty(),
 
         body("image", "Image is required")
+          .not()
+          .isEmpty()
+
+      ];
+      break;
+    }
+    case VALIDATOR.SORTPARAMS: {
+      error = [
+        query("orderBy", "orderBy is required")
+          .not()
+          .isEmpty(),
+          query("sortBy", "sortBy is required")
           .not()
           .isEmpty()
 

@@ -19,7 +19,7 @@ routes
 
 routes
   .route(PATH.BROWSE)
-  .get(collectionController.getAllUsersCollection)
+  .get(validate(VALIDATOR.SORTPARAMS),collectionController.getAllUsersCollection)
 
 /**
  * * User Authorization middleware
@@ -40,7 +40,7 @@ routes
    * @desc Get My Collection
    * @access Private
    * **/
-  .get(collectionController.getMyCollection)
+  .get(validate(VALIDATOR.SORTPARAMS),collectionController.getMyCollection)
 /**
   * @api {PUT} /api/collection
   * @desc Update Collection
