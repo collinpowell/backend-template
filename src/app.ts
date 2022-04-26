@@ -18,7 +18,7 @@ import { constants as APP_CONST } from "./constant/application";
 import "./pre-data/category";
 
 //import "./rabbitSend";
-import "./rabbitReceive";
+//import "./rabbitReceive";
 
 
 

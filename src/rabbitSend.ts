@@ -4,7 +4,7 @@ var ethers = require("ethers");
 //import { auctionContract } from "./service/web3/auction_contract";
 //var auctionContract = require("./service/web3/auction_contract");
 
-//var auctionContract = require("./service/web3/web3_eth");
+//var auctionContract = require("./service/web3/web3_eth")
 const ethProvider = new ethers.providers.JsonRpcProvider(
     "https://data-seed-prebsc-1-s1.binance.org:8545"
 );
