@@ -2,7 +2,7 @@ import { customAlphabet } from "nanoid";
 import * as fs from "fs";
 import * as path from "path";
 import crypto from "crypto";
-
+import { generateFromEmail } from "unique-username-generator";
 import {
   encrypt,
   decrypt
@@ -23,6 +23,7 @@ import JWTAuth from "../../service/jwt_auth/jwt_auth";
 import * as authService from "../../service/auth.service";
 import transporter from "../../utils/transport";
 import user from "../../model/user";
+import { createTrue } from "typescript";
 
 
 
@@ -233,60 +234,98 @@ export const loginUser = async (loginInput: LoginInput) => {
 };
 
 export const googleLogin = async (
-  email: string,
   googleId: string,
   idToken: string,
-  username: string
 ) => {
   logger.log(level.info, `>> googleLogin()`);
-  const idData = await authService.googleUserVerify(idToken);
+  try {
+    const { userid, email, name } = await authService.googleUserVerify(idToken)
 
-  if (idData !== googleId) {
-    const data = {
-      error: true,
-      message: "Login fails",
-    };
-    return data;
-  }
-  const userData = await userModel.find({ email: email });
-  if (
-    userData &&
-    userData.length > 0 &&
-    userData[0].status.toString() === 'ACTIVE' &&
-    userData[0].googleId === "null"
-  ) {
-    const data = { error: true, message: "This user need password login" };
-    return data;
-  }
-  if (!userData || userData.length <= 0) {
-    await authService.addGoogleUser({
-      username: username,
-      googleId: idData,
-      authProvider: 'GOOGLE',
-      email,
-      status: "ACTIVE",
-    });
+    if (userid !== googleId) {
+      const data = {
+        error: true,
+        message: "Authentication failed",
+      };
+      return data;
+    }
+    const userData = await userModel.find({ email: email });
+    if (
+      userData &&
+      userData.length > 0 &&
+      userData[0].status.toString() === 'ACTIVE' &&
+      userData[0].googleId === "null"
+    ) {
+      const data = { error: true, message: "This user need password login" };
+      return data;
+    }
+    if (!userData || userData.length <= 0) {
+      const username = await checkUniqueId(email);
+      console.log(username);
+      await authService.addGoogleUser({
+        username: username,
+        fullName: name,
+        googleId: userid,
+        authProvider: 'GOOGLE',
+        email,
+        status: "ACTIVE",
+      });
 
-    const userDetails = await userModel.find({
-      email: email,
-      is_deleted: false,
-    });
+      const userDetails = await userModel.find({
+        email: email,
+        status: "ACTIVE",
+      });
+      const tokenPayload: accessTokenData = {
+        id: userDetails[0]._id,
+        email: userDetails[0].email,
+        role: userDetails[0].role,
+      };
+      const auth = new JWTAuth();
+      const accessToken = await auth.createToken(tokenPayload);
+      const [totalCreations, totalCollections] = await Promise.all([
+        nftModel.find({ creatorId: userDetails[0]._id }).count(),
+        collectionModel
+          .find({ ownerId: userDetails[0]._id })
+          .count(),
+      ]);
+      const data = {
+        error: false,
+        message: "User Registered successfully",
+        data: {
+          userId: userDetails[0]._id.toString(),
+          email: tokenPayload.email,
+          fullName: userDetails[0].fullName,
+          username: userDetails[0].username,
+          role: tokenPayload.role,
+          kycStatus: userDetails[0].kycStatus,
+          createdAt: userDetails[0].createdAt,
+          updatedAt: userDetails[0].updatedAt,
+          status: 'ACTIVE',
+          authProvider: userDetails[0].authProvider,
+          accessToken,
+          connectedWallet: userDetails[0].connectedWallet,
+          totalCreations,
+          totalCollections,
+        },
+      };
+      return data;
+    }
+
     const tokenPayload: accessTokenData = {
-      id: userDetails[0]._id,
-      email: userDetails[0].email,
-      role: userDetails[0].role,
+      id: userData[0]._id,
+      email: userData[0].email,
+      role: userData[0].role,
     };
     const auth = new JWTAuth();
     const accessToken = await auth.createToken(tokenPayload);
     const [totalCreations, totalCollections] = await Promise.all([
-      nftModel.find({ userId: userData[0]._id }).count(),
+      nftModel.find({ creatorId: userData[0]._id }).count(),
       collectionModel
-        .find({ userId: userData[0]._id })
+        .find({ ownerId: userData[0]._id })
         .count(),
     ]);
     const data = {
       error: false,
-      message: "User Registered successfully",
+      message: "Login Successful",
       data: {
         userId: userData[0]._id.toString(),
         email: tokenPayload.email,
@@ -305,43 +344,42 @@ export const googleLogin = async (
       },
     };
     return data;
+  } catch (err) {
+    const data = {
+      error: true,
+      message: "Invalid Token",
+    };
+    return data;
+  }
+};
+
+async function checkUniqueId(email: string) {
+  let username = generateFromEmail(
+    email,
+    0
+  );
+  while (await checkInDb(username)) {
+    username = generateFromEmail(
+      email,
+      Math.floor(Math.random() * 5)
+    );
+  }
+  return username;
+}
+
+async function checkInDb(username: string) {
+  try {
+    let idFound = await userModel.findOne({ username });
+    if (idFound) return true;
+    else return false;
+  }
+  catch (err) {
+    console.log(err);
+    return false;
   }
 
-  const tokenPayload: accessTokenData = {
-    id: userData[0]._id,
-    email: userData[0].email,
-    role: userData[0].role,
-  };
-  const auth = new JWTAuth();
-  const accessToken = await auth.createToken(tokenPayload);
-  const [totalCreations, totalCollections] = await Promise.all([
-    nftModel.find({ userId: userData[0]._id }).count(),
-    collectionModel
-      .find({ userId: userData[0]._id })
-      .count(),
-  ]);
-  const data = {
-    error: false,
-    message: "Login Successful",
-    data: {
-      userId: userData[0]._id.toString(),
-      email: tokenPayload.email,
-      fullName: userData[0].fullName,
-      username: userData[0].username,
-      role: tokenPayload.role,
-      kycStatus: userData[0].kycStatus,
-      createdAt: userData[0].createdAt,
-      updatedAt: userData[0].updatedAt,
-      status: 'ACTIVE',
-      authProvider: userData[0].authProvider,
-      accessToken,
-      connectedWallet: userData[0].connectedWallet,
-      totalCreations,
-      totalCollections,
-    },
-  };
-  return data;
-};
+}
+
 
 export const changePassword = async (
   _id: string,

@@ -13,7 +13,14 @@ const PATH = {
   UPLOADCOVER: "/uploadcover",
 
 };
-
+/**
+* @api {GET} /api/account/getuserprofile
+* @desc User Details
+* @access Public
+* **/
+routes
+  .route(PATH.USERPROFILE +"/:userId")
+  .get(accountController.getUserDetails)
 /**
  * * User Authorization middleware
  */
@@ -38,14 +45,7 @@ routes
     name: 'coverImage', maxCount: 1
   }]),accountController.editProfile);
   
-/**
-* @api {GET} /api/account/getuserprofile
-* @desc User Details
-* @access Public
-* **/
-routes
-  .route(PATH.USERPROFILE +"/:userId")
-  .get(accountController.getUserDetails)
+
 
 /**
 * @api {GET} /api/account/connectwallet

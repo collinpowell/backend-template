@@ -74,14 +74,12 @@ const schema = {
     set: encryptText,
     get: decryptText,
   },
-  fullName: { type: String,
-    required: true, },
+  fullName: { type: String},
   username: { type: String, required: true },
   mobileNumber: { type: String },
   bio: { type: String },
   password: {
     type: String,
-    required: true,
   },
   googleId: {
     type: String,
