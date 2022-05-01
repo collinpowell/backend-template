@@ -12,6 +12,13 @@ const storage: StorageEngine = multer.diskStorage({
     if (!file) {
       cb(new Error("Upload file error"), null);
     } else {
+      if (file.size / (1024 * 1024) > 5) {
+        const data = {
+          error: true,
+          message: "File size exceed maximum limit"
+        };
+        cb(new Error("File size exceed maximum limit"), null);
+      }
       const path = `src/public/uploads`;
       fs.mkdirSync(path, { recursive: true });
       cb(null, resolve(process.cwd(), path));

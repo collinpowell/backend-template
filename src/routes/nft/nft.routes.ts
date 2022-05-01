@@ -9,6 +9,7 @@ import { constants as VALIDATOR } from "../../constant/validator/nft.constant";
 
 const PATH = {
     ROOT: "/",
+    DETAIL: "/detail",
     EXPLORE: "/explore",
     ADDNFT: "/generation",
     IPFSUPLOAD: "/ipfsupload",
@@ -40,8 +41,10 @@ const PATH = {
 * **/
 routes
     .route(PATH.BROWSEBYCOLLECTION + "/:collectionid")
-    .get(nftController.browseByCollection)
-
+    .get(validate(VALIDATOR.BROWSE3), nftController.browseByCollection)
+routes.route(PATH.BROWSEBYCOLLECTION + '/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
 
 /**
 * @api {GET} /api/nft/usercreatednft
@@ -50,8 +53,10 @@ routes
 * **/
 routes
     .route(PATH.USERCREATEDNFT + "/:userid")
-    .get(nftController.getUserCreatedArtWork)
-
+    .get(validate(VALIDATOR.BROWSE3), nftController.getUserCreatedArtWork)
+routes.route(PATH.USERCREATEDNFT + '/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
 /**
 * @api {GET} /api/nft/usersnftartwork
 * @desc Get mynftartwork
@@ -59,20 +64,34 @@ routes
 * **/
 routes
     .route(PATH.USERSNFTARTWORK + "/:userid")
-    .get(nftController.getUserAllOwnedNFT)
+    .get(validate(VALIDATOR.BROWSE3), nftController.getUserAllOwnedNFT)
+routes.route(PATH.USERSNFTARTWORK + '/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
 
 routes
-    .route(PATH.ROOT + ":nftid")
+    .route(PATH.DETAIL + "/:nftid")
     .get(nftController.getArtWorkDetails)
+routes.route(PATH.DETAIL + '/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
 
+routes
+    .route(PATH.NFTINAUCTION + "/:nftid")
+    .get(nftController.getAuctionDetails)
+routes.route(PATH.NFTINAUCTION + '/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
 /**
  * @api {GET} /api/nft/explore
  * @desc Fetch Art work
  * @access Public
  * **/
-routes.route(PATH.EXPLORE).get(nftController.getAllArtWork);
+routes.route(PATH.EXPLORE).get(validate(VALIDATOR.BROWSE3), nftController.getAllArtWork);
+
 
 /**
+
  * * User Authorization middleware
  */
 routes.use(UserAuthenticationMiddleware);
@@ -85,6 +104,11 @@ routes.use(UserAuthenticationMiddleware);
 routes
     .route(PATH.LIKE + "/:nftid")
     .put(nftController.likeNFT);
+
+
+routes
+    .route(PATH.MYBIDS)
+    .get(nftController.getMyAllBids);
 
 /**
 * @api {PUT} /api/user/nft/bookmark
@@ -111,7 +135,7 @@ routes
 * **/
 routes
     .route(PATH.UPDATE + "/:nftid")
-    .put(validate(VALIDATOR.NFTID), nftController.editArtWork)
+    .put(nftController.editArtWork)
 
 /**
 * @api {PUT} /api/nft/stopsale
@@ -120,7 +144,7 @@ routes
 * **/
 routes
     .route(PATH.STOPSALE + "/:nftid")
-    .put(validate(VALIDATOR.NFTID), nftController.stopArtWorkSale)
+    .put(nftController.stopArtWorkSale)
 
 
 /**
@@ -130,7 +154,7 @@ routes
  * **/
 routes
     .route(PATH.BURNNFT + "/:nftid")
-    .delete(validate(VALIDATOR.NFTID), nftController.burnNFT)
+    .delete(nftController.burnNFT)
 
 /**
 * @api {GET} /api/nft/mynftartwork
@@ -139,7 +163,7 @@ routes
 * **/
 routes
     .route(PATH.MYNFTARTWORK)
-    .get(nftController.getMyAllArtWork)
+    .get(validate(VALIDATOR.BROWSE3), nftController.getMyAllArtWork)
 
 /**
 * @api {GET} /api/nft/mycreatednft
@@ -148,7 +172,7 @@ routes
 * **/
 routes
     .route(PATH.MYCREATEDNFT)
-    .get(nftController.getMyAllCreatedArtWork)
+    .get(validate(VALIDATOR.BROWSE3), nftController.getMyAllCreatedArtWork)
 
 
 /**
@@ -180,7 +204,7 @@ routes.route(PATH.FIXEDSALE).post(nftController.purchaseArtWork);
 * @desc Bookmarked nft
 * @access Private
 * **/
-routes.route(PATH.BROWSEBOOKMARKED).get(nftController.browseByBookmarkedNFT);
+routes.route(PATH.BROWSEBOOKMARKED).get(validate(VALIDATOR.BROWSE3), nftController.browseByBookmarkedNFT);
 
 
 export default routes;

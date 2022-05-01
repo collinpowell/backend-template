@@ -17,6 +17,7 @@ import {
   standardStructureStringToJson,
   authError,
 } from "../../utils/utility";
+import mongoose from 'mongoose'
 import nft, { FileTypes } from "../../model/nft"
 import JWTAuth from "../../service/jwt_auth/jwt_auth";
 const auth = new JWTAuth();
@@ -44,7 +45,7 @@ export const addArtWork = async (
 
   } catch (error) {
     logger.log(level.error, `<< addArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -54,12 +55,12 @@ export const editArtWork = async (
 ) => {
   logger.log(level.debug, `>> editArtWork()`);
   const { id } = req.currentUser;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return badRequestError(res, "Invalid User Id");
+  }
 
-  const errors = validationResult(req);
   try {
-    if (!errors.isEmpty()) {
-      return badRequestError(res, errors.array()[0].msg);
-    }
+
     const result = await nftRepo.editArtWork(
       id,
       req.params.nftid,
@@ -72,7 +73,7 @@ export const editArtWork = async (
     return successfulRequest(res, result);
   } catch (error) {
     logger.log(level.error, `<< editArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -82,11 +83,11 @@ export const stopArtWorkSale = async (
 ) => {
   logger.log(level.debug, `>> stopArtWorkSale()`);
   const { id } = req.currentUser;
-  const errors = validationResult(req);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return badRequestError(res, "Invalid User Id");
+  }
   try {
-    if (!errors.isEmpty()) {
-      return badRequestError(res, errors.array()[0].msg);
-    }
+
 
     const result = await nftRepo.stopArtWorkSale(
       id,
@@ -100,7 +101,7 @@ export const stopArtWorkSale = async (
 
   } catch (error) {
     logger.log(level.error, `<< stopArtWorkSale() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -110,11 +111,10 @@ export const burnNFT = async (
 ) => {
   logger.log(level.debug, `>> stopArtWorkSale()`);
   const { id } = req.currentUser;
-  const errors = validationResult(req);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return badRequestError(res, "Invalid User Id");
+  }
   try {
-    if (!errors.isEmpty()) {
-      return badRequestError(res, errors.array()[0].msg);
-    }
 
     const result = await nftRepo.burnNFT(
       id,
@@ -128,7 +128,7 @@ export const burnNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< stopArtWorkSale() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -140,14 +140,19 @@ export const getMyAllArtWork = async (
   const { id } = req.currentUser;
   const extraParams = standardStructureStringToJson(req.query);
   const options = getOptionsPipelineJson(extraParams);
+  const errors = validationResult(req);
+
   try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
     const result = await nftRepo.getMyAllArtWork(id, req.query, options, false);
     //return res.status(201).json({ data: result });
     //return res.status(201).json({ data: result });
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -159,14 +164,19 @@ export const getMyAllCreatedArtWork = async (
   const { id } = req.currentUser;
   const extraParams = standardStructureStringToJson(req.query);
   const options = getOptionsPipelineJson(extraParams);
+  const errors = validationResult(req);
+
   try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
     const result = await nftRepo.getMyAllArtWork(id, req.query, options, true);
     //return res.status(201).json({ data: result });
     //return res.status(201).json({ data: result });
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -176,16 +186,24 @@ export const getUserCreatedArtWork = async (
 ) => {
   logger.log(level.debug, `>> getMyAllArtWork()`);
   const id = req.params.userid;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return badRequestError(res, "Invalid User Id");
+  }
   const extraParams = standardStructureStringToJson(req.query);
   const options = getOptionsPipelineJson(extraParams);
+  const errors = validationResult(req);
+
   try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
     const result = await nftRepo.getMyAllArtWork(id, req.query, options, true);
     //return res.status(201).json({ data: result });
     //return res.status(201).json({ data: result });
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -197,17 +215,24 @@ export const getUserAllOwnedNFT = async (
   const id = req.params.userid;
   const extraParams = standardStructureStringToJson(req.query);
   const options = getOptionsPipelineJson(extraParams);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return badRequestError(res, "Invalid User Id");
+  }
+  const errors = validationResult(req);
+
   try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
     const result = await nftRepo.getMyAllArtWork(id, req.query, options, false);
     //return res.status(201).json({ data: result });
     //return res.status(201).json({ data: result });
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
-
 
 export const uploadToIPFS = async (
   req: IGetUserAuthInfoRequest,
@@ -215,6 +240,18 @@ export const uploadToIPFS = async (
 ) => {
   logger.log(level.debug, `>> addArtWork()`);
   try {
+    if (!req.body.title) {
+      return badRequestError(res, "Title is Required");
+    }
+    if (!req.body.description) {
+      return badRequestError(res, "Description is Required");
+    }
+    if (!req.body.nftCategory) {
+      return badRequestError(res, "Nft Category is Required");
+    }
+    if (!req.body.properties) {
+      return badRequestError(res, "Properties is Required");
+    }
     const files: any = (req as MulterRequest).files;
 
     files.map((file) => {
@@ -257,7 +294,7 @@ export const uploadToIPFS = async (
     return successfulRequest(res, result);
   } catch (error) {
     logger.log(level.error, `<< addArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -267,12 +304,10 @@ export const likeNFT = async (
 ) => {
   logger.log(level.debug, `>> likeArtWork()`);
   const { id } = req.currentUser;
-  const errors = validationResult(req);
-
+  if (!mongoose.Types.ObjectId.isValid(req.params.nftid)) {
+    return badRequestError(res, "Invalid NFT Id");
+  }
   try {
-    if (!errors.isEmpty()) {
-      return badRequestError(res, errors.array()[0].msg);
-    }
     const result = await nftRepo.likeNFT(id, req.params.nftid);
     if (result.error) {
       return badRequestError(res, result.message);
@@ -282,7 +317,7 @@ export const likeNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -293,7 +328,9 @@ export const bookmarkNFT = async (
   logger.log(level.debug, `>> likeArtWork()`);
   const { id } = req.currentUser;
   const errors = validationResult(req);
-
+  if (!mongoose.Types.ObjectId.isValid(req.params.nftid)) {
+    return badRequestError(res, "Invalid NFT Id");
+  }
   try {
     if (!errors.isEmpty()) {
       return badRequestError(res, errors.array()[0].msg);
@@ -307,7 +344,7 @@ export const bookmarkNFT = async (
 
   } catch (error) {
     logger.log(level.error, `<< likeArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -330,25 +367,27 @@ export const purchaseArtWork = async (
     console.log({ error });
 
     logger.log(level.error, `<< purchaseArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
-
 
 export const browseByCollection = async (
   req: Request,
   res: Response
 ) => {
-  logger.log(level.debug, `>> getMyAllArtWork()`);
+  logger.log(level.debug, `>> browseByCollection()`);
   const id = req.params.collectionid;
   const extraParams = standardStructureStringToJson(req.query);
   const options = getOptionsPipelineJson(extraParams);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return badRequestError(res, "Invalid Collection Id");
+  }
   try {
     const result = await nftRepo.browseByCollection(id, req.query, options);
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getMyAllArtWork() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -360,14 +399,18 @@ export const browseByBookmarkedNFT = async (
   const { id } = req.currentUser;
   const extraParams = standardStructureStringToJson(req.query);
   const options = getOptionsPipelineJson(extraParams);
+  const errors = validationResult(req);
+
   try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
     const result = await nftRepo.browseByBookmarkedNFT(id, req.query, options);
-    //return res.status(201).json({ data: result });
-    //return res.status(201).json({ data: result });
+
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< browseByBookmarkedNFT() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -383,7 +426,12 @@ export const getAllArtWork = async (
     !req.headers["authorization"] ||
     req.headers["authorization"].trim() === ""
   ) {
+    const errors = validationResult(req);
+
     try {
+      if (!errors.isEmpty()) {
+        return badRequestError(res, errors.array()[0].msg);
+      }
       const result = await nftRepo.getAllWithoutUserIdArtWork(
         req.query,
         options
@@ -396,7 +444,7 @@ export const getAllArtWork = async (
 
     } catch (error) {
       logger.log(level.error, `<< getAllWithoutUserIdArtWork() error=${error}`);
-      serverError(res,error);
+      serverError(res, error);
     }
   } else {
     const authorization = req.headers["authorization"];
@@ -408,7 +456,12 @@ export const getAllArtWork = async (
 
       if (length == tokenLength && token[0].toLowerCase() === "bearer") {
         let accessToken = token[1];
+        const errors = validationResult(req);
+
         try {
+          if (!errors.isEmpty()) {
+            return badRequestError(res, errors.array()[0].msg);
+          }
           const userData: DecodedToken = await auth.verifyToken(accessToken);
           logger.log(level.debug, `UserAuthenticationMiddleware()`);
 
@@ -448,8 +501,11 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
     !req.headers["authorization"]
   ) {
     try {
-     
+
       let filter = {};
+      if (!mongoose.Types.ObjectId.isValid(req.params.nftid)) {
+        return badRequestError(res, "Invalid NFT Id");
+      }
       filter = { ...filter, _id: req.params.nftid };
       const result = await nftRepo.getArtWorkDetails(filter);
 
@@ -458,10 +514,12 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
       }
 
       const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.params.nftid);
-      return res.status(201).json({ data: { ...result, seller_other_artworks: sellerOtherArtworks } });
+      // return res.status(201).json({ data: { ...result, seller_other_artworks: sellerOtherArtworks } });
+      result.data.sellerOtherArtworks = sellerOtherArtworks
+      return successfulRequest(res, Object(result));
     } catch (error) {
       logger.log(level.error, `<< getArtWorkDetails() error=${error}`);
-      serverError(res,error);
+      serverError(res, error);
     }
   } else {
     const authorization = req.headers["authorization"];
@@ -484,24 +542,67 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
             filter = {
               ...filter,
               _id: req.params.nftid,
-              user_id: userDoc.id,
+              userId: userDoc.id,
             };
 
             const result = await nftRepo.getArtWorkDetails(filter);
             if (result.error) {
               return badRequestError(res, result.message);
             }
-            const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.query.art_work_id);
+            const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.params.nftid);
             return res.status(201).json({ data: { ...result, seller_other_artworks: sellerOtherArtworks } });
           }
         } catch (error) {
           if (error.toString().includes("jwt expired")) {
-            res.status(410).json({ error: { message: "Token is expired" } });
+            res.status(410).json({ statuscode: 410, body: "", message: "Token is expired" });
+
+          } else {
+            return badRequestError(res, error.message);
           }
           logger.log(level.error, `appAuthMiddleware ${error}`);
         }
         authError(res);
       }
     }
+  }
+};
+
+export const getAuctionDetails = async (req: Request, res: Response) => {
+  logger.log(level.debug, `>> getAuctionDetails()`);
+  try {
+
+    let filter = {};
+    if (!mongoose.Types.ObjectId.isValid(req.params.nftid)) {
+      return badRequestError(res, "Invalid NFT Id");
+    }
+    filter = { ...filter, _id: req.params.nftid };
+    const result = await nftRepo.getAuctionDetails(filter);
+
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    return successfulRequest(res, Object(result));
+  } catch (error) {
+    logger.log(level.error, `<< getAuctionDetails() error=${error}`);
+    serverError(res, error);
+  }
+}
+
+
+export const getMyAllBids = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response
+) => {
+  logger.log(level.debug, `>> getMyAllBids()`);
+  const extraParams = standardStructureStringToJson(req.query);
+  const options = getOptionsPipelineJson(extraParams);
+  const { id } = req.currentUser;
+  try {
+    const result = await nftRepo.getMyAllBids(id, req.query, options);
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, Object(result));
+  } catch (error) {
+    logger.log(level.error, `<< getMyAllBids() error=${error}`);
+    serverError(res, error);
   }
 };

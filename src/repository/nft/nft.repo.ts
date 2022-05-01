@@ -6,6 +6,7 @@ import bidModel from "../../model/bid";
 import ownerHistoryModel from "../../model/nftOwnersHistory";
 import ownerHistory1155Model from "../../model/nftOwnersHistory";
 import nftBookmarks from "../../model/nftBookmarks";
+import auctionModel from "../../model/auction"
 
 import {
   addNFTService,
@@ -27,9 +28,9 @@ import ownerPurchaseModel from "../../model/nftOwnersHistory";
 import collectionModel from "../../model/collection";
 import { addOwnerHistory } from "../../service/ownerHistory.service";
 import { addBid, highestBidPipeline } from "../../service/bid.service";
-import nft from "../../model/nft";
 
-
+import categoryModel from "../../model/category";
+import coinModel from "../../model/coin";
 
 
 
@@ -39,7 +40,20 @@ export const addArtWork = async (
 ) => {
   logger.log(level.info, `>> addArtWork()`);
   let inputJSON = {};
+  let auctionJson = {};
+
+
   let data = { error: false, message: "" };
+
+  if (!body.mintResponse) {
+    data = {
+      error: true,
+      message:
+        "Mint Response is Required",
+    };
+    return data;
+
+  }
 
   if (!body.metaData) {
     data = {
@@ -50,10 +64,35 @@ export const addArtWork = async (
     return data;
   }
 
+  if (!Number(body.nftCategory)) {
+    if(body.nftCategory != 0){
+      data = {
+        error: true,
+        message:
+          "NFT must have Category ID (Number)",
+      };
+      return data;
+    }
+
+  }
+
+
   if (Number(body.mintNft) !== 0 && Number(body.mintNft) !== 1) {
-    data = { error: true, message: "mint nft field is required" };
+    data = { error: true, message: "Mint nft field is required" };
     return data;
   }
+
+  const cat = await categoryModel.find({})
+  if(!cat[0].category[body.nftCategory]){
+    data = {
+      error: true,
+      message:
+        "Category Does Not exist",
+    };
+    return data;
+  }
+  
+
 
   inputJSON = {
     ...inputJSON,
@@ -85,7 +124,7 @@ export const addArtWork = async (
       !Number(body.auctionEndHours) ||
       Number(body.auctionEndHours) <= 0
     ) {
-      data = { error: true, message: "auction end time is requied" };
+      data = { error: true, message: "Auction end time is requied" };
       return data;
     }
 
@@ -100,12 +139,17 @@ export const addArtWork = async (
       data = { error: true, message: "Buy Now Price is requied" };
       return data;
     }
+
     inputJSON = {
       ...inputJSON,
-      auctionEndHours: Number(body.auctionEndHours),
       fixedPrice: Number(body.fixedPrice),
-      auctionStartPrice: body.auctionStartPrice,
     };
+
+    auctionJson = {
+      ownerId: _id,
+      auctionEndHours: Number(body.auctionEndHours),
+      auctionStartPrice: body.auctionStartPrice,
+    }
   }
 
   if (body.formOfSale === "FIXEDPRICE") {
@@ -113,7 +157,7 @@ export const addArtWork = async (
       data = { error: true, message: "Sale Price is requied" };
       return data;
     }
-    inputJSON = { ...inputJSON, sale_price: body.fixedPrice };
+    inputJSON = { ...inputJSON, fixedPrice: Number(body.fixedPrice) };
   }
 
   if (body.formOfSale !== "NOT_FOR_SALE") {
@@ -123,31 +167,48 @@ export const addArtWork = async (
     }
     inputJSON = { ...inputJSON, saleCoin: Number(body.saleCoin) };
   }
+  if (body.royalty) {
+    const royalty = JSON.parse(body.royalty);
+    if (royalty && royalty.length > 0) {
+      let fixedPercentage = 100;
+      royalty.map((royal: Royalty) => {
+        fixedPercentage = fixedPercentage - royal.percentage;
+        if (fixedPercentage < 0) {
+          data = { error: true, message: "Royalty percentage must be under 100%" };
+          return data;
+        }
+        return fixedPercentage;
+      });
 
-  const royalty = JSON.parse(body.royalty);
-  if (royalty && royalty.length > 0) {
-    let fixedPercentage = 100;
-    royalty.map((royal: Royalty) => {
-      fixedPercentage = fixedPercentage - royal.percentage;
       if (fixedPercentage < 0) {
         data = { error: true, message: "Royalty percentage must be under 100%" };
         return data;
       }
-      return fixedPercentage;
-    });
 
-    if (fixedPercentage < 0) {
-      data = { error: true, message: "Royalty percentage must be under 100%" };
-      return data;
+      inputJSON = { ...inputJSON, royalty };
+    }
+  }
+
+  try {
+    await addNFTService(inputJSON, body.metaData, auctionJson)
+
+  } catch (error) {
+    if (error.name == "TypeError") {
+      data = {
+        error: true,
+        message: "Invalid Mint Response",
+      };
+    } else {
+      data = {
+        error: true,
+        message: error.message,
+      };
     }
 
-    inputJSON = { ...inputJSON, royalty };
+    return data;
   }
 
 
-
-
-  await addNFTService(inputJSON, body.metaData);
 
   data = {
     error: false,
@@ -170,6 +231,8 @@ export const editArtWork = async (
   });
 
   let inputJSON = {};
+  let auctionJson = {};
+
   let data = { error: false, message: "" };
 
   if (!artWorkData || artWorkData.length <= 0) {
@@ -194,7 +257,7 @@ export const editArtWork = async (
       !Number(body.auctionEndHours) ||
       Number(body.auctionEndHours) <= 0
     ) {
-      data = { error: true, message: "auction end hours is requied" };
+      data = { error: true, message: "Auction End Hours is requied" };
       return data;
     }
 
@@ -205,11 +268,17 @@ export const editArtWork = async (
       data = { error: true, message: "Auction Start price is requied" };
       return data;
     }
+
     inputJSON = {
       ...inputJSON,
-      auctionEndTime: Number(body.auctionEndTime),
-      auctionStartPrice: body.auctionStartPrice,
+      fixedPrice: Number(body.fixedPrice),
     };
+
+    auctionJson = {
+      ownerId: ownerId,
+      auctionEndHours: Number(body.auctionEndHours),
+      auctionStartPrice: body.auctionStartPrice,
+    }
   }
   if (Number(body.saleCoin) !== 0 && Number(body.saleCoin) !== 1) {
     data = { error: true, message: "Sale Coin is requied" };
@@ -228,13 +297,13 @@ export const editArtWork = async (
 
   if (body.formOfSale === "AUCTION") {
     const auctionEndTime = moment()
-      .add(Number(body.auction_end_hours), "hours")
+      .add(Number(body.auctionEndHours), "hours")
       .toDate()
       .toISOString();
-    inputJSON = {
-      ...inputJSON,
+    auctionJson = {
+      ...auctionJson,
       auctionEndTime,
-      auction_end_hours: body.auction_end_hours,
+      nftId
     };
   }
 
@@ -245,14 +314,14 @@ export const editArtWork = async (
     }
 
     if (Number(body.saleQuantity) <= 0 || !body.saleQuantity) {
-      data = { error: true, message: "sale quantity required" };
+      data = { error: true, message: "Sale quantity required" };
       return data;
     }
 
     if (Number(body.saleQuantity) > Number(artWorkData[0].saleQuantity)) {
       data = {
         error: true,
-        message: "sale quantity must be less than or equals to available quantity",
+        message: "Sale quantity must be less than or equals to available quantity",
       };
       return data;
     }
@@ -305,6 +374,12 @@ export const editArtWork = async (
     }
   }
 
+  if (body.formOfSale === "AUCTION") {
+    const auction = new auctionModel(auctionJson);
+    inputJSON = { ...inputJSON, auctionId: auction._id }
+    await auction.save();
+  }
+
   await nftModel.findOneAndUpdate({ _id: nftId }, inputJSON);
   data = {
     error: false,
@@ -335,6 +410,10 @@ export const stopArtWorkSale = async (ownerId: string, nftId: any) => {
       };
       return data;
     }
+    await auctionModel.findOneAndUpdate(
+      { ownerId, nftId, _id: artWorkExist[0].auctionId },
+      { $set: { auctionEnded: true } }
+    );
   }
   await nftModel.findOneAndUpdate(
     { ownerId, _id: nftId },
@@ -385,7 +464,7 @@ export const getMyAllArtWork = async (
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale) {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale)) {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.search) {
@@ -401,37 +480,21 @@ export const getMyAllArtWork = async (
 
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
       ) {
-        data.auctionEnded = true;
+        data.currentAuction.auctionEnded = true;
       } else {
-        data.auctionEnded = false;
+        data.currentAuction.auctionEnded = false;
       }
     }
-    data.creator.creator_email = decryptText(data.creator.creator_email);
-    if (data.currentOwner.currentOwnerEmail !== undefined) {
-      data.currentOwner.currentOwnerEmail = decryptText(
-        data.currentOwner.currentOwnerEmail
-      );
-    } else {
-      data.currentOwner = {
-        currentOwnerUsername: data.creator.creatorUsername,
-        currentOwnerAvatar: data.creator.userProfile,
-        currentOwnerId: data.creator.Id,
-        currentOwnerEmail: data.creator.creatorEmail,
-      };
+
+    if (data?.creator?.email) {
+      data.creator.email = decryptText(data.creator.email)
+    }
+    if (data?.currentOwner?.email) {
+      data.currentOwner.email = decryptText(data.currentOwner.email)
     }
 
-    if (
-      data.currentOwnerId === null ||
-      data.currentOwnerId === undefined ||
-      id === data.currentOwnerId ||
-      data.userId === data.currentOwnerId
-    ) {
-      data.isOwner = true;
-    } else {
-      data.isOwner = false;
-    }
     return data;
   });
   let data = {};
@@ -759,7 +822,7 @@ export const browseByCollection = async (
   query: any,
   options: any,
 ) => {
-  logger.log(level.info, `>> getMyAllArtWork`);
+  logger.log(level.info, `>> browseByCollection`);
   let filter = {};
   if (query.sortBy) {
     filter = { ...filter, sortBy: query.sortBy };
@@ -767,7 +830,7 @@ export const browseByCollection = async (
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale) {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale))  {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.search) {
@@ -783,12 +846,18 @@ export const browseByCollection = async (
 
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
       ) {
-        data.auctionEnded = true;
+        data.currentAuction.auctionEnded = true;
       } else {
-        data.auctionEnded = false;
+        data.currentAuction.auctionEnded = false;
       }
+    }
+    if (data?.creator?.email) {
+      data.creator.email = decryptText(data.creator.email)
+    }
+    if (data?.currentOwner?.email) {
+      data.currentOwner.email = decryptText(data.currentOwner.email)
     }
     // data.creator.creator_email = decryptText(data.creator.creator_email);
     // if (data.currentOwner.currentOwnerEmail !== undefined) {
@@ -872,7 +941,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale) {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale))  {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.nftCategory) {
@@ -890,30 +959,22 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   artWorkList = artWorkList.map((data) => {
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
       ) {
-        data.auctionEnded = true;
+        data.currentAuction.auctionEnded = true;
       } else {
-        data.auctionEnded = false;
+        data.currentAuction.auctionEnded = false;
       }
     }
-    /*  data.creator.creator_email = decryptText(data.creator.creator_email);
-     if (data.current_owner.current_owner_email !== undefined) {
-       data.current_owner.current_owner_email = decryptText(
-         data.current_owner.current_owner_email
-       );
-     } else {
-       data.current_owner = {
-         current_owner_nickname: data.creator.creator_nickname,
-         current_owner_profile: data.creator.user_profile,
-         current_owner_id: data.creator.user_id,
-         current_owner_email: data.creator.creator_email,
-       };
-     } */
+    if (data?.creator?.email) {
+      data.creator.email = decryptText(data.creator.email)
+    }
+    if (data?.currentOwner?.email) {
+      data.currentOwner.email = decryptText(data.currentOwner.email)
+    }
     return data;
   });
 
-  console.log("data");
 
   if (query.sortBy === "deadline") {
     filter = { ...filter, formOfSale: "AUCTION" };
@@ -927,11 +988,30 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
     let countPipeline = getAllArtWorkPipeline(filter, {}, true);
     const totalCount = await nftModel.aggregate(countPipeline);
     count = totalCount[0].total;
-
     const data = {
       error: false,
       message: "All ArtWork Fetched Successfully",
-      totalItems: count,
+      data: {
+        totalItems: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: artWorkList.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: artWorkList,
+      }
+
+    };
+    return data;
+  }
+  const data = {
+    error: false,
+    message: "All ArtWork Fetched Successfully",
+    data: {
+      totalItems: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -940,23 +1020,9 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
           : Math.round(count / Number(query.limit)),
       currentItemCount: artWorkList.length,
       lastPage: count / Number(query.limit) <= Number(query.page),
-      data: artWorkList,
-    };
-    return data;
-  }
-  const data = {
-    error: false,
-    message: "All ArtWork Fetched Successfully",
-    totalItems: 0,
-    currentPage: Number(query.page),
-    itemPerPage: Number(query.limit),
-    totalPages:
-      Math.round(count / Number(query.limit)) < count / Number(query.limit)
-        ? Math.round(count / Number(query.limit)) + 1
-        : Math.round(count / Number(query.limit)),
-    currentItemCount: artWorkList.length,
-    lastPage: count / Number(query.limit) <= Number(query.page),
-    data: [],
+      data: [],
+    }
+
   };
   return data;
 };
@@ -974,7 +1040,7 @@ export const getAllArtWork = async (
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale) {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale))  {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.nftCategory) {
@@ -1003,9 +1069,9 @@ export const getAllArtWork = async (
       if (
         !moment(data.auctionEndTime).isAfter(moment(new Date().toISOString()))
       ) {
-        data.auctionEnded = true;
+        data.currentAuction.auctionEnded = true;
       } else {
-        data.auctionEnded = false;
+        data.currentAuction.auctionEnded = false;
       }
     }
     data.creator.creator_email = decryptText(data.creator.creator_email);
@@ -1070,22 +1136,26 @@ export const getArtWorkDetails = async (filter: any) => {
 
   if (artWorkDetails && artWorkDetails.length > 0) {
     artWorkDetails = artWorkDetails.map((data) => {
-      data.creator.creator_email = decryptText(data.creator.creator_email);
-      data.current_owner.current_owner_email = decryptText(
-        data.current_owner.current_owner_email
-      );
-      if (
-        !moment(data.auction_end_time).isAfter(moment(new Date().toISOString()))
-      ) {
-        data.auction_ended = true;
-      } else {
-        data.auction_ended = false;
+      if (data.formOfSale === "AUCTION") {
+        if (
+          !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        ) {
+          data.currentAuction.auctionEnded = true;
+        } else {
+          data.currentAuction.auctionEnded = false;
+        }
+      }
+      if (data?.creator?.email) {
+        data.creator.email = decryptText(data.creator.email)
+      }
+      if (data?.currentOwner?.email) {
+        data.currentOwner.email = decryptText(data.currentOwner.email)
       }
       return data;
     });
     let ownerHistory = await getArtWorkPurchaseHistory(filter.art_work_id);
 
-    let purchase_history = [];
+    let purchaseHistory = [];
     if (ownerHistory && ownerHistory.data && ownerHistory.data.length > 0) {
       ownerHistory.data.map((data) => {
         let transactionHash;
@@ -1102,7 +1172,7 @@ export const getArtWorkDetails = async (filter: any) => {
         if (data.coin === 1) {
           coin_name = "Polygon";
         }
-        purchase_history.push({
+        purchaseHistory.push({
           coin: data.coin,
           coin_name,
           price: data.price,
@@ -1120,18 +1190,18 @@ export const getArtWorkDetails = async (filter: any) => {
 
     let artWorkData = {
       ...artWorkDetails[0],
-      purchase_history,
+      purchaseHistory,
     };
-    let highest_bid = 0;
-    if (artWorkDetails[0].form_of_sale === "auction") {
-      let pipeline = highestBidPipeline(filter.art_work_id);
+    let highestBid = 0;
+    if (artWorkDetails[0].formOfSale === "AUCTION") {
+      let pipeline = highestBidPipeline(filter._id);
       const currentBid = await bidModel.aggregate(pipeline);
       if (currentBid && currentBid.length > 0) {
-        highest_bid = currentBid[0].sale_price;
+        highestBid = currentBid[0].sale_price;
       }
     }
-    artWorkData = { ...artWorkData, highest_bid };
-    if (filter.user_id) {
+    artWorkData = { ...artWorkData, highestBid };
+    if (filter.userId) {
       const artWorkOwner = await nftModel.find({
         art_work_id: filter.art_work_id,
         $or: [
@@ -1167,17 +1237,6 @@ export const getArtWorkDetails = async (filter: any) => {
         artWorkData = { ...artWorkData, is_current_owner: false };
       }
     }
-    if (
-      !artWorkData.current_owner ||
-      artWorkData.current_owner.current_owner_email === undefined
-    ) {
-      artWorkData.current_owner = {
-        current_owner_nickname: artWorkDetails[0].creator.creator_nickname,
-        current_owner_profile: artWorkDetails[0].creator.user_profile,
-        current_owner_id: artWorkDetails[0].creator.user_id,
-        current_owner_email: artWorkDetails[0].creator.creator_email,
-      };
-    }
     const data = {
       error: false,
       message: "Art work details fetched succssfully",
@@ -1192,10 +1251,64 @@ export const getArtWorkDetails = async (filter: any) => {
   };
   return data;
 };
+export const getAuctionDetails = async (filter: any) => {
+  logger.log(level.info, `>> getArtWorkDetails()`);
 
-export const getSellerOtherArtworks = async (art_work_id) => {
-  let artWork = await nftModel.findOne({ art_work_id });
-  const pipeline = getSellerOtherArtworkPipeline(art_work_id, artWork.ownerId, 3);
+  let artWorkDetails = await nftModel.find({ _id: filter._id, formOfSale: "AUCTION", status: "ACTIVE" });
+
+  if (artWorkDetails && artWorkDetails.length > 0) {
+    let auctionData = {}
+    const auction = await auctionModel.find({ _id: artWorkDetails[0].auctionId })
+
+    if (!auction && auction.length < 1) {
+      const data = {
+        error: true,
+        message: "No Auction found",
+        data: "",
+      };
+      return data;
+    }
+    if (
+      !moment(auction[0].auctionEndTime).isAfter(moment(new Date().toISOString()))
+    ) {
+      auctionData = {
+        ...auctionData,
+        auctionEnded: true,
+      }
+    } else {
+      auctionData = {
+        ...auctionData,
+        auctionEnded: false,
+      }
+    }
+    auctionData = {
+      ...auctionData,
+      auctionId: auction[0]._id,
+      auctionEndHour: auction[0].auctionEndHour,
+      auctionStartPrice: auction[0].auctionStartPrice,
+      currentOwnerId: artWorkDetails[0].ownerId,
+      buyNowPrice: artWorkDetails[0].fixedPrice,
+      createdAt: auction[0].createdAt,
+    }
+    const data = {
+      error: false,
+      message: "Auction details fetched succssfully",
+      data: auctionData,
+    };
+    return data;
+  }
+  const data = {
+    error: true,
+    message: "No Auction found",
+    data: "",
+  };
+  return data;
+
+}
+
+export const getSellerOtherArtworks = async (nftId: string) => {
+  let artWork = await nftModel.findOne({ _id: nftId });
+  const pipeline = getSellerOtherArtworkPipeline(nftId, artWork.ownerId, 3);
   let similarArtWork = await nftModel.aggregate(pipeline).exec();
   return similarArtWork;
 }
@@ -1261,7 +1374,7 @@ export const browseByBookmarkedNFT = async (
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale) {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale))  {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.search) {
@@ -1276,40 +1389,21 @@ export const browseByBookmarkedNFT = async (
 
   console.log(artWorkList.length)
   artWorkList = artWorkList.map((data) => {
-
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
       ) {
-        data.auctionEnded = true;
+        data.currentAuction.auctionEnded = true;
       } else {
-        data.auctionEnded = false;
+        data.currentAuction.auctionEnded = false;
       }
     }
-    // data.creator.creator_email = decryptText(data.creator.creator_email);
-    // if (data.currentOwner.currentOwnerEmail !== undefined) {
-    //     data.currentOwner.currentOwnerEmail = decryptText(
-    //         data.currentOwner.currentOwnerEmail
-    //     );
-    // } else {
-    //     data.currentOwner = {
-    //         currentOwnerUsername: data.creator.creatorUsername,
-    //         currentOwnerAvatar: data.creator.userProfile,
-    //         currentOwnerId: data.creator.Id,
-    //         currentOwnerEmail: data.creator.creatorEmail,
-    //     };
-    // }
-
-    // if (
-    //     data.currentOwnerId === null ||
-    //     data.currentOwnerId === undefined ||
-    //     id === data.currentOwnerId ||
-    //     data.userId === data.currentOwnerId
-    // ) {
-    //     data.isOwner = true;
-    // } else {
-    //     data.isOwner = false;
-    // }
+    if (data?.creator?.email) {
+      data.creator.email = decryptText(data.creator.email)
+    }
+    if (data?.currentOwner?.email) {
+      data.currentOwner.email = decryptText(data.currentOwner.email)
+    }
     return data;
   });
   let data = {};
@@ -1414,7 +1508,7 @@ export const getMyAllBids = async (
 };
 
 export const pipelineForBidList = (
-  user_id: string,
+  userId: string,
   search: string,
   filter: any,
   extraParams: any,
@@ -1424,7 +1518,7 @@ export const pipelineForBidList = (
   let pipeline = [];
   pipeline = [
     ...pipeline,
-    { $match: { user_id, auctionEnded: false } },
+    { $match: { userId, auctionEnded: false } },
     {
       $lookup: {
         let: { "nftObjId": { "$toObjectId": "nftId" } },
@@ -1438,15 +1532,14 @@ export const pipelineForBidList = (
     { $unwind: "$nftData" },
     {
       $project: {
-        art_work_id: 1,
-        sale_coin: 1,
-        sale_price: { $toDouble: "$bidAmount" },
-        user_id: 1,
+        nftId: 1,
+        saleCoin: 1,
+        bidAmount: { $toDouble: "$bidAmount" },
+        userId: 1,
         transactionHash: 1,
-        is_deleted: 1,
-        auction_ended: 1,
-        bid_id: 1,
-        created_at: 1,
+        auctionEnded: 1,
+        _id: 1,
+        createdAt: 1,
         nftData: 1,
       },
     },

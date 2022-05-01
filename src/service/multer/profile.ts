@@ -19,7 +19,6 @@ const MIME_TYPES = {
 };
 const storage: StorageEngine = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb): void => {
-    console.log("Storage")
     if (!file) {
       cb(new Error("Upload file error"), null);
     } else {
@@ -40,6 +39,7 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: (arg0: Error, arg1: boolean) => void
 ): void => {
+  
   if (
     file.mimetype === "image/webp" ||
     file.mimetype === "image/jpeg" ||
@@ -48,8 +48,6 @@ const fileFilter = (
     cb(null, true);
   } else {
     cb(null, true);
-    //cb(new Error("Image uploaded is not of type webp,jpeg, png, mp3"), false);
-    // throw new Error("Image uploaded is not of type webp,jpeg, png");
   }
 };
 let obj = {

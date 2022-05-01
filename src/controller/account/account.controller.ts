@@ -1,8 +1,9 @@
-import { Request,Response } from "express";
+import { Request, Response } from "express";
 import { level, logger } from "../../config/logger";
 import * as accountRepo from "../../repository/account/account.repo";
 
 import { IGetUserAuthInfoRequest } from "../../middleware/authentication";
+import { upload } from "../../service/multer/profile";
 
 import {
   badRequestError,
@@ -29,7 +30,7 @@ export const myAccount = async (
 
   } catch (error) {
     logger.log(level.error, `<< myAccount() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -43,7 +44,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< getUserDetails() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -56,11 +57,11 @@ export const editProfile = async (
 
 
   try {
-    let result =  await uploadProfile(req)
+    let result = await uploadProfile(req)
     if (result.error) {
       return badRequestError(res, result.message);
     }
-    result =  await uploadCoverImage(req)
+    result = await uploadCoverImage(req)
     if (result.error) {
       return badRequestError(res, result.message);
     }
@@ -71,7 +72,7 @@ export const editProfile = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< editProfile() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -89,7 +90,7 @@ export const connectWallet = async (
     return successfulRequest(res, result)
   } catch (error) {
     logger.log(level.error, `<< editProfile() error=${error}`);
-    serverError(res,error);
+    serverError(res, error);
   }
 };
 
@@ -99,8 +100,17 @@ export const uploadProfile = async (
   logger.log(level.info, `>> uploadProfile()`);
   const { id } = req.currentUser;
   try {
+  
     const files: any = (req as MulterRequest).files;
     const file: any = files.avatar[0];
+
+    if (file.size / (1024 * 1024) > 5) {
+      const data = {
+        error: true,
+        message: "File size exceed maximum limit"
+      };
+      return data;
+    }
 
     if (
       file &&

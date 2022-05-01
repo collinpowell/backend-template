@@ -18,7 +18,7 @@ export const highestBidPipeline = (nftId: string) => {
         let: { "bidderId": { "$toObjectId": "$bidderId" } },
         from: "users",
         pipeline: [
-          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+          { $match: { "$expr": { "$eq": ["$_id", "$$bidderId"] } } }
         ],
         as: "userData"
       }

@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
 
 const schema = {
-  ownerID: String,
+  ownerId: String,
   nftId: String,
   auctionEndHours: { type: Number },
   auctionEndTime: { type: Date },

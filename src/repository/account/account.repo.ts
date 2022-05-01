@@ -228,6 +228,13 @@ export const editProfile = async (_id: string, body: any) => {
       };
       return data;
     }
+    if(body.mobileNumber.length < 10){
+      const data = {
+        error: true,
+        message: "Invalid Mobile Number (Must be greater than 10 characters)",
+      };
+      return data;
+    }
     updateData = {
       ...updateData,
       mobileNumber: body.mobileNumber,

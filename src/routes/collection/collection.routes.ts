@@ -10,16 +10,21 @@ const PATH = {
   ROOTX: "/root",
   LIKE: "/like",
   BROWSE: "/browse",
+  BROWSEID: "/browsebyid",
   NFT: "/nft",
 };
-
 routes
-  .route(PATH.BROWSE + "/:collectionid")
+  .route(PATH.BROWSEID + "/:collectionid")
   .get(collectionController.getUserCollection)
+routes.route(PATH.BROWSEID + '/*').get(function (req, res) {
+  res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
 
 routes
   .route(PATH.BROWSE)
-  .get(validate(VALIDATOR.SORTPARAMS),collectionController.getAllUsersCollection)
+  .get(validate(VALIDATOR.SORTPARAMS), collectionController.getAllUsersCollection)
+
+
 
 /**
  * * User Authorization middleware
@@ -40,7 +45,7 @@ routes
    * @desc Get My Collection
    * @access Private
    * **/
-  .get(validate(VALIDATOR.SORTPARAMS),collectionController.getMyCollection)
+  .get(validate(VALIDATOR.SORTPARAMS), collectionController.getMyCollection)
 /**
   * @api {PUT} /api/collection
   * @desc Update Collection

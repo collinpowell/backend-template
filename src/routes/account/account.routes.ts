@@ -24,6 +24,9 @@ routes
 /**
  * * User Authorization middleware
  */
+ routes.route(PATH.USERPROFILE + '/*').get(function (req, res) {
+  res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
 routes.use(UserAuthenticationMiddleware);
 
 /**
