@@ -18,7 +18,7 @@ import {
   authError,
 } from "../../utils/utility";
 import mongoose from 'mongoose'
-import nft, { FileTypes } from "../../model/nft"
+import { FileTypes } from "../../model/nft"
 import JWTAuth from "../../service/jwt_auth/jwt_auth";
 const auth = new JWTAuth();
 
@@ -364,7 +364,6 @@ export const purchaseArtWork = async (
     return successfulRequest(res, result);
 
   } catch (error) {
-    console.log({ error });
 
     logger.log(level.error, `<< purchaseArtWork() error=${error}`);
     serverError(res, error);

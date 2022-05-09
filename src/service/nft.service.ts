@@ -16,9 +16,6 @@ const ipfsClient = async () => {
     });
     return ipfs;
 };
-//  let ipfs = await ipfsClient();
-// const result = await ipfs.get("QmWATWQ7fVPP2EFGu71UkfnqhYXDYH566qy47CnJDgvs8u")
-
 export const addNFTService = async (nft: any, metaData: string, auction: any) => {
 
     let tokenId = 0;
@@ -190,7 +187,6 @@ export const getMyAllArtCreationsPipeline = (
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$userData.email", 0] },
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -199,7 +195,6 @@ export const getMyAllArtCreationsPipeline = (
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
                 },
                 isCreator: {
                     $cond: {
@@ -661,7 +656,6 @@ export const browseByCollectionPipeline = (
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$userData.email", 0] },
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -670,7 +664,6 @@ export const browseByCollectionPipeline = (
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
                 },
                 isCreator: {
                     $cond: {
@@ -906,7 +899,6 @@ export const browseByBookmarkPipeline = (
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$userData.email", 0] },
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -915,7 +907,6 @@ export const browseByBookmarkPipeline = (
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
                 },
                 isCreator: {
                     $cond: {
@@ -1000,68 +991,6 @@ export const getAllArtWorkPipeline = (
         console.log(filter.formOfSale)
         pipeline = [...pipeline, { $match: { formOfSale: filter.formOfSale } }];
     }
-
-    /* if (filter.auth && filter.form_of_sale === "my_selling_work") {
-        pipeline = [
-            ...pipeline,
-            {
-                $match: {
-                    $or: [
-                        {
-                            $and: [
-                                { user_id: { $ne: filter.user_id } },
-                                { current_owner_id: { $eq: filter.user_id } },
-                            ],
-                        },
-                        {
-                            $and: [
-                                { user_id: { $eq: filter.user_id } },
-                                { current_owner_id: null },
-                            ],
-                        },
-                    ],
-                },
-            },
-        ];
-    }
-
-    if (filter.user_id && filter.form_of_sale !== "my_selling_work") {
-        pipeline = [
-            ...pipeline,
-
-            {
-                $lookup: {
-                    from: "art_work_likes",
-                    let: { art_work_id: "$art_work_id" },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$art_work_id", "$$art_work_id"] },
-                                        { $eq: ["$liked", true] },
-                                        { $eq: ["$user_id", filter.user_id] },
-                                    ],
-                                },
-                            },
-                        },
-                    ],
-                    as: "isLiked",
-                },
-            },
-            {
-                $addFields: {
-                    is_liked: {
-                        $cond: {
-                            if: { $gt: [{ $size: "$isLiked" }, 0] },
-                            then: true,
-                            else: false,
-                        },
-                    },
-                },
-            },
-        ];
-    } */
     pipeline = [
         ...pipeline,
         ...commonArtworkPipeline,
@@ -1112,7 +1041,6 @@ export const getAllArtWorkPipeline = (
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$userData.email", 0] },
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -1121,7 +1049,6 @@ export const getAllArtWorkPipeline = (
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
                 },
                 isCreator: {
                     $cond: {
@@ -1145,29 +1072,6 @@ export const getAllArtWorkPipeline = (
             },
         },
     ];
-    /* if (
-        filter.form_of_sale &&
-        filter.form_of_sale !== "waiting_for_sale" &&
-        filter.form_of_sale !== "creator_owned_work" &&
-        filter.form_of_sale !== "my_selling_work"
-    ) {
-        pipeline = [...pipeline, { $match: { form_of_sale: filter.form_of_sale } }];
-    }
-
-    if (filter.form_of_sale && filter.form_of_sale === "creator_owned_work") {
-        pipeline = [
-            ...pipeline,
-            {
-                $match: {
-                    $or: [
-                        // { $gt: ["$sale_quantity", 0] },
-                        { $and: [{ current_owner_id: null }] },
-                        { $expr: { $eq: ["$user_id", "$current_owner_id"] } },
-                    ],
-                },
-            },
-        ];
-    } */
 
     if (
         filter.nftCategory === 0 ||
@@ -1336,7 +1240,6 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$userData.email", 0] },
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -1345,7 +1248,6 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
                 },
                 isCreator: {
                     $cond: {
@@ -1462,7 +1364,6 @@ export const getAuctionPipeline = (filter: any) => {
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$userData.email", 0] },
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -1471,7 +1372,6 @@ export const getAuctionPipeline = (filter: any) => {
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
                 },
                 isCreator: {
                     $cond: {

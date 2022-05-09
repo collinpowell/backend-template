@@ -1,9 +1,10 @@
 import { ethers } from "ethers";
 import nftModel, { NftInput, UploadInput, Royalty } from "../model/nft";
-
+import { level, logger } from "../config/logger";
+import * as nftRepo from "../repository/nft/nft.repo";
 
 const ethProvider = new ethers.providers.JsonRpcProvider(
-    "https://data-seed-prebsc-1-s1.binance.org:8545"
+  "https://matic-mumbai.chainstacklabs.com"
 );
 
 const MintoContract = [
@@ -99,6 +100,12 @@ const MintoContract = [
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "userId",
+        "type": "string"
       }
     ],
     "name": "BuyOrBid",
@@ -348,6 +355,11 @@ const MintoContract = [
         "internalType": "uint256",
         "name": "_tokenId",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "userId",
+        "type": "string"
       }
     ],
     "name": "buyToken",
@@ -808,19 +820,55 @@ const MintoContract = [
 ];
 
 const signerEther = new ethers.Wallet(
-    process.env.ADMIN_PRIVATE_ADDRESS,
-    ethProvider
+  process.env.ADMIN_PRIVATE_ADDRESS,
+  ethProvider
 );
 
 
 let contract = new ethers.Contract(
-    process.env.TEST,
-    MintoContract,
-    signerEther
+  process.env.TEST,
+  MintoContract,
+  signerEther
 );
 
-contract.on("BuyOrBid", async (tokenId, auction, bid,amount)  =>  {
-    console.log(tokenId, auction, bid,amount);
-    tokenId = '4';
-    const artWorkData = await nftModel.find({});
+contract.on("BuyOrBid", async (tokenId, auction, bid, amount, userId, event) => {
+  console.log(tokenId, auction, bid, amount, userId);
+
+  const nftTokenId = tokenId;
+  const artWorkData = await nftModel.find({ nftTokenId });
+  const id = userId;
+  const body = {
+    formOfSale: artWorkData[0].formOfSale,
+    nftId: artWorkData[0]._id,
+    saleQuantity: artWorkData[0].saleQuantity,
+    transactionHash: event.transactionHash,
+  }
+
+  if (auction) {
+    if (bid) {
+      try {
+        const result = await nftRepo.purchaseArtWork(id, body);
+        if (result.error) {
+          logger.log(level.error, `<< purchaseArtWork() Bid Won error=${result.message}`);
+        }
+        logger.log(level.error, `>> purchaseArtWork() Bid Won success=${result.message}`);
+      } catch (error) {
+        logger.log(level.error, `<< purchaseArtWork() Bid Won error=${error}`);
+      }
+    }
+  } else {
+
+    try {
+      const result = await nftRepo.purchaseArtWork(id, body);
+      if (result.error) {
+        logger.log(level.error, `<< purchaseArtWork() Fixedprice error=${result.message}`);
+      }
+      logger.log(level.error, `>> purchaseArtWork() Fixedprice success=${result.message}`);
+    } catch (error) {
+      logger.log(level.error, `<< purchaseArtWork() Fixedprice error=${error}`);
+    }
+
+  }
+
+
 });

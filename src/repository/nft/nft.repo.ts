@@ -122,9 +122,9 @@ export const addArtWork = async (
   if (body.formOfSale === "AUCTION") {
     if (
       !Number(body.auctionEndHours) ||
-      Number(body.auctionEndHours) <= 0
+      Number(body.auctionEndHours) <= 0 || Number(body.auctionEndHours) >= 168
     ) {
-      data = { error: true, message: "Auction end time is requied" };
+      data = { error: true, message: "Valid Auction end time is requied" };
       return data;
     }
 
@@ -341,31 +341,6 @@ export const editArtWork = async (
         { _id: nftId },
         { $inc: { saleQuantity: Number(Number(body.saleQuantity) * -1) } }
       );
-      // let addArtWorkJSON = {
-      //     user_id: artWorkData[0].user_id,
-      //     title: artWorkData[0].title,
-      //     art_work_category: artWorkData[0].art_work_category,
-      //     sale_quantity: Number(body.sale_quantity),
-      //     formOfSale: "fixed_price",
-      //     contract_type: "erc_1155",
-      //     contract_address: artWorkData[0].contract_address,
-      //     files: artWorkData[0].files,
-      //     sale_coin: Number(body.sale_coin),
-      //     sale_price: artWorkData[0].sale_price,
-      //     parent_art_work_id: artWorkData[0].parent_art_work_id,
-      //     parent_total_sale_quantity: artWorkData[0].parent_total_sale_quantity,
-      //     common_art_id: artWorkData[0].common_art_id,
-      //     last_art_work_id: artWorkData[0].art_work_id,
-      //     description: artWorkData[0].description,
-      //     royalty: artWorkData[0].royalty,
-      //     mint_response: artWorkData[0].mint_response,
-      //     selling_available: true,
-      //     nft_token: artWorkData[0].nft_token,
-      //     current_owner_id: user_id,
-      //     total_sale_quantity: Number(body.sale_quantity),
-      //     mint_nft: artWorkData[0].mint_nft,
-      // };
-      //await addArtWorkFunction(addArtWorkJSON);
       data = {
         error: false,
         message: "Artwork Updated successfully",
@@ -488,12 +463,7 @@ export const getMyAllArtWork = async (
       }
     }
 
-    if (data?.creator?.email) {
-      data.creator.email = decryptText(data.creator.email)
-    }
-    if (data?.currentOwner?.email) {
-      data.currentOwner.email = decryptText(data.currentOwner.email)
-    }
+    
 
     return data;
   });
@@ -666,7 +636,7 @@ export const purchaseArtWork = async (userId: string, body: any) => {
     }),
     userModel.find({ userId }),
   ]);
-  console.log("----------1---------", artWorkData, userDetails);
+  //console.log("----------1---------", artWorkData, userDetails);
 
   if (!artWorkData || artWorkData.length <= 0) {
     data = { error: true, message: "NFT not found" };
@@ -753,7 +723,7 @@ export const purchaseArtWork = async (userId: string, body: any) => {
         creatorUserId: artWorkData[0].creatorId,
         sellerUserId: artWorkData[0].ownerId,
         transactionHash: body.transactionHash,
-        currentOwnerAddress: userDetails[0].connectedWallet.walletType[0].walletKey,
+        currentOwnerAddress: userDetails[0].connectedWallet[0].walletType[0]?.walletKey,
         purchaseType: "FIXEDPRICE",
       }),
     ]);
@@ -853,36 +823,7 @@ export const browseByCollection = async (
         data.currentAuction.auctionEnded = false;
       }
     }
-    if (data?.creator?.email) {
-      data.creator.email = decryptText(data.creator.email)
-    }
-    if (data?.currentOwner?.email) {
-      data.currentOwner.email = decryptText(data.currentOwner.email)
-    }
-    // data.creator.creator_email = decryptText(data.creator.creator_email);
-    // if (data.currentOwner.currentOwnerEmail !== undefined) {
-    //     data.currentOwner.currentOwnerEmail = decryptText(
-    //         data.currentOwner.currentOwnerEmail
-    //     );
-    // } else {
-    //     data.currentOwner = {
-    //         currentOwnerUsername: data.creator.creatorUsername,
-    //         currentOwnerAvatar: data.creator.userProfile,
-    //         currentOwnerId: data.creator.Id,
-    //         currentOwnerEmail: data.creator.creatorEmail,
-    //     };
-    // }
-
-    // if (
-    //     data.currentOwnerId === null ||
-    //     data.currentOwnerId === undefined ||
-    //     id === data.currentOwnerId ||
-    //     data.userId === data.currentOwnerId
-    // ) {
-    //     data.isOwner = true;
-    // } else {
-    //     data.isOwner = false;
-    // }
+    
     return data;
   });
   let data = {};
@@ -966,12 +907,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
         data.currentAuction.auctionEnded = false;
       }
     }
-    if (data?.creator?.email) {
-      data.creator.email = decryptText(data.creator.email)
-    }
-    if (data?.currentOwner?.email) {
-      data.currentOwner.email = decryptText(data.currentOwner.email)
-    }
+    
     return data;
   });
 
@@ -1145,12 +1081,7 @@ export const getArtWorkDetails = async (filter: any) => {
           data.currentAuction.auctionEnded = false;
         }
       }
-      if (data?.creator?.email) {
-        data.creator.email = decryptText(data.creator.email)
-      }
-      if (data?.currentOwner?.email) {
-        data.currentOwner.email = decryptText(data.currentOwner.email)
-      }
+      
       return data;
     });
     let ownerHistory = await getArtWorkPurchaseHistory(filter.art_work_id);
@@ -1398,12 +1329,7 @@ export const browseByBookmarkedNFT = async (
         data.currentAuction.auctionEnded = false;
       }
     }
-    if (data?.creator?.email) {
-      data.creator.email = decryptText(data.creator.email)
-    }
-    if (data?.currentOwner?.email) {
-      data.currentOwner.email = decryptText(data.currentOwner.email)
-    }
+    
     return data;
   });
   let data = {};

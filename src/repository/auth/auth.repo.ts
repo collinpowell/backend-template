@@ -437,7 +437,7 @@ export const verificationEmail = async (
   verificationCode: string
 ) => {
   let html = fs.readFileSync(
-    path.resolve("./src/template/verification.html"),
+    path.resolve("./src/template/Account_Activation/index.html"),
     "utf8"
   );
   let verificationTemplate = html.replace(/APP_USERNAME/g, email);
@@ -461,10 +461,10 @@ export const forgetPasswordEmail = async (
   resetPasswordToken: string
 ) => {
   let html = fs.readFileSync(
-    path.resolve("./src/template/forgetPassword.html"),
+    path.resolve("./src/template/Password_Reset/index.html"),
     "utf8"
   );
-  const resetPasswordEndPoint = `${process.env.USER_END_POINT}/reset-password?reset_password_token=${resetPasswordToken}`;
+  const resetPasswordEndPoint = `${process.env.USER_END_POINT}/passwordreset/${resetPasswordToken}`;
   let verificationTemplate = html.replace(/APP_USERNAME/g, email);
   verificationTemplate = verificationTemplate.replace(
     /RESET_PASSWORD_LINK/g,
