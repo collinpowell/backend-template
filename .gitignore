@@ -51,5 +51,4 @@ Thumbs.db
 
 package-lock.json
 .vscode/*
-.env
 .gitignore
