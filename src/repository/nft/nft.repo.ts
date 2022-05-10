@@ -65,7 +65,7 @@ export const addArtWork = async (
   }
 
   if (!Number(body.nftCategory)) {
-    if(body.nftCategory != 0){
+    if (body.nftCategory != 0) {
       data = {
         error: true,
         message:
@@ -83,7 +83,7 @@ export const addArtWork = async (
   }
 
   const cat = await categoryModel.find({})
-  if(!cat[0].category[body.nftCategory]){
+  if (!cat[0].category[body.nftCategory]) {
     data = {
       error: true,
       message:
@@ -91,7 +91,7 @@ export const addArtWork = async (
     };
     return data;
   }
-  
+
 
 
   inputJSON = {
@@ -167,22 +167,32 @@ export const addArtWork = async (
     }
     inputJSON = { ...inputJSON, saleCoin: Number(body.saleCoin) };
   }
+  //console.log(typeof Royalty(body.royalty) === "object")
   if (body.royalty) {
-    const royalty = JSON.parse(body.royalty);
+    let royalty: any;
+    try {
+      royalty = JSON.parse(body.royalty);
+    } catch (error) {
+      data = { error: true, message: "Invalid Royalty" };
+      return data;
+    }
+    if (royalty.length == undefined) {
+      data = { error: true, message: "Invalid Royalty" };
+      return data;
+    }
+
     if (royalty && royalty.length > 0) {
       let fixedPercentage = 100;
-      royalty.map((royal: Royalty) => {
-        fixedPercentage = fixedPercentage - royal.percentage;
+      for(let i = 0; i < royalty.length; i++) {
+        if (royalty[i].percentage == undefined || royalty[i].walletAddress == undefined) {
+          data = { error: true, message: "Invalid Royalty" };
+          return data;
+        }
+        fixedPercentage = fixedPercentage - royalty[i].percentage;
         if (fixedPercentage < 0) {
           data = { error: true, message: "Royalty percentage must be under 100%" };
           return data;
         }
-        return fixedPercentage;
-      });
-
-      if (fixedPercentage < 0) {
-        data = { error: true, message: "Royalty percentage must be under 100%" };
-        return data;
       }
 
       inputJSON = { ...inputJSON, royalty };
@@ -365,7 +375,7 @@ export const editArtWork = async (
 
 export const stopArtWorkSale = async (ownerId: string, nftId: any) => {
   logger.log(level.info, `>> stopArtWorkSale()`);
-  const artWorkExist = await nftModel.find({ _id: nftId, ownerId,formOfSale:"AUCTION"||"FIXEDPRICE" });
+  const artWorkExist = await nftModel.find({ _id: nftId, ownerId, formOfSale: "AUCTION" || "FIXEDPRICE" });
   let data = { error: false, message: "" };
   if (!artWorkExist || artWorkExist.length <= 0) {
     data = {
@@ -463,7 +473,7 @@ export const getMyAllArtWork = async (
       }
     }
 
-    
+
 
     return data;
   });
@@ -800,7 +810,7 @@ export const browseByCollection = async (
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale))  {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale)) {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.search) {
@@ -823,7 +833,7 @@ export const browseByCollection = async (
         data.currentAuction.auctionEnded = false;
       }
     }
-    
+
     return data;
   });
   let data = {};
@@ -882,7 +892,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale))  {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale)) {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.nftCategory) {
@@ -907,7 +917,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
         data.currentAuction.auctionEnded = false;
       }
     }
-    
+
     return data;
   });
 
@@ -976,7 +986,7 @@ export const getAllArtWork = async (
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale))  {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale)) {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.nftCategory) {
@@ -1068,7 +1078,7 @@ export const getArtWorkDetails = async (filter: any) => {
           data.currentAuction.auctionEnded = false;
         }
       }
-      
+
       return data;
     });
     let ownerHistory = await getArtWorkPurchaseHistory(filter.art_work_id);
@@ -1292,7 +1302,7 @@ export const browseByBookmarkedNFT = async (
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
-  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale))  {
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale)) {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
   if (query.search) {
@@ -1316,7 +1326,7 @@ export const browseByBookmarkedNFT = async (
         data.currentAuction.auctionEnded = false;
       }
     }
-    
+
     return data;
   });
   let data = {};
