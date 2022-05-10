@@ -435,11 +435,11 @@ export const getMyCollectionListPipeline = (
     search = "";
   }
   let pipeline = [];
-  if (filter.userId) {
+  if (filter.ownerId) {
 
     pipeline = [
       ...pipeline,
-      { $match: { ownerId: filter.userId} },
+      { $match: { ownerId: filter.ownerId} },
     ];
   }
   if (filter._id) {

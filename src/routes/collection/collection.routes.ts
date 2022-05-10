@@ -7,7 +7,6 @@ import { validate } from "../../validator/collection.validator";
 import { constants as VALIDATOR } from "../../constant/validator/collection.constant";
 const PATH = {
   ROOT: "/",
-  ROOTX: "/root",
   LIKE: "/like",
   BROWSE: "/browse",
   BROWSEID: "/browsebyid",

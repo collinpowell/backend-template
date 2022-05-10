@@ -11,6 +11,7 @@ import {
 import * as fs from "fs";
 import { validationResult } from "express-validator";
 //import collectionModel from "../../model/collection";
+import mongoose from 'mongoose'
 
 import * as collectionRepo from "../../repository/collection/collection.repo";
 import {
@@ -96,6 +97,9 @@ export const editCollection = async (
 ) => {
   logger.log(level.debug, `>> editCollection()`);
   const { id } = req.currentUser;
+  if (!mongoose.Types.ObjectId.isValid(req.params.collectionid)) {
+    return badRequestError(res, "Invalid Collection Id");
+  }
   try {
     const file: any = (req as MulterRequest).file;
     if (

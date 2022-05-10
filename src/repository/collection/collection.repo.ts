@@ -192,7 +192,7 @@ export const getAllUsersCollection = async (query: any, options: any) => {
   }
 
   if (query.userId) {
-    filter = { ...filter, userId: query.userId };
+    filter = { ...filter, ownerId: query.userId };
   }
   if (query.sortBy) {
     filter = { ...filter, sortBy: query.sortBy };
