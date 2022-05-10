@@ -499,7 +499,9 @@ export const getAllArtWork = async (
 
 export const getArtWorkDetails = async (req: Request, res: Response) => {
   logger.log(level.debug, `>> getArtWorkDetails()`);
-
+  if (!mongoose.Types.ObjectId.isValid(req.params.nftid)) {
+    return badRequestError(res, "Invalid NFT Id");
+  }
   if (
     req.headers["authorization"] === undefined ||
     !req.headers["authorization"]
@@ -507,9 +509,7 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
     try {
 
       let filter = {};
-      if (!mongoose.Types.ObjectId.isValid(req.params.nftid)) {
-        return badRequestError(res, "Invalid NFT Id");
-      }
+    
       filter = { ...filter, _id: req.params.nftid };
       const result = await nftRepo.getArtWorkDetails(filter);
 
