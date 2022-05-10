@@ -381,7 +381,12 @@ export const browseByCollection = async (
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return badRequestError(res, "Invalid Collection Id");
   }
+  const errors = validationResult(req);
+
   try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
     const result = await nftRepo.browseByCollection(id, req.query, options);
     return successfulRequest(res, Object(result));
   } catch (error) {

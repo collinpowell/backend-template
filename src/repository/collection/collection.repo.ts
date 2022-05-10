@@ -29,6 +29,14 @@ export const createCollection = async (id: string, body: any, file: any) => {
   
   let data = { error: false, message: "" };
 
+  if(!body.title || body.title.trim().length < 1) {
+    data = {
+      error: true,
+      message:
+        "Title is required",
+    };
+    return data;
+  }
   if (body.title.trim().length > 20) {
     data = {
       error: true,
@@ -45,7 +53,7 @@ export const createCollection = async (id: string, body: any, file: any) => {
 
   if (body.title) {
 
-    const existTitle = await collectionModel.findOne({ title: body.title.toLocaleLowerCase() });
+    const existTitle = await collectionModel.findOne({ title: body.title.toLocaleLowerCase(),status: "ACTIVE" });
     if (existTitle) {
       const data = { error: true, message: "Collection title is taken" };
       return data;

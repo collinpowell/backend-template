@@ -33,9 +33,9 @@ routes.route(PATH.COIN).get(miscController.getCoin);
    [
     body("name", "Name is required").not().isEmpty(),
     body("email", "Valid Email Address is Required").isEmail(),
-    body("subject","Subject length must be less than 200 characters")
+    body("subject","Subject length must be less than 200 characters and Not Empty").not().isEmpty()
     .isLength({ max: 200 }),
-    body("message","Message length must be less than 500 characters")
+    body("message","Message length must be less than 500 characters and Not Empty").not().isEmpty()
     .isLength({ max: 500 })
    ],miscController.saveContactUsDetails);
 

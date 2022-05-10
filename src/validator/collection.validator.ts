@@ -20,12 +20,27 @@ export const validate = (method: string) => {
     }
     case VALIDATOR.SORTPARAMS: {
       error = [
-        query("orderBy", "orderBy is required")
-          .not()
-          .isEmpty(),
-          query("sortBy", "sortBy is required")
-          .not()
-          .isEmpty()
+        error = [
+          query("sortBy", "Sort By is required")
+            .not()
+            .isEmpty()
+            .custom((value) => {
+              if (!["DATE", "POPULARITY"].includes(value)) {
+                throw new Error("In Valid Sort by Enum");
+              } else {
+                return value;
+              }
+            }),
+          query("orderBy", "Order By is required")
+            .not()
+            .isEmpty()
+            .custom((value) => {
+              if (value != 0 && value != 1) {
+                throw new Error("Order By can ether be zero or one");
+              } else {
+                return value;
+              }
+            })]
 
       ];
       break;

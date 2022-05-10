@@ -182,7 +182,7 @@ export const getMyCollectixonListPipeline = (
   //   },
   // ];
 
-  if (filter.sortBy === "latest") {
+  if (filter.sortBy === "DATE") {
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
@@ -190,7 +190,7 @@ export const getMyCollectixonListPipeline = (
   }
 
   // ? Show most liked artwork in ascending and descending order
-  if (filter.sortBy === "popular") {
+  if (filter.sortBy === "POPULARITY") {
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
@@ -394,7 +394,7 @@ export const getMyCollectionListPipelineX = (
     },
   ];
 
-  if (filter.sortBy === "latest") {
+  if (filter.sortBy === "DATE") {
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
@@ -402,7 +402,7 @@ export const getMyCollectionListPipelineX = (
   }
 
   // ? Show most liked artwork in ascending and descending order
-  if (filter.sortBy === "popular") {
+  if (filter.sortBy === "POPULARITY") {
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
@@ -550,7 +550,7 @@ export const getMyCollectionListPipeline = (
     },
   ];
 
-  if (filter.sortBy === "latest") {
+  if (filter.sortBy === "DATE") {
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
@@ -558,7 +558,7 @@ export const getMyCollectionListPipeline = (
   }
 
   // ? Show most liked artwork in ascending and descending order
-  if (filter.sortBy === "popular") {
+  if (filter.sortBy === "POPULARITY") {
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }

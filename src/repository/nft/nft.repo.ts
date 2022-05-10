@@ -365,12 +365,12 @@ export const editArtWork = async (
 
 export const stopArtWorkSale = async (ownerId: string, nftId: any) => {
   logger.log(level.info, `>> stopArtWorkSale()`);
-  const artWorkExist = await nftModel.find({ _id: nftId, ownerId });
+  const artWorkExist = await nftModel.find({ _id: nftId, ownerId,formOfSale:"AUCTION"||"FIXEDPRICE" });
   let data = { error: false, message: "" };
   if (!artWorkExist || artWorkExist.length <= 0) {
     data = {
       error: true,
-      message: "Art work not found",
+      message: "Art work is Not on Sale",
     };
     return data;
   }
@@ -916,7 +916,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
     filter = { ...filter, formOfSale: "AUCTION" };
   }
 
-  if (query.sortBy === "popular") {
+  if (query.sortBy === "POPULARITY") {
     filter = { ...filter, formOfSale: "FIXEDPRICE" };
   }
   let count = 0;
@@ -1009,19 +1009,6 @@ export const getAllArtWork = async (
       } else {
         data.currentAuction.auctionEnded = false;
       }
-    }
-    data.creator.creator_email = decryptText(data.creator.creator_email);
-    if (data.current_owner.current_owner_email !== undefined) {
-      data.current_owner.current_owner_email = decryptText(
-        data.current_owner.current_owner_email
-      );
-    } else {
-      data.current_owner = {
-        current_owner_nickname: data.creator.creator_nickname,
-        current_owner_profile: data.creator.user_profile,
-        current_owner_id: data.creator.user_id,
-        current_owner_email: data.creator.creator_email,
-      };
     }
     return data;
   });
@@ -1482,7 +1469,7 @@ export const pipelineForBidList = (
       },
     ];
   }
-  if (filter.sortBy === "latest") {
+  if (filter.sortBy === "DATE") {
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }

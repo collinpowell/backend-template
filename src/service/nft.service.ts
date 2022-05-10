@@ -230,7 +230,7 @@ export const getMyAllArtCreationsPipeline = (
     if (filter.formOfSale) {
         pipeline = [...pipeline, { $match: { formOfSale: filter.formOfSale } }];
     }
-    if (filter.sortBy === "latest") {
+    if (filter.sortBy === "DATE") {
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
         }
@@ -238,7 +238,7 @@ export const getMyAllArtCreationsPipeline = (
     }
 
     // ? Show most liked artwork in ascending and descending order
-    if (filter.sortBy === "popular") {
+    if (filter.sortBy === "POPULARITY") {
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
         }
@@ -966,14 +966,14 @@ export const getAllArtWorkPipeline = (
         ];
     }
 
-    if (filter.sortBy === "popular") {
+    if (filter.sortBy === "POPULARITY") {
         pipeline = [
             ...pipeline,
             { $match: { formOfSale: "FIXEDPRICE" } },
         ];
     }
 
-    if (filter.sortBy === "latest" || filter.sortBy === "price") {
+    if (filter.sortBy === "DATE" || filter.sortBy === "price") {
 
         pipeline = [...pipeline, {
             $match: {
@@ -1084,7 +1084,7 @@ export const getAllArtWorkPipeline = (
         ];
     }
 
-    if (filter.sortBy === "latest") {
+    if (filter.sortBy === "DATE") {
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
         }
@@ -1092,7 +1092,7 @@ export const getAllArtWorkPipeline = (
     }
 
     // ? Show most liked artwork in ascending and descending order
-    if (filter.sortBy === "popular") {
+    if (filter.sortBy === "POPULARITY") {
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
         }
@@ -1124,7 +1124,7 @@ export const getAllArtWorkPipeline = (
     }
 
     // ? Show most liked artwork in ascending and descending order
-    if (filter.sortBy === "popular") {
+    if (filter.sortBy === "POPULARITY") {
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
         }
