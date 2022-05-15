@@ -889,6 +889,9 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   if (query.sortBy) {
     filter = { ...filter, sortBy: query.sortBy };
   }
+  if (query.search) {
+    filter = { ...filter, search: query.search };
+  }
   if (query.orderBy) {
     filter = { ...filter, orderBy: query.orderBy };
   }
@@ -898,13 +901,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   if (query.nftCategory) {
     filter = { ...filter, nftCategory: query.nftCategory };
   }
-  // if (query.formOfSale === "my_selling_work") {
-  //   const data = {
-  //     error: true,
-  //     message: "Login is required",
-  //   };
-  //   return data;
-  // }
+
   const pipeline = getAllArtWorkPipeline(filter, options, false);
   let artWorkList = await nftModel.aggregate(pipeline).exec();
   artWorkList = artWorkList.map((data) => {
@@ -980,6 +977,10 @@ export const getAllArtWork = async (
 ) => {
   logger.log(level.info, `>> getAllArtWork()`);
   let filter = {};
+
+  if (query.search) {
+    filter = { ...filter, search: query.search };
+  }
   if (query.sortBy) {
     filter = { ...filter, sortBy: query.sortBy };
   }
@@ -1030,7 +1031,26 @@ export const getAllArtWork = async (
     const data = {
       error: false,
       message: "All ArtWork Fetched Successfully",
-      totalItems: count,
+      data: {
+        totalItems: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: artWorkList.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: artWorkList
+      }
+    };
+    return data;
+  }
+  const data = {
+    error: false,
+    message: "All ArtWork Fetched Successfully",
+    data: {
+      totalItems: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1039,23 +1059,9 @@ export const getAllArtWork = async (
           : Math.round(count / Number(query.limit)),
       currentItemCount: artWorkList.length,
       lastPage: count / Number(query.limit) <= Number(query.page),
-      data: artWorkList,
-    };
-    return data;
-  }
-  const data = {
-    error: false,
-    message: "All ArtWork Fetched Successfully",
-    totalItems: 0,
-    currentPage: Number(query.page),
-    itemPerPage: Number(query.limit),
-    totalPages:
-      Math.round(count / Number(query.limit)) < count / Number(query.limit)
-        ? Math.round(count / Number(query.limit)) + 1
-        : Math.round(count / Number(query.limit)),
-    currentItemCount: artWorkList.length,
-    lastPage: count / Number(query.limit) <= Number(query.page),
-    data: [],
+      data: [],
+    }
+
   };
   return data;
 };

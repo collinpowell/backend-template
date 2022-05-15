@@ -956,8 +956,11 @@ export const getAllArtWorkPipeline = (
     count: boolean
 ) => {
     logger.log(level.info, `>> getAllArtWorkPipeline()`);
+    let search = filter.search;
+    if (!filter.search) {
+        search = "";
+    }
     let pipeline = [];
-    console.log(filter.sortBy)
 
     if (filter.sortBy === "deadline") {
         pipeline = [
@@ -973,7 +976,7 @@ export const getAllArtWorkPipeline = (
         ];
     }
 
-    if (filter.sortBy === "DATE" || filter.sortBy === "price") {
+    if (filter.sortBy === "DATE" || filter.sortBy === "PRICE") {
 
         pipeline = [...pipeline, {
             $match: {
@@ -1071,11 +1074,17 @@ export const getAllArtWorkPipeline = (
 
             },
         },
+        {
+            $match: {
+                $or: [
+                    { title: { $regex: search, $options: "i" } },
+                    { coinName: { $regex: search, $options: "i" } },
+                ],
+            },
+        },
     ];
 
     if (
-        filter.nftCategory === 0 ||
-        filter.nftCategory === 1 ||
         filter.nftCategory
     ) {
         pipeline = [
@@ -1100,7 +1109,7 @@ export const getAllArtWorkPipeline = (
     }
 
     // ? Show most liked artwork in ascending and descending order
-    if (filter.sortBy === "price") {
+    if (filter.sortBy === "PRICE") {
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
         }
