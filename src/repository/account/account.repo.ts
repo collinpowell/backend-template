@@ -5,6 +5,7 @@ import userModel from "../../model/user";
 import nftModel from "../../model/nft";
 import collectionModel from "../../model/collection";
 import { Storage } from "@google-cloud/storage";
+import * as accountService from "../../service/account.service";
 
 
 const googleCloud = new Storage({
@@ -67,7 +68,7 @@ export const userAccount = async (_id: any) => {
           ],
         })
         .count(),
-      collectionModel.find({ ownerId:_id }).count(),
+      collectionModel.find({ ownerId: _id }).count(),
     ]);
     const totalNftOwned = await nftModel.count({
       $or: [
@@ -221,14 +222,14 @@ export const editProfile = async (_id: string, body: any) => {
   if (body.mobileNumber && body.mobileNumber.length > 0) {
     const regex = new RegExp('^[+\\(\\)\\[\\]]*([0-9][ +-pw\\(\\)\\[\\]]*){6,45}$', '')
 
-    if(!body.mobileNumber.match(regex)){
+    if (!body.mobileNumber.match(regex)) {
       const data = {
         error: true,
         message: "Invalid Mobile Number (Unsupported Character)",
       };
       return data;
     }
-    if(body.mobileNumber.length < 10){
+    if (body.mobileNumber.length < 10) {
       const data = {
         error: true,
         message: "Invalid Mobile Number (Must be greater than 10 characters)",
@@ -240,7 +241,7 @@ export const editProfile = async (_id: string, body: any) => {
       mobileNumber: body.mobileNumber,
     };
   }
- 
+
 
 
   await userModel.findOneAndUpdate({ _id }, { $set: updateData });
@@ -526,4 +527,72 @@ export const uploadCoverPromise = async (_id, file) => {
       console.log("successfully Deleted");
     });
   });
+};
+export const getTrendingUsers = async (query: any, options: any) => {
+  logger.log(level.info, `>> getTrendingUsers()`);
+  let pipeline = accountService.creatorsListPipeline(options, false);
+  let userList = await userModel.aggregate(pipeline);
+console.log(userList);
+  if (userList && userList.length > 0) {
+    await Promise.all(
+      userList.map(async (data) => {
+        data.totalCreations = await nftModel.count({
+          $or: [
+            {
+              $and: [
+                { contractType: { $eq: "ERC721" } },
+                { creatorId: { $eq: data.userId } },
+              ],
+            },
+            {
+              $and: [
+                { contractType: { $eq: "ERC1155" } },
+                { creatorId: { $eq: data.userId } },
+              ],
+            },
+          ],
+        });
+        return data;
+      })
+    );
+
+    let countPipeline = accountService.creatorsListPipeline({}, true);
+    let count = 0;
+    const totalCount = await userModel.aggregate(countPipeline);
+    count = totalCount[0].total;
+    const data = {
+      error: false,
+      message: "All Top Creator Fetched successfully",
+      data: {
+        totalItems: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: userList.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: userList,
+      }
+    };
+    return data;
+  }
+  const data = {
+    error: false,
+    message: "All Top Creator Fetched successfully",
+    data: {
+      totalItems: 0,
+      currentPage: Number(query.page),
+      itemPerPage: Number(query.limit),
+      totalPages:
+        Math.round(0 / Number(query.limit)) < 0 / Number(query.limit)
+          ? Math.round(0 / Number(query.limit)) + 1
+          : Math.round(0 / Number(query.limit)),
+      currentItemCount: userList.length,
+      lastPage: 0 / Number(query.limit) <= Number(query.page),
+      data: [],
+    }
+  };
+  return data;
 };

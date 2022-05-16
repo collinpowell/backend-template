@@ -8,7 +8,9 @@ import { upload } from "../../service/multer/profile";
 import {
   badRequestError,
   serverError,
-  successfulRequest
+  successfulRequest,
+  getOptionsPipelineJson,
+  standardStructureStringToJson,
 } from "../../utils/utility";
 
 import { MulterRequest } from "../../service/multer/profile";
@@ -181,5 +183,22 @@ export const uploadCoverImage = async (
       message: ""
     };
     return data;
+  }
+};
+
+
+export const getTrendingUsers = async (req: Request, res: Response) => {
+  logger.log(level.debug, `>> getTrendingUsers()`);
+  const extraParams = standardStructureStringToJson(req.query);
+  const options = getOptionsPipelineJson(extraParams);
+  try {
+    const result = await accountRepo.getTrendingUsers(req.query, options);
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    return successfulRequest(res, Object(result))
+  } catch (error) {
+    logger.log(level.error, `<< getTrendingUsers() error=${error}`);
+    serverError(res,error);
   }
 };

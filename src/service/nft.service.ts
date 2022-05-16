@@ -545,70 +545,6 @@ export const browseByCollectionPipeline = (
                 as: "coinData",
             },
         },
-        // {
-        //     $project: {
-        //         _id: "$nftData._id",
-        //         title: "$nftData.title",
-        //         isLiked: 1,
-        //         totalLikes: { $size: "$nftLikes" },
-        //         formOfSale: "$nftData.formOfSale",
-        //         file: "$nftData.file",
-        //         nftTokenId: "$nftData.nftTokenId",
-        //         fixedPrice: { $toDouble: "$fixedPrice" },
-        //         ownerId: "$nftData.ownerId",
-        //         auctionEndTime: "$nftData.auctionEndTime",
-        //         auctionStartPrice: { $toDouble: "$auctionStartPrice" },
-        //         description: "$nftData.description",
-        //         royalty: "$nftData.royalty",
-        //         createdAt: "$nftData.createdAt",
-        //         categoryId: "$categoryData.category.id",
-        //         categoryName: "$categoryData.category.categoryName",
-        //         coinId: { $arrayElemAt: ["$coinData.coins.id", 0] },
-        //         coinName: { $arrayElemAt: ["$coinData.coins.coinName", 0] },
-        //         contractType: "$nftData.contractType",
-        //         saleQuantity: "$nftData.saleQuantity",
-        //         contractAddress: "$nftData.contractAddress",
-        //         mintNft: "$nftData.mintNft",
-        //         creator: {
-        //             userId: { $arrayElemAt: ["$userData._id", 0] },
-        //             fullName: { $arrayElemAt: ["$userData.fullName", 0] },
-        //             username: { $arrayElemAt: ["$userData.username", 0] },
-        //             avatar: { $arrayElemAt: ["$userData.avatar", 0] },
-        //             bio: { $arrayElemAt: ["$userData.bio", 0] },
-        //             coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-        //             email: { $arrayElemAt: ["$userData.email", 0] },
-        //         },
-        //         currentOwner: {
-        //             userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
-        //             fullName: { $arrayElemAt: ["$currentOwnerData.fullName", 0] },
-        //             username: { $arrayElemAt: ["$currentOwnerData.username", 0] },
-        //             avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
-        //             bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
-        //             coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-        //             email: { $arrayElemAt: ["$currentOwnerData.email", 0] },
-        //         },
-        //         isCreator: {
-        //             $cond: {
-        //                 if: {
-        //                     $and: [{ $eq: ["$creatorId", filter.userId] }],
-        //                 },
-        //                 then: true,
-        //                 else: false,
-        //             },
-        //         },
-        //         differance: {
-        //             $subtract: [
-        //                 "$auctionEndHours",
-        //                 {
-        //                     $divide: [
-        //                         { $subtract: [new Date(), "$createdAt"] },
-        //                         60 * 1000 * 60,
-        //                     ],
-        //                 },
-        //             ],
-        //         },
-        //     },
-        // },
         {
             $project: {
                 title: "$nftData.title",
@@ -718,12 +654,18 @@ export const browseByBookmarkPipeline = (
     }
     let pipeline = [];
 
+    if (filter.formOfSale === "AUCTION" || filter.formOfSale === "FIXEDPRICE" ) {
+        pipeline = [
+            ...pipeline,
+            { $match: { formOfSale: filter.formOfSale } },
+        ];
+    }
+
     pipeline = [
         ...pipeline,
 
         { $match: { userId: filter.userId } },
         { $match: { bookmarked: true } },
-
         {
             $lookup: {
                 let: { "nftObjId": { "$toObjectId": "$nftId" } },

@@ -23,9 +23,6 @@ import JWTAuth from "../../service/jwt_auth/jwt_auth";
 import * as authService from "../../service/auth.service";
 import transporter from "../../utils/transport";
 import user from "../../model/user";
-import { createTrue } from "typescript";
-
-
 
 const nanoid = customAlphabet(process.env.CUSTOM_NUMBER, 8);
 
