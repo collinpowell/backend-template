@@ -12,6 +12,7 @@ import apiRoutes from "./routes/index";
 
 import { constants as APP_CONST } from "./constant/application";
 import "./pre-data/category";
+import "./service/sm_eventListener"
 
 
 const app = express();

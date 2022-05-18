@@ -842,6 +842,7 @@ contract.on("BuyOrBid", async (tokenId, auction, bid, amount, userId, event) => 
     nftId: artWorkData[0]._id,
     saleQuantity: artWorkData[0].saleQuantity,
     transactionHash: event.transactionHash,
+    bidAmount: amount
   }
 
   if (auction) {
