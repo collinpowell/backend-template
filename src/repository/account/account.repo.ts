@@ -528,11 +528,12 @@ export const uploadCoverPromise = async (_id, file) => {
     });
   });
 };
+
 export const getTrendingUsers = async (query: any, options: any) => {
   logger.log(level.info, `>> getTrendingUsers()`);
-  let pipeline = accountService.creatorsListPipeline(options, false);
+  let pipeline = query.type === 'CREATOR' ? accountService.creatorsListPipeline(options, false) : accountService.sellersListPipeline(options, false);
   let userList = await userModel.aggregate(pipeline);
-console.log(userList);
+  console.log(userList);
   if (userList && userList.length > 0) {
     await Promise.all(
       userList.map(async (data) => {
@@ -541,13 +542,13 @@ console.log(userList);
             {
               $and: [
                 { contractType: { $eq: "ERC721" } },
-                { creatorId: { $eq: data.userId } },
+                { creatorId: { $eq: data._id } },
               ],
             },
             {
               $and: [
                 { contractType: { $eq: "ERC1155" } },
-                { creatorId: { $eq: data.userId } },
+                { creatorId: { $eq: data._id } },
               ],
             },
           ],
@@ -556,7 +557,17 @@ console.log(userList);
       })
     );
 
-    let countPipeline = accountService.creatorsListPipeline({}, true);
+    userList.sort((a,b) => {
+      if ( a.totalCreations > b.totalCreations ){
+        return -1;
+      }
+      if ( a.totalCreations < b.totalCreations ){
+        return 1;
+      }
+      return 0;
+    })
+
+    let countPipeline = query.type === 'CREATOR' ? accountService.creatorsListPipeline(options, true) : accountService.sellersListPipeline(options, true);
     let count = 0;
     const totalCount = await userModel.aggregate(countPipeline);
     count = totalCount[0].total;

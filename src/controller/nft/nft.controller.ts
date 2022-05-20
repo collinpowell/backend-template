@@ -497,6 +497,36 @@ export const getAllArtWork = async (
   }
 };
 
+export const getTrendingNFT = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response
+) => {
+  logger.log(level.debug, `>> getAllWithoutUserIdArtWork()`);
+  const extraParams = standardStructureStringToJson(req.query);
+  const options = getOptionsPipelineJson(extraParams);
+  const errors = validationResult(req);
+
+  try {
+    if (!errors.isEmpty()) {
+      return badRequestError(res, errors.array()[0].msg);
+    }
+    const result = await nftRepo.getTrendingArtWork(
+      req.query,
+      options
+    );
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    // return res.status(201).json({ data: result });
+    return successfulRequest(res, Object(result));
+
+  } catch (error) {
+    logger.log(level.error, `<< getAllWithoutUserIdArtWork() error=${error}`);
+    serverError(res, error);
+  }
+
+};
+
 export const getArtWorkDetails = async (req: Request, res: Response) => {
   logger.log(level.debug, `>> getArtWorkDetails()`);
   if (!mongoose.Types.ObjectId.isValid(req.params.nftid)) {
@@ -509,7 +539,7 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
     try {
 
       let filter = {};
-    
+
       filter = { ...filter, _id: req.params.nftid };
       const result = await nftRepo.getArtWorkDetails(filter);
 

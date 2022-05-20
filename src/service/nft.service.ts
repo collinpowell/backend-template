@@ -1099,6 +1099,116 @@ export const getAllArtWorkPipeline = (
     return pipeline;
 };
 
+export const getTrendingArtWorkPipeline = (
+    filter: any,
+    extraParams: any,
+    count: boolean
+) => {
+    logger.log(level.info, `>> getAllArtWorkPipeline()`);
+    let pipeline = [];
+
+    if (filter.formOfSale) {
+        console.log(filter.formOfSale)
+        pipeline = [...pipeline, { $match: { formOfSale: filter.formOfSale } }];
+    }
+    pipeline = [
+        ...pipeline,
+        ...commonArtworkPipeline,
+        {
+            $project: {
+                title: 1,
+                isLiked: 1,
+                totalLikes: { $size: "$nftLikes" },
+                formOfSale: 1,
+                file: 1,
+                nftTokenId: 1,
+                fixedPrice: { $toDouble: "$fixedPrice" },
+                description: 1,
+                royalty: 1,
+                _id: 1,
+                createdAt: 1,
+                categoryId: "$categoryData.category.id",
+                categoryName: "$categoryData.category.categoryName",
+                coinId: { $arrayElemAt: ["$coinData.coins.id", 0] },
+                coinName: { $arrayElemAt: ["$coinData.coins.coinName", 0] },
+                contractType: 1,
+                saleQuantity: 1,
+                contractAddress: 1,
+                mintNft: 1,
+                currentAuction: {
+                    auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                    auctionEndTime: { $arrayElemAt: ["$auction.auctionEndTime", 0] },
+                    auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
+                    auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
+                    ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
+                    nftId: { $arrayElemAt: ["$auction.nftId", 0] },
+                    difference: {
+                        $subtract: [
+                            { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                                    60 * 1000 * 60,
+                                ],
+                            },
+                        ],
+                    },
+                },
+                creator: {
+                    userId: { $arrayElemAt: ["$userData._id", 0] },
+                    fullName: { $arrayElemAt: ["$userData.fullName", 0] },
+                    username: { $arrayElemAt: ["$userData.username", 0] },
+                    avatar: { $arrayElemAt: ["$userData.avatar", 0] },
+                    bio: { $arrayElemAt: ["$userData.bio", 0] },
+                    coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
+                },
+                currentOwner: {
+                    userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
+                    fullName: { $arrayElemAt: ["$currentOwnerData.fullName", 0] },
+                    username: { $arrayElemAt: ["$currentOwnerData.username", 0] },
+                    avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
+                    bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
+                    coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
+                },
+                isCreator: {
+                    $cond: {
+                        if: {
+                            $and: [{ $eq: ["$creatorId", filter.userId] }],
+                        },
+                        then: true,
+                        else: false,
+                    },
+                },
+                isOwner: {
+                    $cond: {
+                        if: {
+                            $and: [{ $eq: ["$ownerId", filter.userId] }],
+                        },
+                        then: true,
+                        else: false,
+                    },
+                },
+
+            },
+        },
+    ];
+
+    pipeline = [
+        ...pipeline,
+        { $match: { totalLikes: {$ne:0 } }},
+    ];
+    pipeline = [...pipeline, { $sort: { totalLikes: Number(-1) } }];
+
+    if (count) {
+        pipeline.push({ $count: "total" });
+    }
+    if (extraParams) {
+        if (extraParams.skip) pipeline.push({ $skip: Number(extraParams.skip) });
+        if (extraParams.limit) pipeline.push({ $limit: Number(extraParams.limit) });
+    }
+    return pipeline;
+};
+
 
 
 export const getArtWorkDetailsPipeline = (filter: any) => {

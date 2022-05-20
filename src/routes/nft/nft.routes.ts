@@ -91,6 +91,13 @@ routes.route(PATH.EXPLORE).get(validate(VALIDATOR.BROWSE3), nftController.getAll
 
 
 /**
+ * @api {GET} /api/nft/trendingnfts
+ * @desc Fetch Art work
+ * @access Public
+ * **/
+ routes.route(PATH.TRENDINGNFTS).get(validate(VALIDATOR.BROWSE1), nftController.getTrendingNFT);
+
+/**
 
  * * User Authorization middleware
  */

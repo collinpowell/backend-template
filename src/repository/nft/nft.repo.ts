@@ -14,6 +14,7 @@ import {
   getMyAllArtCreationsPipeline,
   browseByCollectionPipeline,
   getAllArtWorkPipeline,
+  getTrendingArtWorkPipeline,
   getArtWorkDetailsPipeline,
   getPipelineForPurchaseHistory,
   getSellerOtherArtworkPipeline,
@@ -953,6 +954,73 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   const data = {
     error: false,
     message: "All ArtWork Fetched Successfully",
+    data: {
+      totalItems: 0,
+      currentPage: Number(query.page),
+      itemPerPage: Number(query.limit),
+      totalPages:
+        Math.round(count / Number(query.limit)) < count / Number(query.limit)
+          ? Math.round(count / Number(query.limit)) + 1
+          : Math.round(count / Number(query.limit)),
+      currentItemCount: artWorkList.length,
+      lastPage: count / Number(query.limit) <= Number(query.page),
+      data: [],
+    }
+
+  };
+  return data;
+};
+
+export const getTrendingArtWork = async (query: any, options: any) => {
+  logger.log(level.info, `>> getAllWithoutUserIdArtWork()`);
+  let filter = {};
+  if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale)) {
+    filter = { ...filter, formOfSale: query.formOfSale };
+  }
+
+  const pipeline = getTrendingArtWorkPipeline(filter, options, false);
+  let artWorkList = await nftModel.aggregate(pipeline).exec();
+  artWorkList = artWorkList.map((data) => {
+    if (data.formOfSale === "AUCTION") {
+      if (
+        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
+      ) {
+        data.currentAuction.auctionEnded = true;
+      } else {
+        data.currentAuction.auctionEnded = false;
+      }
+    }
+
+    return data;
+  });
+
+  let count = 0;
+  if (artWorkList && artWorkList.length > 0) {
+    let countPipeline = getTrendingArtWorkPipeline(filter, {}, true);
+    const totalCount = await nftModel.aggregate(countPipeline);
+    count = totalCount[0].total;
+    const data = {
+      error: false,
+      message: "Trending Artworks Fetched Successfully",
+      data: {
+        totalItems: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: artWorkList.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: artWorkList,
+      }
+
+    };
+    return data;
+  }
+  const data = {
+    error: false,
+    message: "Trending Artworks Fetched Successfully",
     data: {
       totalItems: 0,
       currentPage: Number(query.page),
