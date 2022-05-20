@@ -1351,7 +1351,8 @@ export const getAuctionDetails = async (filter: any) => {
     let auctionData = {}
     const auction = await auctionModel.find({ _id: artWorkDetails[0].auctionId })
 
-    if (!auction && auction.length < 1) {
+    //console.log(auction)
+    if (!auction || auction.length < 1) {
       const data = {
         error: true,
         message: "No Auction found",
@@ -1359,32 +1360,38 @@ export const getAuctionDetails = async (filter: any) => {
       };
       return data;
     }
-    if (
-      !moment(auction[0].auctionEndTime).isAfter(moment(new Date().toISOString()))
-    ) {
+    let resp = []
+    for (let i = 0; i < auction.length; i++) {
+      if (
+        !moment(auction[i].auctionEndTime).isAfter(moment(new Date().toISOString()))
+      ) {
+        auctionData = {
+          ...auctionData,
+          auctionEnded: true,
+        }
+      } else {
+        auctionData = {
+          ...auctionData,
+          auctionEnded: false,
+        }
+      }
       auctionData = {
         ...auctionData,
-        auctionEnded: true,
+        auctionId: auction[i]._id,
+        auctionEndHour: auction[i].auctionEndHour,
+        auctionStartPrice: auction[i].auctionStartPrice,
+        currentOwnerId: artWorkDetails[i].ownerId,
+        buyNowPrice: artWorkDetails[i].fixedPrice,
+        createdAt: auction[i].createdAt,
       }
-    } else {
-      auctionData = {
-        ...auctionData,
-        auctionEnded: false,
-      }
+
+      resp.push(auctionData)
     }
-    auctionData = {
-      ...auctionData,
-      auctionId: auction[0]._id,
-      auctionEndHour: auction[0].auctionEndHour,
-      auctionStartPrice: auction[0].auctionStartPrice,
-      currentOwnerId: artWorkDetails[0].ownerId,
-      buyNowPrice: artWorkDetails[0].fixedPrice,
-      createdAt: auction[0].createdAt,
-    }
+   
     const data = {
       error: false,
       message: "Auction details fetched succssfully",
-      data: auctionData,
+      data: resp,
     };
     return data;
   }

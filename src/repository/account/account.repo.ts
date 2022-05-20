@@ -242,17 +242,9 @@ export const editProfile = async (_id: string, body: any) => {
     };
   }
 
-
-
-  await userModel.findOneAndUpdate({ _id }, { $set: updateData });
-  const userData = await userModel.find({
-    _id,
-    status: "ACTIVE",
-  });
   const data = {
     error: false,
     message: "Profile Updated Successfully",
-    data: userData[0],
   };
   return data;
 };
@@ -419,6 +411,8 @@ export const uploadProfile = async (_id: string, file: any, body: any) => {
     status: "ACTIVE",
   });
 
+  console.log(_id)
+
   if (!userExist || userExist.length <= 0) {
     const data = {
       error: true,
@@ -427,16 +421,9 @@ export const uploadProfile = async (_id: string, file: any, body: any) => {
     return data;
   }
   let uploadData = {};
-  if (body.isAvatar === "true" || body.isAvatar === true) {
-    await userModel.findOneAndUpdate(
-      { _id },
-      { $set: { avatar: body.avatar } }
-    );
-    uploadData = { ...uploadData, avatar: body.avatar };
-  }
-  if (body.isAvatar === "false" || body.isAvatar === false) {
+
     uploadData = await uploadProfilePromise(_id, file);
-  }
+
 
   const data = {
     error: false,
@@ -557,11 +544,11 @@ export const getTrendingUsers = async (query: any, options: any) => {
       })
     );
 
-    userList.sort((a,b) => {
-      if ( a.totalCreations > b.totalCreations ){
+    userList.sort((a, b) => {
+      if (a.totalCreations > b.totalCreations) {
         return -1;
       }
-      if ( a.totalCreations < b.totalCreations ){
+      if (a.totalCreations < b.totalCreations) {
         return 1;
       }
       return 0;
