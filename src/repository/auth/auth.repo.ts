@@ -442,6 +442,10 @@ export const verificationEmail = async (
     /VERIFICATION_CODE/g,
     verificationCode
   );
+  verificationTemplate = verificationTemplate.replace(
+    /ACTIVATION_LINK/g,
+    "https://mintonft.vercel.app/activate/"+email+"/"+ verificationCode
+  );
 
   await transporter.sendMail({
     from: 'Verify@nodexigub.com',
