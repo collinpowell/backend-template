@@ -632,8 +632,16 @@ export const changeEmail = async (
   );
 
   changeEmailTemplate = changeEmailTemplate.replace(
+    /APP_USERNAME/g,
+    email
+  );
+  changeEmailTemplate = changeEmailTemplate.replace(
     /VERIFICATION_CODE/g,
     verificationCode
+  );
+  changeEmailTemplate = changeEmailTemplate.replace(
+    /RESET_PASSWORD_LINK/g,
+    "https://mintoui.vercel.app/changeemail/"+email+"/"+verificationCode
   );
 
   await transporter.sendMail({
@@ -642,6 +650,9 @@ export const changeEmail = async (
     subject: "Change Email",
     text: verificationCode,
     html: changeEmailTemplate,
+  }).catch((error) => {
+    logger.log(level.info, `>> email sent failed()${error}`);
+
   });
   logger.log(level.info, `>> email sent successfully()`);
 };
