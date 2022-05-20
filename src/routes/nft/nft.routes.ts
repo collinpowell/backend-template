@@ -95,7 +95,24 @@ routes.route(PATH.EXPLORE).get(validate(VALIDATOR.BROWSE3), nftController.getAll
  * @desc Fetch Art work
  * @access Public
  * **/
- routes.route(PATH.TRENDINGNFTS).get(validate(VALIDATOR.BROWSE1), nftController.getTrendingNFT);
+routes.route(PATH.TRENDINGNFTS).get(validate(VALIDATOR.BROWSE1), nftController.getTrendingNFT);
+
+/**
+* @api {GET} /api/nft/ownershistory
+* @desc Fetch Art work
+* @access Public
+* **/
+routes.route(PATH.OWNNERHISTORY + "/:nftid").get(nftController.getOwnersHistory);
+routes.route(PATH.OWNNERHISTORY + '/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
+
+routes.route(PATH.NFTHISTORY + "/:nftid").get(nftController.getNFTHistory);
+routes.route(PATH.NFTHISTORY + '/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
+
+
 
 /**
 

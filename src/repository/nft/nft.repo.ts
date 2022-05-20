@@ -7,6 +7,7 @@ import ownerHistoryModel from "../../model/nftOwnersHistory";
 import ownerHistory1155Model from "../../model/nftOwnersHistory";
 import nftBookmarks from "../../model/nftBookmarks";
 import auctionModel from "../../model/auction"
+import mongoose from 'mongoose'
 
 import {
   addNFTService,
@@ -184,7 +185,7 @@ export const addArtWork = async (
 
     if (royalty && royalty.length > 0) {
       let fixedPercentage = 100;
-      for(let i = 0; i < royalty.length; i++) {
+      for (let i = 0; i < royalty.length; i++) {
         if (royalty[i].percentage == undefined || royalty[i].walletAddress == undefined) {
           data = { error: true, message: "Invalid Royalty" };
           return data;
@@ -602,7 +603,7 @@ export const likeNFT = async (userId: string, nftId: any) => {
 
 
 export const bookmarkNFT = async (userId: string, nftId: any) => {
-  logger.log(level.info, `>> likeArtWork()`);
+  logger.log(level.info, `>> bookmarkNFT()`);
   const [artWorkData, artWorkLiked] = await Promise.all([
     nftModel.find({ _id: nftId }),
     nftBookmarksModel.find({ nftId, userId }),
@@ -633,6 +634,94 @@ export const bookmarkNFT = async (userId: string, nftId: any) => {
     }
     return data;
   }
+};
+
+export const getOwnersHistory = async (nftId: any) => {
+  logger.log(level.info, `>> getOwnersHistory()`);
+  const [artWorkData] = await Promise.all([
+    nftModel.find({ _id: nftId }),
+  ]);
+  //let data = { error: false, message: "" };
+  if (!artWorkData && artWorkData.length < 0) {
+    const data = { error: true, message: "NFT not found" };
+    return data;
+  }
+  // let history = await ownerHistoryModel.find({nftId})
+  // let history = await ownerHistoryModel.find({nftId})
+
+  let history = await ownerHistoryModel.aggregate([
+    { $match: { nftId } },
+    {
+      $lookup: {
+        let: { "userObjId": { "$toObjectId": "$userId" } },
+        from: "users",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+        ],
+        as: "currentOwnerData"
+      }
+    },
+    {
+      $project: {
+        userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
+        fullName: { $arrayElemAt: ["$currentOwnerData.fullName", 0] },
+        username: { $arrayElemAt: ["$currentOwnerData.username", 0] },
+        avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
+        bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
+        coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
+      }
+    }
+  ]).exec();
+  //console.log(history)
+
+
+
+  const data = { error: false, data: history, message: "History Fetched Successfully" };
+  return data;
+
+};
+
+export const getNFTHistory = async (nftId: any) => {
+  logger.log(level.info, `>> getNFTHistory()`);
+  const [artWorkData] = await Promise.all([
+    nftModel.find({ _id: nftId }),
+  ]);
+  //let data = { error: false, message: "" };
+  if (!artWorkData && artWorkData.length < 0) {
+    const data = { error: true, message: "NFT not found" };
+    return data;
+  }
+  // let history = await ownerHistoryModel.find({nftId})
+  // let history = await ownerHistoryModel.find({nftId})
+
+  let history = await nftModel.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(nftId) }, },
+    {
+      $lookup: {
+        let: { "userObjId": { "$toObjectId": "$creatorId" } },
+        from: "users",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+        ],
+        as: "creator"
+      }
+    },
+    {
+      $project: {
+        userId: { $arrayElemAt: ["$creator._id", 0] },
+        fullName: { $arrayElemAt: ["$creator.fullName", 0] },
+        username: { $arrayElemAt: ["$creator.username", 0] },
+        avatar: { $arrayElemAt: ["$creator.avatar", 0] },
+        typeOfEvent: "MINT",
+        meta: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
+        timestamp: "$createdAt",
+      }
+    }
+  ]).exec();
+
+  const data = { error: false, data: history, message: "History Fetched Successfully" };
+  return data;
+
 };
 
 

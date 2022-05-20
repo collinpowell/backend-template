@@ -370,6 +370,58 @@ export const purchaseArtWork = async (
   }
 };
 
+export const getOwnersHistory = async (
+  req: Request,
+  res: Response
+) => {
+  logger.log(level.debug, `>> getOwnersHistory()`);
+  const nftId  = req.params.nftid;
+
+  if (!mongoose.Types.ObjectId.isValid(nftId)) {
+    return badRequestError(res, "Invalid NFT Id");
+  }
+
+  try {
+    const result = await nftRepo.getOwnersHistory(nftId);
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    //return res.status(201).json({ data: result });
+    return successfulRequest(res, result);
+
+  } catch (error) {
+
+    logger.log(level.error, `<< getOwnersHistory() error=${error}`);
+    serverError(res, error);
+  }
+};
+
+export const getNFTHistory = async (
+  req: Request,
+  res: Response
+) => {
+  logger.log(level.debug, `>> getNFTHistory()`);
+  const nftId  = req.params.nftid;
+
+  if (!mongoose.Types.ObjectId.isValid(nftId)) {
+    return badRequestError(res, "Invalid NFT Id");
+  }
+
+  try {
+    const result = await nftRepo.getNFTHistory(nftId);
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    
+    return successfulRequest(res, result);
+
+  } catch (error) {
+
+    logger.log(level.error, `<< getNFTHistory() error=${error}`);
+    serverError(res, error);
+  }
+};
+
 export const browseByCollection = async (
   req: Request,
   res: Response
