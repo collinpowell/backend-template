@@ -140,6 +140,7 @@ export const getMyAllArtCreationsPipeline = (
     pipeline = [
         ...pipeline,
         ...commonArtworkPipeline,
+        { $match: { status: "ACTIVE" } },
         {
             $project: {
                 title: 1,
