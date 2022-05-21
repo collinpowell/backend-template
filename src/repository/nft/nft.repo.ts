@@ -742,10 +742,6 @@ export const purchaseArtWork = async (userId: string, body: any) => {
     data = { error: true, message: "NFT not found" };
     return data;
   }
-  if (!userDetails[0].connectedWallet || userDetails[0].connectedWallet.length <= 0) {
-    data = { error: true, message: "Wallet is required" };
-    return data;
-  }
 
   let recipt;
   if (artWorkData[0].saleCoin === 0) {
@@ -823,7 +819,7 @@ export const purchaseArtWork = async (userId: string, body: any) => {
         creatorUserId: artWorkData[0].creatorId,
         sellerUserId: artWorkData[0].ownerId,
         transactionHash: body.transactionHash,
-        currentOwnerAddress: userDetails[0].connectedWallet[0].walletType[0]?.walletKey,
+        currentOwnerAddress: body.transactionHash.from,
         purchaseType: "FIXEDPRICE",
       }),
     ]);
