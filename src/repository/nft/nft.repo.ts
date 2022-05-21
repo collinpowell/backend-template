@@ -743,30 +743,8 @@ export const purchaseArtWork = async (userId: string, body: any) => {
     return data;
   }
 
-  let recipt;
-  if (artWorkData[0].saleCoin === 0) {
-    // ? ETH coin
-    recipt = await ethProvider.getTransaction(
-      body.transactionHash.transactionHash
-    );
-    console.log("-------ETH------", recipt);
-  }
-  if (artWorkData[0].saleCoin === 1) {
-    // ? Polygon coin
-    recipt = await polygonProvider.getTransaction(
-      body.transactionHash.transactionHash
-    );
-    console.log("-------polygon------", recipt);
-  }
 
   if (body.formOfSale === "FIXEDPRICE") {
-    if (
-      Number(recipt.value.toString()) / Math.pow(10, 18) <
-      Number(artWorkData[0].fixedPrice)
-    ) {
-      data = { error: true, message: "Amount is less than art works price" };
-      return data;
-    }
 
     // ? Check for current owner too
     let artWorkSeller = [];
@@ -818,7 +796,7 @@ export const purchaseArtWork = async (userId: string, body: any) => {
         price: artWorkData[0].fixedPrice,
         creatorUserId: artWorkData[0].creatorId,
         sellerUserId: artWorkData[0].ownerId,
-        transactionHash: body.transactionHash,
+        transactionHash: body.transactionHash.transactionHash,
         currentOwnerAddress: body.transactionHash.from,
         purchaseType: "FIXEDPRICE",
       }),

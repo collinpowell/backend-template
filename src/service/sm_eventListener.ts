@@ -831,76 +831,82 @@ let contract = new ethers.Contract(
   signerEther
 );
 
-contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, event) => {
-  console.log("------Here 1");
+contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, events) => {
 
-  const nftTokenId = tokenId;
+  Promise.resolve(events.getTransaction()).then((event) => {
+    console.log("------Here 1");
 
-  console.log("------Here 2");
+    const nftTokenId = tokenId;
+
+    console.log("------Here 2");
 
 
-  new Promise((resolve, reject) => {
-    try {
-      console.log("------Here 3");
-      Promise.resolve(nftModel.find({ nftTokenId })).then((artWorkData) => {
-        console.log(artWorkData);
+    new Promise((resolve, reject) => {
+      try {
+        console.log("------Here 3");
+        Promise.resolve(nftModel.find({ nftTokenId })).then((artWorkData) => {
+          console.log(artWorkData);
 
-        if (!artWorkData || artWorkData.length <= 0) {
-          console.log("No art work found");
-          return;
+          if (!artWorkData || artWorkData.length <= 0) {
+            console.log("No art work found");
+            return;
 
-        }
+          }
 
-        const id = userId;
-        const body = {
-          formOfSale: artWorkData[0].formOfSale,
-          nftId: artWorkData[0]._id,
-          saleQuantity: artWorkData[0].saleQuantity,
-          transactionHash: event.transactionHash,
-          bidAmount: amount
-        }
-        console.log(tokenId, auction, bid, amount, userId, event);
+          const id = userId;
+          const body = {
+            formOfSale: artWorkData[0].formOfSale,
+            nftId: artWorkData[0]._id,
+            saleQuantity: artWorkData[0].saleQuantity,
+            transactionHash: event,
+            bidAmount: amount
+          }
+          //console.log(tokenId, auction, bid, amount, userId, event);
 
-        console.log(body);
-        console.log(artWorkData[0]);
+          console.log(body);
+          console.log(artWorkData[0]);
 
-        if (auction) {
-          if (bid) {
+          if (auction) {
+            if (bid) {
+              try {
+                console.log("------Here Bid");
+
+                Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
+                  console.log(result);
+                });
+
+
+              } catch (error) {
+                logger.log(level.error, `<< purchaseArtWork() Bid Won error=${error}`);
+              }
+            }
+          } else {
+
             try {
-              console.log("------Here Bid");
+              console.log("------Here Buy");
 
               Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
                 console.log(result);
               });
-              
 
             } catch (error) {
-              logger.log(level.error, `<< purchaseArtWork() Bid Won error=${error}`);
+              logger.log(level.error, `<< purchaseArtWork() Fixedprice error=${error}`);
             }
+
           }
-        } else {
+          resolve("success");
 
-          try {
-            console.log("------Here Buy");
+        });
 
-            Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
-              console.log(result);
-            });
+      } catch (err) {
+        logger.log(level.error, `<< Error() Error error=${err}`);
+        reject(err);
+      }
+    });
 
-          } catch (error) {
-            logger.log(level.error, `<< purchaseArtWork() Fixedprice error=${error}`);
-          }
-
-        }
-        resolve("success");
-
-      });
-
-    } catch (err) {
-      logger.log(level.error, `<< Error() Error error=${err}`);
-      reject(err);
-    }
   });
+
+
 
 });
 
