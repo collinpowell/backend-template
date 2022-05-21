@@ -242,6 +242,8 @@ export const editProfile = async (_id: string, body: any) => {
     };
   }
 
+  await userModel.findOneAndUpdate({ _id }, { $set: updateData });
+
   const data = {
     error: false,
     message: "Profile Updated Successfully",
