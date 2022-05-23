@@ -377,7 +377,7 @@ export const editArtWork = async (
 
 export const stopArtWorkSale = async (ownerId: string, nftId: any) => {
   logger.log(level.info, `>> stopArtWorkSale()`);
-  const artWorkExist = await nftModel.find({ _id: nftId, ownerId, formOfSale: "AUCTION" || "FIXEDPRICE" });
+  const artWorkExist = await nftModel.find({ _id: nftId, ownerId, formOfSale:{$ne : "NOT_FOR_SALE"} });
   let data = { error: false, message: "" };
   if (!artWorkExist || artWorkExist.length <= 0) {
     data = {
