@@ -1,7 +1,7 @@
 import { level, logger } from "../../config/logger";
 import nftModel, { NftInput, UploadInput, Royalty } from "../../model/nft";
-import { polygonContract, polygonProvider } from "../../service/web3/web3";
-import { ethContract, ethProvider } from "../../service/web3/web3_eth";
+import { polygonContract } from "../../service/web3/web3";
+import { ethContract } from "../../service/web3/web3_eth";
 import bidModel from "../../model/bid";
 import ownerHistoryModel from "../../model/nftOwnersHistory";
 import ownerHistory1155Model from "../../model/nftOwnersHistory";
