@@ -375,7 +375,7 @@ export const getOwnersHistory = async (
   res: Response
 ) => {
   logger.log(level.debug, `>> getOwnersHistory()`);
-  const nftId  = req.params.nftid;
+  const nftId = req.params.nftid;
 
   if (!mongoose.Types.ObjectId.isValid(nftId)) {
     return badRequestError(res, "Invalid NFT Id");
@@ -401,7 +401,7 @@ export const getNFTHistory = async (
   res: Response
 ) => {
   logger.log(level.debug, `>> getNFTHistory()`);
-  const nftId  = req.params.nftid;
+  const nftId = req.params.nftid;
 
   if (!mongoose.Types.ObjectId.isValid(nftId)) {
     return badRequestError(res, "Invalid NFT Id");
@@ -412,7 +412,7 @@ export const getNFTHistory = async (
     if (result.error) {
       return badRequestError(res, result.message);
     }
-    
+
     return successfulRequest(res, result);
 
   } catch (error) {
@@ -670,6 +670,32 @@ export const getAuctionDetails = async (req: Request, res: Response) => {
     return successfulRequest(res, Object(result));
   } catch (error) {
     logger.log(level.error, `<< getAuctionDetails() error=${error}`);
+    serverError(res, error);
+  }
+}
+
+export const getBidHistory = async (req: Request, res: Response) => {
+  logger.log(level.debug, `>> getBidHistory()`);
+  const extraParams = standardStructureStringToJson(req.query);
+  const options = getOptionsPipelineJson(extraParams);
+  try {
+
+    let filter = {};
+    if (!mongoose.Types.ObjectId.isValid(req.params.nftid)) {
+      return badRequestError(res, "Invalid NFT Id");
+    }
+    if (!mongoose.Types.ObjectId.isValid(req.params.auctionid)) {
+      return badRequestError(res, "Invalid Auction Id");
+    }
+    filter = { ...filter, nftId: req.params.nftid, auctionId: req.params.auctionid };
+    const result = await nftRepo.getBidHistory(filter,req.query, options);
+
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    return successfulRequest(res, Object(result));
+  } catch (error) {
+    logger.log(level.error, `<< getBidHistory() error=${error}`);
     serverError(res, error);
   }
 }

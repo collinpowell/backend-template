@@ -19,7 +19,8 @@ import {
   getArtWorkDetailsPipeline,
   getPipelineForPurchaseHistory,
   getSellerOtherArtworkPipeline,
-  browseByBookmarkPipeline
+  browseByBookmarkPipeline,
+  getBidHistoryPipeline
 } from "../../service/nft.service";
 import { decryptText, regexSpecialChar } from "../../utils/utility";
 import moment from "moment-timezone";
@@ -377,7 +378,7 @@ export const editArtWork = async (
 
 export const stopArtWorkSale = async (ownerId: string, nftId: any) => {
   logger.log(level.info, `>> stopArtWorkSale()`);
-  const artWorkExist = await nftModel.find({ _id: nftId, ownerId, formOfSale:{$ne : "NOT_FOR_SALE"} });
+  const artWorkExist = await nftModel.find({ _id: nftId, ownerId, formOfSale: { $ne: "NOT_FOR_SALE" } });
   let data = { error: false, message: "" };
   if (!artWorkExist || artWorkExist.length <= 0) {
     data = {
@@ -1361,7 +1362,7 @@ export const getAuctionDetails = async (filter: any) => {
 
       resp.push(auctionData)
     }
-   
+
     const data = {
       error: false,
       message: "Auction details fetched succssfully",
@@ -1373,6 +1374,59 @@ export const getAuctionDetails = async (filter: any) => {
     error: true,
     message: "No Auction found",
     data: "",
+  };
+  return data;
+
+}
+
+export const getBidHistory = async (filter: any, query: any, options: any) => {
+  logger.log(level.info, `>> getBidHistory()`);
+
+  const pipeline = getBidHistoryPipeline(filter, options, false);
+
+  //let artWorkDetails = await nftModel.find({ _id: filter._id, formOfSale: "AUCTION", status: "ACTIVE" });
+  let bidDetails = await bidModel.aggregate(pipeline).exec();
+  let count = 0;
+  if (bidDetails && bidDetails.length > 0) {
+    let countPipeline = getBidHistoryPipeline(filter, {}, true);
+    const totalCount = await bidModel.aggregate(countPipeline);
+    count = totalCount[0].total;
+    const data = {
+      error: false,
+      message: "Bid History Fetched Successfully",
+      data: {
+        totalItems: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: bidDetails.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: bidDetails,
+      }
+
+    };
+    return data;
+  }
+
+  const data = {
+    error: false,
+    message: "No Bid History",
+    data: {
+      totalItems: 0,
+      currentPage: Number(query.page),
+      itemPerPage: Number(query.limit),
+      totalPages:
+        Math.round(count / Number(query.limit)) < count / Number(query.limit)
+          ? Math.round(count / Number(query.limit)) + 1
+          : Math.round(count / Number(query.limit)),
+      currentItemCount: bidDetails.length,
+      lastPage: count / Number(query.limit) <= Number(query.page),
+      data: [],
+    }
+
   };
   return data;
 

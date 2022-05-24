@@ -82,6 +82,16 @@ routes
 routes.route(PATH.NFTINAUCTION + '/*').get(function (req, res) {
     res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
 })
+
+routes
+    .route(PATH.BIDHISTORY + "/:nftid/:auctionid")
+    .get(nftController.getBidHistory)
+routes.route(PATH.BIDHISTORY + '/*/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
+routes.route(PATH.BIDHISTORY + '/*').get(function (req, res) {
+    res.status(400).json({ statuscode: 400, body: "", message: "Bad Request (Invalid Route)" });
+})
 /**
  * @api {GET} /api/nft/explore
  * @desc Fetch Art work

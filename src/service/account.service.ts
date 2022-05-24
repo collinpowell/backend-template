@@ -23,6 +23,8 @@ export const creatorsListPipeline = (extraParams: any, count: boolean) => {
                 username: { $first: "$username" },
                 avatar: { $first: "$avatar" },
                 coverImage: { $first: "$coverImage" },
+                fullName: { $first: "$fullName" },
+                bio: { $first: "$bio" },
             },
         },
         {
@@ -38,12 +40,16 @@ export const creatorsListPipeline = (extraParams: any, count: boolean) => {
         },
         {
             $project: {
-                _id: 1,
+                _id : 0 ,
+                userId: "$_id",
                 totalSold: 1,
+                fullName: 1,
                 username: 1,
+                bio: 1,
                 avatar: 1,
-                coverImage: 1,
+                totalCreation: 1,
                 totalEthSold:1,
+                coverImage: 1,
                 totalPolygonSold:1,
                 totalCollection: { $size: "$collectionsData" },
                 createdAt:1
@@ -97,6 +103,8 @@ export const sellersListPipeline = (extraParams: any, count: boolean) => {
                 username: { $first: "$username" },
                 avatar: { $first: "$avatar" },
                 coverImage: { $first: "$coverImage" },
+                fullName: { $first: "$fullName" },
+                bio: { $first: "$bio" },
             },
         },
         {
@@ -112,16 +120,21 @@ export const sellersListPipeline = (extraParams: any, count: boolean) => {
         },
         {
             $project: {
-                _id: 1,
+                _id : 0 ,
+                userId: "$_id",
                 totalSold: 1,
+                fullName: 1,
                 username: 1,
+                bio: 1,
                 avatar: 1,
                 coverImage: 1,
+                totalCreation: 1,
                 totalEthSold:1,
                 totalPolygonSold:1,
                 totalCollection: { $size: "$collectionsData" },
                 createdAt:1
             },
+            
         },
         { $sort: { totalSold: -1 } },
         { $sort: { totalCollection: -1 } },

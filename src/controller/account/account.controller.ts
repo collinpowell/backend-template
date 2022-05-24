@@ -3,7 +3,7 @@ import { level, logger } from "../../config/logger";
 import * as accountRepo from "../../repository/account/account.repo";
 
 import { IGetUserAuthInfoRequest } from "../../middleware/authentication";
-import { upload } from "../../service/multer/profile";
+import nftModel from "../../model/nft";
 
 import {
   badRequestError,
@@ -199,6 +199,20 @@ export const getTrendingUsers = async (req: Request, res: Response) => {
     return successfulRequest(res, Object(result))
   } catch (error) {
     logger.log(level.error, `<< getTrendingUsers() error=${error}`);
+    serverError(res,error);
+  }
+};
+
+export const getStatistics = async (req: Request, res: Response) => {
+  logger.log(level.debug, `>> getStatistics()`);
+   try {
+    const result = await accountRepo.getStatistics();
+    if (result.error) {
+      return badRequestError(res, result.message);
+    }
+    return successfulRequest(res, Object(result))
+  } catch (error) {
+    logger.log(level.error, `<< getStatistics() error=${error}`);
     serverError(res,error);
   }
 };

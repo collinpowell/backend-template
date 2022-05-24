@@ -27,4 +27,6 @@ routes.use(PATH.NFT, nftRoutes);
  */
 routes.use(PATH.ROOT + "trendingcreators", accountController.getTrendingUsers);
 
+routes.use(PATH.ROOT + "getmarketplacestatistics", accountController.getStatistics);
+
 export default routes;

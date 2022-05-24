@@ -3,6 +3,7 @@ import { level, logger } from "../../config/logger";
 
 import userModel from "../../model/user";
 import nftModel from "../../model/nft";
+import sold from "../../model/nftOwnersHistory";
 import collectionModel from "../../model/collection";
 import { Storage } from "@google-cloud/storage";
 import * as accountService from "../../service/account.service";
@@ -424,7 +425,7 @@ export const uploadProfile = async (_id: string, file: any, body: any) => {
   }
   let uploadData = {};
 
-    uploadData = await uploadProfilePromise(_id, file);
+  uploadData = await uploadProfilePromise(_id, file);
 
 
   const data = {
@@ -531,16 +532,19 @@ export const getTrendingUsers = async (query: any, options: any) => {
             {
               $and: [
                 { contractType: { $eq: "ERC721" } },
-                { creatorId: { $eq: data._id } },
+                { creatorId: { $eq: data.userId } },
               ],
             },
             {
               $and: [
                 { contractType: { $eq: "ERC1155" } },
-                { creatorId: { $eq: data._id } },
+                { creatorId: { $eq: data.userId } },
               ],
             },
           ],
+        });
+        data.totalSold = await sold.count({
+          sellerUserId:data.userId
         });
         return data;
       })
@@ -595,4 +599,40 @@ export const getTrendingUsers = async (query: any, options: any) => {
     }
   };
   return data;
+};
+
+
+export const getStatistics = async () => {
+  logger.log(level.debug, `>> getStatistics()`);
+  let stats = {}
+  const totalMints = await nftModel.find({ status: 'ACTIVE' }).count()
+  stats = { ...stats, totalNftMinted: totalMints }
+
+  const totalSold = await sold.find().count()
+  stats = { ...stats, totalNftSold: totalSold }
+
+  const totalSellers = await sold.aggregate([
+    {
+      $group: {
+        _id: "$sellerUserId",
+        orig_id: {$first: "$_id" },
+        count: {$sum: 1 }
+      }
+    },
+    {
+      $count:"totalSellers"
+    }
+  ]).exec()
+
+  console.log(totalSellers)
+  stats = { ...stats, totalSeller: totalSellers[0].totalSellers }
+
+
+  const data = {
+    error: false,
+    message: "Marketplace Statistics fetched Successfully",
+    data: stats,
+  };
+  return data;
+
 };
