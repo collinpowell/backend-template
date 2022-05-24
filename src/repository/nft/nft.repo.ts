@@ -730,14 +730,13 @@ export const purchaseArtWork = async (userId: string, body: any) => {
   logger.log(level.info, `>> purchaseArtWork()`);
   let data = { error: false, message: "" };
 
-  const [artWorkData, userDetails] = await Promise.all([
+  const [artWorkData] = await Promise.all([
     nftModel.find({
-      formOfSale: "FIXEDPRICE" || "AUCTION",
+      formOfSale: { $ne: "NOT_FOR_SALE" },
       _id: body.nftId,
     }),
-    userModel.find({ userId }),
   ]);
-  //console.log("----------1---------", artWorkData, userDetails);
+  console.log("----------1---------", artWorkData);
 
   if (!artWorkData || artWorkData.length <= 0) {
     data = { error: true, message: "NFT not found" };
@@ -821,14 +820,14 @@ const bidArtWork = async (nftData: any, userId: string, body: any) => {
   }
 
   // ? Auction is ended or not
-  if (
+  /* if (
     !moment(nftData.auctionEndTime).isAfter(
       moment(new Date().toISOString())
     )
   ) {
     data = { error: true, message: "Auction ended" };
     return data;
-  }
+  } */
 
   // ? Get the highest big of art work
   let pipeline = highestBidPipeline(nftData._id);
