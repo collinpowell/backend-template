@@ -46,6 +46,7 @@ interface PurchaseInput {
   bidderId: string;
   nftId: string;
   saleCoin: number;
+  auctionId: string;
   bidAmount: string;
   transactionHash?: any;
 }
