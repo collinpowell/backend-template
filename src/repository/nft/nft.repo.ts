@@ -851,7 +851,7 @@ const bidArtWork = async (nftData: any, userId: string, body: any) => {
     nftId: body.nftId,
     saleCoin: nftData.saleCoin,
     bidAmount: body.bidAmount,
-    transactionHash: body.transactionHash,
+    transactionHash: body.transactionHash.hash,
   });
   data = {
     error: false,
