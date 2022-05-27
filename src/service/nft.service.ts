@@ -1050,6 +1050,7 @@ export const getAllArtWorkPipeline = (
         ];
     }
 
+
     if (filter.sortBy === "DATE") {
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
