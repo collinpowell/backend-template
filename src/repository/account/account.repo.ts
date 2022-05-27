@@ -383,7 +383,7 @@ export const getUserProfile = async (_id: any) => {
       createdAt: userData[0].createdAt,
       updatedAt: userData[0].updatedAt,
       status: userData[0].status,
-      authProvider: userData[0].authProvider,
+      //authProvider: userData[0].authProvider,
       totalCreations,
       totalNftOwned,
       totalInSale,
@@ -569,6 +569,7 @@ export const getTrendingUsers = async (query: any, options: any) => {
       message: "All Top Creator Fetched successfully",
       data: {
         totalItems: count,
+        count: count,
         currentPage: Number(query.page),
         itemPerPage: Number(query.limit),
         totalPages:
@@ -586,7 +587,7 @@ export const getTrendingUsers = async (query: any, options: any) => {
     error: false,
     message: "All Top Creator Fetched successfully",
     data: {
-      totalItems: 0,
+      totalItems: 0,count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:

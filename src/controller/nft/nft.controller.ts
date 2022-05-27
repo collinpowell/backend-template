@@ -20,6 +20,7 @@ import {
 import mongoose from 'mongoose'
 import { FileTypes } from "../../model/nft"
 import JWTAuth from "../../service/jwt_auth/jwt_auth";
+import user from "../../model/user";
 const auth = new JWTAuth();
 
 
@@ -558,23 +559,77 @@ export const getTrendingNFT = async (
   const options = getOptionsPipelineJson(extraParams);
   const errors = validationResult(req);
 
-  try {
-    if (!errors.isEmpty()) {
-      return badRequestError(res, errors.array()[0].msg);
-    }
-    const result = await nftRepo.getTrendingArtWork(
-      req.query,
-      options
-    );
-    if (result.error) {
-      return badRequestError(res, result.message);
-    }
-    // return res.status(201).json({ data: result });
-    return successfulRequest(res, Object(result));
+  if (
+    req.headers["authorization"] === undefined ||
+    !req.headers["authorization"] ||
+    req.headers["authorization"].trim() === ""
+  ) {
+    try {
+      if (!errors.isEmpty()) {
+        return badRequestError(res, errors.array()[0].msg);
+      }
+      const result = await nftRepo.getTrendingArtWork(
+        null,
+        req.query,
+        options
+      );
+      if (result.error) {
+        return badRequestError(res, result.message);
+      }
+      // return res.status(201).json({ data: result });
+      return successfulRequest(res, Object(result));
 
-  } catch (error) {
-    logger.log(level.error, `<< getAllWithoutUserIdArtWork() error=${error}`);
-    serverError(res, error);
+    } catch (error) {
+      logger.log(level.error, `<< getAllWithoutUserIdArtWork() error=${error}`);
+      serverError(res, error);
+    }
+  } else {
+    const authorization = req.headers["authorization"];
+    const tokenSplitBy = " ";
+    if (authorization) {
+      let token = authorization.split(tokenSplitBy);
+      let length = token.length;
+      const tokenLength = 2;
+
+      if (length == tokenLength && token[0].toLowerCase() === "bearer") {
+        let accessToken = token[1];
+        const errors = validationResult(req);
+
+        try {
+          if (!errors.isEmpty()) {
+            return badRequestError(res, errors.array()[0].msg);
+          }
+          const userData: DecodedToken = await auth.verifyToken(accessToken);
+          logger.log(level.debug, `UserAuthenticationMiddleware()`);
+
+          const [userDoc] = await userModel.find({ email: userData.email });
+
+          if (userDoc && userDoc.status.toString() === "ACTIVE") {
+            console.log(userDoc.id)
+
+            const result = await nftRepo.getTrendingArtWork(
+              userDoc.id,
+              req.query,
+              options
+            );
+            if (result.error) {
+              return badRequestError(res, result.message);
+            }
+            // return res.status(201).json({ data: result });
+            return successfulRequest(res, Object(result));
+
+          }
+        } catch (error) {
+          if (error.toString().includes("jwt expired")) {
+            //res.status(410).json({ error: { message: "Token is expired" } });
+            res.status(410).json({ statuscode: 410, body: "", message: "Token is expired" });
+          }
+          logger.log(level.error, `appAuthMiddleware ${error}`);
+        }
+
+        authError(res);
+      }
+    }
   }
 
 };
@@ -601,7 +656,7 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
 
       const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.params.nftid);
       // return res.status(201).json({ data: { ...result, seller_other_artworks: sellerOtherArtworks } });
-      result.data.sellerOtherArtworks = sellerOtherArtworks
+      //result.data.sellerOtherArtworks = sellerOtherArtworks
       return successfulRequest(res, Object(result));
     } catch (error) {
       logger.log(level.error, `<< getArtWorkDetails() error=${error}`);
@@ -635,8 +690,10 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
             if (result.error) {
               return badRequestError(res, result.message);
             }
-            const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.params.nftid);
-            return res.status(201).json({ data: { ...result, seller_other_artworks: sellerOtherArtworks } });
+            //const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.params.nftid);
+            //return res.status(201).json({ data: { ...result } });
+            return successfulRequest(res, Object(result));
+
           }
         } catch (error) {
           if (error.toString().includes("jwt expired")) {
@@ -688,7 +745,7 @@ export const getBidHistory = async (req: Request, res: Response) => {
       return badRequestError(res, "Invalid Auction Id");
     }
     filter = { ...filter, nftId: req.params.nftid, auctionId: req.params.auctionid };
-    const result = await nftRepo.getBidHistory(filter,req.query, options);
+    const result = await nftRepo.getBidHistory(filter, req.query, options);
 
     if (result.error) {
       return badRequestError(res, result.message);

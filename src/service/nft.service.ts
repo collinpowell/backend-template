@@ -288,6 +288,16 @@ const commonArtworkPipeline = [
     },
     {
         $lookup: {
+            let: { "userObjId": { "$toObjectId": "$creatorId" } },
+            from: "users",
+            pipeline: [
+                { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+            ],
+            as: "userData"
+        }
+    },
+    {
+        $lookup: {
             let: { "userObjId": { "$toObjectId": "$ownerId" } },
             from: "users",
             pipeline: [
@@ -314,16 +324,6 @@ const commonArtworkPipeline = [
                 { $match: { "$expr": { "$eq": ["$auctionId", "$$userObjId"] } } }
             ],
             as: "bids"
-        }
-    },
-    {
-        $lookup: {
-            let: { "userObjId": { "$toObjectId": "$creatorId" } },
-            from: "users",
-            pipeline: [
-                { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
-            ],
-            as: "userData"
         }
     },
     {
@@ -950,6 +950,75 @@ export const getAllArtWorkPipeline = (
         console.log(filter.formOfSale)
         pipeline = [...pipeline, { $match: { formOfSale: filter.formOfSale } }];
     }
+
+    if (filter.auth) {
+        pipeline = [
+            ...pipeline,
+            {
+                $lookup: {
+                    from: "nftlikes",
+                    let: { "nftId": { "$toString": "$_id" } },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$nftId", "$$nftId"] },
+                                        { $eq: ["$liked", true] },
+                                        { $eq: ["$userId", filter.userId] },
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    as: "isLiked",
+                },
+            },
+            {
+                $addFields: {
+                    isLiked: {
+                        $cond: {
+                            if: { $gt: [{ $size: "$isLiked" }, 0] },
+                            then: true,
+                            else: false,
+                        },
+                    },
+                },
+            },
+
+            {
+                $lookup: {
+                    from: "nftbookmarks",
+                    let: { "nftId": { "$toString": "$_id" } },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$nftId", "$$nftId"] },
+                                        { $eq: ["$bookmarked", true] },
+                                        { $eq: ["$userId", filter.userId] },
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    as: "isBookmarked",
+                },
+            },
+            {
+                $addFields: {
+                    isBookmarked: {
+                        $cond: {
+                            if: { $gt: [{ $size: "$isBookmarked" }, 0] },
+                            then: true,
+                            else: false,
+                        },
+                    },
+                },
+            },
+        ];
+    }
     pipeline = [
         ...pipeline,
         ...commonArtworkPipeline,
@@ -957,6 +1026,7 @@ export const getAllArtWorkPipeline = (
             $project: {
                 title: 1,
                 isLiked: 1,
+                isBookmarked: 1,
                 totalLikes: { $size: "$nftLikes" },
                 formOfSale: 1,
                 file: 1,
@@ -1127,6 +1197,74 @@ export const getTrendingArtWorkPipeline = (
         console.log(filter.formOfSale)
         pipeline = [...pipeline, { $match: { formOfSale: filter.formOfSale } }];
     }
+    if (filter.userId) {
+        pipeline = [
+            ...pipeline,
+            {
+                $lookup: {
+                    from: "nftlikes",
+                    let: { "nftId": { "$toString": "$_id" } },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$nftId", "$$nftId"] },
+                                        { $eq: ["$liked", true] },
+                                        { $eq: ["$userId", filter.userId] },
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    as: "isLiked",
+                },
+            },
+            {
+                $addFields: {
+                    isLiked: {
+                        $cond: {
+                            if: { $gt: [{ $size: "$isLiked" }, 0] },
+                            then: true,
+                            else: false,
+                        },
+                    },
+                },
+            },
+
+            {
+                $lookup: {
+                    from: "nftbookmarks",
+                    let: { "nftId": { "$toString": "$_id" } },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$nftId", "$$nftId"] },
+                                        { $eq: ["$bookmarked", true] },
+                                        { $eq: ["$userId", filter.userId] },
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    as: "isBookmarked",
+                },
+            },
+            {
+                $addFields: {
+                    isBookmarked: {
+                        $cond: {
+                            if: { $gt: [{ $size: "$isBookmarked" }, 0] },
+                            then: true,
+                            else: false,
+                        },
+                    },
+                },
+            },
+        ];
+    }
     pipeline = [
         ...pipeline,
         ...commonArtworkPipeline,
@@ -1134,6 +1272,7 @@ export const getTrendingArtWorkPipeline = (
             $project: {
                 title: 1,
                 isLiked: 1,
+                isBookmarked: 1,
                 totalLikes: { $size: "$nftLikes" },
                 formOfSale: 1,
                 file: 1,
@@ -1311,6 +1450,7 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                 totalLikes: { $size: "$nftLikes" },
                 formOfSale: 1,
                 file: 1,
+                properties: 1,
                 nftTokenId: 1,
                 fixedPrice: { $toDouble: "$fixedPrice" },
                 description: 1,

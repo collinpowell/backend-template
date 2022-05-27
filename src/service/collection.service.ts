@@ -230,7 +230,7 @@ export const getMyCollectionListPipelineX = (
           username: { $arrayElemAt: ["$userData.username", 0] },
           avatar: { $arrayElemAt: ["$userData.avatar", 0] },
           bio: { $arrayElemAt: ["$userData.bio", 0] },
-          email: { $arrayElemAt: ["$userData.email", 0] },
+          //email: { $arrayElemAt: ["$userData.email", 0] },
           coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
         }
       },
@@ -387,8 +387,163 @@ export const getMyCollectionListPipeline = (
           avatar: { $arrayElemAt: ["$userData.avatar", 0] },
           bio: { $arrayElemAt: ["$userData.bio", 0] },
           coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-          email: { $arrayElemAt: ["$userData.email", 0] }
+          //email: { $arrayElemAt: ["$userData.email", 0] }
         }
+      },
+    },
+
+    {
+      $match: {
+        $or: [{ title: { $regex: search, $options: "i" } }],
+      },
+    },
+  ];
+
+  if (filter.sortBy === "DATE") {
+    if (!filter.orderBy || Number(filter.orderBy) === 0) {
+      filter.orderBy = -1;
+    }
+    pipeline = [...pipeline, { $sort: { createdAt: Number(filter.orderBy) } }];
+  }
+
+  // ? Show most liked artwork in ascending and descending order
+  if (filter.sortBy === "POPULARITY") {
+    if (!filter.orderBy || Number(filter.orderBy) === 0) {
+      filter.orderBy = -1;
+    }
+    pipeline = [
+      ...pipeline,
+      { $sort: { totalLikes: Number(filter.orderBy) } },
+    ];
+  }
+
+  if (count) {
+    pipeline.push({ $count: "total" });
+  }
+  if (extraParams) {
+    if (extraParams.skip) pipeline.push({ $skip: Number(extraParams.skip) });
+    if (extraParams.limit) pipeline.push({ $limit: Number(extraParams.limit) });
+  }
+
+  return pipeline;
+};
+
+export const getMyCollectionListPipelineY = (
+  filter: any,
+  extraParams: any,
+  count: boolean
+) => {
+  logger.log(level.info, `>> getMyCollectionListPipeline()`);
+  let search = filter.search;
+  if (!filter.search) {
+    search = "";
+  }
+  let pipeline = [];
+  if (filter.ownerId) {
+
+    pipeline = [
+      ...pipeline,
+      { $match: { ownerId: filter.ownerId} },
+    ];
+  }
+  if (filter._id) {
+
+    pipeline = [
+      ...pipeline,
+      { $match: { _id: filter._id } },
+    ];
+  }
+  if (filter.authUserId) {
+    pipeline = [
+      ...pipeline,
+      {
+        $lookup: {
+          from: "collectionlikes",
+          let: { collectionId: { "$toString": "$_id" } },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$collectionId", "$$collectionId"] },
+                    { $eq: ["$liked", true] },
+                    {
+                      $eq: ["$userId", filter.authUserId],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "isLiked",
+        },
+      },
+      {
+        $addFields: {
+          isLiked: {
+            $cond: {
+              if: { $gt: [{ $size: "$isLiked" }, 0] },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+    ];
+  }
+  pipeline = [
+    ...pipeline,
+    { $match: { status: "ACTIVE" } },
+    {
+      $lookup: {
+        let: { "userObjId": { "$toObjectId": "$ownerId" } },
+        from: "users",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+        ],
+        as: "userData"
+      }
+    },
+
+    {
+      $lookup: {
+        from: "collectionlikes",
+        let: { collectionId: { "$toString": "$_id" } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$collectionId", "$$collectionId"] },
+                  { $eq: ["$liked", true] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "collectionLikes",
+      },
+    },
+
+    {
+      $project: {
+        _id: 1,
+        title: 1,
+        image: 1,
+        totalLikes: { $size: "$collectionLikes" },
+        isLiked: "$isLiked",
+        nftCount: { $size: "$collectionData" },
+        createdAt: 1,
+        updatedAt: 1,
+        // creator: {
+        //   userId: { $arrayElemAt: ["$userData._id", 0] },
+        //   fullName: { $arrayElemAt: ["$userData.fullName", 0] },
+        //   username: { $arrayElemAt: ["$userData.username", 0] },
+        //   avatar: { $arrayElemAt: ["$userData.avatar", 0] },
+        //   bio: { $arrayElemAt: ["$userData.bio", 0] },
+        //   coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
+        //   //email: { $arrayElemAt: ["$userData.email", 0] }
+        // }
       },
     },
 

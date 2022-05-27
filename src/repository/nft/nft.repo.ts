@@ -492,6 +492,7 @@ export const getMyAllArtWork = async (
       message: "Users All ArtWork Fetched Successfully",
       data: {
         totalItems: count,
+        count: count,
         currentPage: Number(query.page),
         itemPerPage: Number(query.limit),
         totalPages:
@@ -509,7 +510,7 @@ export const getMyAllArtWork = async (
     error: false,
     message: "Users All ArtWork Fetched Successfully",
     data: {
-      totalItems: 0,
+      totalItems: 0,count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -913,6 +914,7 @@ export const browseByCollection = async (
       message: "Users All ArtWork Fetched Successfully",
       data: {
         totalItems: count,
+        count: count,
         currentPage: Number(query.page),
         itemPerPage: Number(query.limit),
         totalPages:
@@ -930,7 +932,7 @@ export const browseByCollection = async (
     error: false,
     message: "Users All ArtWork Fetched Successfully",
     data: {
-      totalItems: 0,
+      totalItems: 0,count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1001,6 +1003,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
       message: "All ArtWork Fetched Successfully",
       data: {
         totalItems: count,
+        count: count,
         currentPage: Number(query.page),
         itemPerPage: Number(query.limit),
         totalPages:
@@ -1019,7 +1022,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
     error: false,
     message: "All ArtWork Fetched Successfully",
     data: {
-      totalItems: 0,
+      totalItems: 0,count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1035,9 +1038,13 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   return data;
 };
 
-export const getTrendingArtWork = async (query: any, options: any) => {
+export const getTrendingArtWork = async (userId: any,query: any, options: any) => {
   logger.log(level.info, `>> getAllWithoutUserIdArtWork()`);
   let filter = {};
+
+  if(userId){
+    filter = {...filter, userId}
+  }
   if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale)) {
     filter = { ...filter, formOfSale: query.formOfSale };
   }
@@ -1067,7 +1074,7 @@ export const getTrendingArtWork = async (query: any, options: any) => {
       error: false,
       message: "Trending Artworks Fetched Successfully",
       data: {
-        totalItems: count,
+        count: count,
         currentPage: Number(query.page),
         itemPerPage: Number(query.limit),
         totalPages:
@@ -1086,7 +1093,7 @@ export const getTrendingArtWork = async (query: any, options: any) => {
     error: false,
     message: "Trending Artworks Fetched Successfully",
     data: {
-      totalItems: 0,
+      count: count,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1103,7 +1110,7 @@ export const getTrendingArtWork = async (query: any, options: any) => {
 };
 
 export const getAllArtWork = async (
-  user_id: string,
+  userId: string,
   query: any,
   options: any
 ) => {
@@ -1127,12 +1134,12 @@ export const getAllArtWork = async (
   }
   let count = 0;
 
-  if (user_id) {
-    filter = { ...filter, ownerId: user_id, auth: true };
+  if (userId) {
+    filter = { ...filter, ownerId: userId, auth: true };
   }
 
   if (
-    (!user_id || user_id === undefined || user_id === null)
+    (!userId || userId === undefined || userId === null)
   ) {
     const data = {
       error: true,
@@ -1165,6 +1172,7 @@ export const getAllArtWork = async (
       message: "All ArtWork Fetched Successfully",
       data: {
         totalItems: count,
+        count: count,
         currentPage: Number(query.page),
         itemPerPage: Number(query.limit),
         totalPages:
@@ -1182,7 +1190,7 @@ export const getAllArtWork = async (
     error: false,
     message: "All ArtWork Fetched Successfully",
     data: {
-      totalItems: 0,
+      totalItems: 0,count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1204,7 +1212,7 @@ export const getArtWorkDetails = async (filter: any) => {
   const pipeline = getArtWorkDetailsPipeline(filter);
 
   let artWorkDetails = await nftModel.aggregate(pipeline).exec();
-
+  
   if (artWorkDetails && artWorkDetails.length > 0) {
     artWorkDetails = artWorkDetails.map((data) => {
       if (data.formOfSale === "AUCTION") {
@@ -1256,7 +1264,7 @@ export const getArtWorkDetails = async (filter: any) => {
 
     let artWorkData = {
       ...artWorkDetails[0],
-      purchaseHistory,
+      //purchaseHistory,
     };
     let highestBid = 0;
     if (artWorkDetails[0].formOfSale === "AUCTION") {
@@ -1266,8 +1274,8 @@ export const getArtWorkDetails = async (filter: any) => {
         highestBid = currentBid[0].sale_price;
       }
     }
-    artWorkData = { ...artWorkData, highestBid };
-    if (filter.userId) {
+    //artWorkData = { ...artWorkData, highestBid };
+ /*    if (filter.userId) {
       const artWorkOwner = await nftModel.find({
         art_work_id: filter.art_work_id,
         $or: [
@@ -1302,7 +1310,7 @@ export const getArtWorkDetails = async (filter: any) => {
       } else {
         artWorkData = { ...artWorkData, is_current_owner: false };
       }
-    }
+    } */
     const data = {
       error: false,
       message: "Art work details fetched succssfully",
@@ -1396,6 +1404,7 @@ export const getBidHistory = async (filter: any, query: any, options: any) => {
       message: "Bid History Fetched Successfully",
       data: {
         totalItems: count,
+        count: count,
         currentPage: Number(query.page),
         itemPerPage: Number(query.limit),
         totalPages:
@@ -1415,7 +1424,7 @@ export const getBidHistory = async (filter: any, query: any, options: any) => {
     error: false,
     message: "No Bid History",
     data: {
-      totalItems: 0,
+      totalItems: 0,count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1539,6 +1548,7 @@ export const browseByBookmarkedNFT = async (
       message: "Users All Bookmarked NFT Fetched Successfully",
       data: {
         totalItems: count,
+        count: count,
         currentPage: Number(query.page),
         itemPerPage: Number(query.limit),
         totalPages:
@@ -1556,7 +1566,7 @@ export const browseByBookmarkedNFT = async (
     error: false,
     message: "Users All Bookmarked NFT Fetched Successfully",
     data: {
-      totalItems: 0,
+      totalItems: 0,count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1600,6 +1610,7 @@ export const getMyAllBids = async (
     let data = {
       message: "All bids fetched successfully",
       totalItems: count,
+      count: count,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1614,7 +1625,7 @@ export const getMyAllBids = async (
   }
   let data = {
     message: "All bids fetched successfully",
-    totalItems: 0,
+    totalItems: 0,count: 0,
     currentPage: Number(query.page),
     itemPerPage: Number(query.limit),
     totalPages:

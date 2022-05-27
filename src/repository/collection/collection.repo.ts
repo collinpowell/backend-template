@@ -6,7 +6,8 @@ import collectionLikesModel from "../../model/collectionLikes";
 import {
   addUserCollection,
   getMyCollectionListPipeline,
-  getMyCollectionListPipeline1
+  getMyCollectionListPipeline1,
+  getMyCollectionListPipelineY
 } from "../../service/collection.service";
 import * as fs from "fs";
 import { Storage } from "@google-cloud/storage";
@@ -127,22 +128,17 @@ export const getMyCollection = async (
     filter = { ...filter, search };
   }
 
-  return await commonGetCollectionFunction(filter, options, query);
+  return await commonGetCollectionFunctionX(filter, options, query);
 };
 
-const commonGetCollectionFunction = async (
+const commonGetCollectionFunctionX = async (
   filter: any,
   options: any,
   query?: any
 ) => {
-  const pipeline = getMyCollectionListPipeline(filter, options, false);
+  const pipeline = getMyCollectionListPipelineY(filter, options, false);
   let collectionList = await collectionModel.aggregate(pipeline).exec();
 
-
-  collectionList = collectionList.map((data) => {
-    data.creator.email = decryptText(data.creator.email);
-    return data;
-  });
   let data = {};
   const count = await collectionModel.find({ ...filter }).count();
   console.log(collectionList.length)
@@ -170,7 +166,57 @@ const commonGetCollectionFunction = async (
     error: false,
     message: "All Collection Fetched Successfully",
     data: {
-      totalItems: 0,
+      totalItems: 0,count: 0,
+      currentPage: Number(query.page),
+      itemPerPage: Number(query.limit),
+      totalPages:
+        Math.round(count / Number(query.limit)) < count / Number(query.limit)
+          ? Math.round(count / Number(query.limit)) + 1
+          : Math.round(count / Number(query.limit)),
+      currentItemCount: collectionList.length,
+      lastPage: count / Number(query.limit) <= Number(query.page),
+      data: [],
+    }
+  };
+  return data;
+};
+
+const commonGetCollectionFunction = async (
+  filter: any,
+  options: any,
+  query?: any
+) => {
+  const pipeline = getMyCollectionListPipeline(filter, options, false);
+  let collectionList = await collectionModel.aggregate(pipeline).exec();
+
+  let data = {};
+  const count = await collectionModel.find({ ...filter }).count();
+  console.log(collectionList.length)
+  if (collectionList && collectionList.length > 0) {
+    data = {
+      error: false,
+      message: "All Collection Fetched Successfully",
+      data: {
+        count,
+        totalItems: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: collectionList.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: collectionList,
+      }
+    };
+    return data;
+  }
+  data = {
+    error: false,
+    message: "All Collection Fetched Successfully",
+    data: {
+      totalItems: 0,count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -366,10 +412,7 @@ export const getCollectionDetails = async (query: any) => {
     const data = { error: true, message: "Collection Not Found" };
     return data;
   }
-  collectionExist = collectionExist.map((data) => {
-    data.creator_email = decryptText(data.creator_email);
-    return data;
-  });
+
   let collectionData = {};
   let artWorkData = [];
   await Promise.all(
@@ -644,16 +687,10 @@ export const getUserCollection = async (param: any,) => {
     data = { error: true, message: "Collection Not Found", data: {} };
     return data;
   }
-  collectionList = collectionList.map((data) => {
-    data.creator.email = decryptText(data.creator.email);
-    return data;
-  });
   data = {
     error: false,
     message: "Collection Found",
     data: collectionList[0]
   };
   return data;
-
-
 };
