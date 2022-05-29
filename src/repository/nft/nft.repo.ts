@@ -1135,7 +1135,7 @@ export const getAllArtWork = async (
   let count = 0;
 
   if (userId) {
-    filter = { ...filter, ownerId: userId, auth: true };
+    filter = { ...filter, userId: userId, auth: true };
   }
 
   if (

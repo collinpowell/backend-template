@@ -952,6 +952,7 @@ export const getAllArtWorkPipeline = (
     }
 
     if (filter.auth) {
+        console.log("Sasdas")
         pipeline = [
             ...pipeline,
             {
