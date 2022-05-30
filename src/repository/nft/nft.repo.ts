@@ -4,10 +4,10 @@ import { polygonContract } from "../../service/web3/web3";
 import { ethContract } from "../../service/web3/web3_eth";
 import bidModel from "../../model/bid";
 import ownerHistoryModel from "../../model/nftOwnersHistory";
+import nftHistory from "../../model/nftHistory";
 import ownerHistory1155Model from "../../model/nftOwnersHistory";
 import nftBookmarks from "../../model/nftBookmarks";
 import auctionModel from "../../model/auction"
-import mongoose from 'mongoose'
 
 import {
   addNFTService,
@@ -20,7 +20,8 @@ import {
   getPipelineForPurchaseHistory,
   getSellerOtherArtworkPipeline,
   browseByBookmarkPipeline,
-  getBidHistoryPipeline
+  getBidHistoryPipeline,
+  addToHistory
 } from "../../service/nft.service";
 import { decryptText, regexSpecialChar } from "../../utils/utility";
 import moment from "moment-timezone";
@@ -33,7 +34,7 @@ import { addOwnerHistory } from "../../service/ownerHistory.service";
 import { addBid, highestBidPipeline } from "../../service/bid.service";
 
 import categoryModel from "../../model/category";
-import coinModel from "../../model/coin";
+
 
 
 
@@ -309,13 +310,8 @@ export const editArtWork = async (
   }
 
   if (body.formOfSale === "AUCTION") {
-    const auctionEndTime = moment()
-      .add(Number(body.auctionEndHours), "hours")
-      .toDate()
-      .toISOString();
     auctionJson = {
       ...auctionJson,
-      auctionEndTime,
       nftId
     };
   }
@@ -344,12 +340,26 @@ export const editArtWork = async (
       Number(body.saleCoin) === Number(artWorkData[0].saleCoin)
     ) {
       await nftModel.findOneAndUpdate({ nftId }, inputJSON);
+      Promise.resolve(addToHistory({
+        userId: ownerId,
+        nftId,
+        typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION": body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE":"MINTED",
+        meta: {},
+        timestamp: new Date()
+      }));
       data = {
         error: false,
         message: "Artwork Updated successfully",
       };
       return data;
     } else {
+      Promise.resolve(addToHistory({
+        userId: ownerId,
+        nftId,
+        typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION": body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE":"MINTED",
+        meta: {},
+        timestamp: new Date()
+      }));
       await nftModel.findOneAndUpdate(
         { _id: nftId },
         { $inc: { saleQuantity: Number(Number(body.saleQuantity) * -1) } }
@@ -367,7 +377,13 @@ export const editArtWork = async (
     inputJSON = { ...inputJSON, auctionId: auction._id }
     await auction.save();
   }
-
+  Promise.resolve(addToHistory({
+    userId: ownerId,
+    nftId,
+    typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION": body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE":"MINTED",
+    meta: {},
+    timestamp: new Date()
+  }));
   await nftModel.findOneAndUpdate({ _id: nftId }, inputJSON);
   data = {
     error: false,
@@ -407,6 +423,13 @@ export const stopArtWorkSale = async (ownerId: string, nftId: any) => {
     { ownerId, _id: nftId },
     { $set: { formOfSale: "NOT_FOR_SALE" } }
   );
+  Promise.resolve(addToHistory({
+    userId:ownerId,
+    nftId,
+    typeOfEvent: "REMOVED_FROM_SALE",
+    meta: {},
+    timestamp: new Date()
+  }))
   data = {
     error: false,
     message: "Art Work sale is stopped",
@@ -431,6 +454,13 @@ export const burnNFT = async (ownerId: string, nftId: any) => {
     { ownerId, _id: nftId },
     { $set: { status: "DELETED" } }
   );
+  await addToHistory({
+    userId: artWorkExist[0].creatorId,
+    nftId: artWorkExist[0]._id,
+    typeOfEvent: "BURNED",
+    meta: {},
+    timestamp: new Date()
+  });
   data = {
     error: false,
     message: "NFT deleted Successfully",
@@ -468,7 +498,7 @@ export const getMyAllArtWork = async (
 
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -510,7 +540,7 @@ export const getMyAllArtWork = async (
     error: false,
     message: "Users All ArtWork Fetched Successfully",
     data: {
-      totalItems: 0,count: 0,
+      totalItems: 0, count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -587,6 +617,13 @@ export const likeNFT = async (userId: string, nftId: any) => {
       liked: true,
     });
     Promise.resolve(likeAdded.save());
+    Promise.resolve(addToHistory({
+      userId,
+      nftId,
+      typeOfEvent: "LIKED",
+      meta: {},
+      timestamp: new Date()
+    }))
     data = { error: false, message: "Liked Added Successfully" };
     return data;
   } else {
@@ -595,8 +632,22 @@ export const likeNFT = async (userId: string, nftId: any) => {
       { $set: { liked: !artWorkLiked[0].liked } }
     );
     if (!artWorkLiked[0].liked === false) {
+      Promise.resolve(addToHistory({
+        userId,
+        nftId,
+        typeOfEvent: "UNLIKED",
+        meta: {},
+        timestamp: new Date()
+      }))
       data = { error: false, message: "Liked removed Successfully" };
     } else {
+      Promise.resolve(addToHistory({
+        userId,
+        nftId,
+        typeOfEvent: "LIKED",
+        meta: {},
+        timestamp: new Date()
+      }))
       data = { error: false, message: "Liked Added Successfully" };
     }
     return data;
@@ -683,45 +734,52 @@ export const getOwnersHistory = async (nftId: any) => {
 
 };
 
-export const getNFTHistory = async (nftId: any) => {
+export const getNFTHistory = async (nftId: any,
+  query: any,
+  options: any) => {
   logger.log(level.info, `>> getNFTHistory()`);
-  const [artWorkData] = await Promise.all([
-    nftModel.find({ _id: nftId }),
-  ]);
-  //let data = { error: false, message: "" };
-  if (!artWorkData && artWorkData.length < 0) {
-    const data = { error: true, message: "NFT not found" };
+
+  let pipeline = pipelineNftHistory(nftId, options, false);
+  let myBidsList = await nftHistory.aggregate(pipeline);
+  let count = 0;
+  if (myBidsList && myBidsList.length > 0) {
+    let countPipeline = pipelineNftHistory(nftId, {}, true);
+    const totalCount = await nftHistory.aggregate(countPipeline);
+
+    count = totalCount[0].total;
+    let data = {
+      message: "History Fetched Successfully",
+      data: {
+        totalItems: count,
+        count: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: myBidsList.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: myBidsList,
+      }
+    };
     return data;
   }
-  // let history = await ownerHistoryModel.find({nftId})
-  // let history = await ownerHistoryModel.find({nftId})
-
-  let history = await nftModel.aggregate([
-    { $match: { _id: new mongoose.Types.ObjectId(nftId) }, },
-    {
-      $lookup: {
-        let: { "userObjId": { "$toObjectId": "$creatorId" } },
-        from: "users",
-        pipeline: [
-          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
-        ],
-        as: "creator"
-      }
-    },
-    {
-      $project: {
-        userId: { $arrayElemAt: ["$creator._id", 0] },
-        fullName: { $arrayElemAt: ["$creator.fullName", 0] },
-        username: { $arrayElemAt: ["$creator.username", 0] },
-        avatar: { $arrayElemAt: ["$creator.avatar", 0] },
-        typeOfEvent: "MINT",
-        meta: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-        timestamp: "$createdAt",
-      }
+  let data = {
+    message: "No History Found",
+    data: {
+      totalItems: 0, count: 0,
+      currentPage: Number(query.page),
+      itemPerPage: Number(query.limit),
+      totalPages:
+        Math.round(count / Number(query.limit)) < count / Number(query.limit)
+          ? Math.round(count / Number(query.limit)) + 1
+          : Math.round(count / Number(query.limit)),
+      currentItemCount: myBidsList.length,
+      lastPage: count / Number(query.limit) <= Number(query.page),
+      data: [],
     }
-  ]).exec();
-
-  const data = { error: false, data: history, message: "History Fetched Successfully" };
+  };
   return data;
 
 };
@@ -790,6 +848,13 @@ export const purchaseArtWork = async (userId: string, body: any) => {
         { collectionData: { $elemMatch: { nftId: body.nftId } } },
         { $set: { isDeleted: true } }
       ),
+      Promise.resolve(addToHistory({
+        userId,
+        nftId: body.nftId,
+        typeOfEvent: "PURCHASED",
+        meta: {},
+        timestamp: new Date()
+      })),
       addOwnerHistory({
         userId,
         nftId: body.nftId,
@@ -801,6 +866,8 @@ export const purchaseArtWork = async (userId: string, body: any) => {
         currentOwnerAddress: body.transactionHash.from,
         purchaseType: "FIXEDPRICE",
       }),
+
+
     ]);
     data = { error: false, message: "Art work purchased successfully" };
     return data;
@@ -855,6 +922,13 @@ const bidArtWork = async (nftData: any, userId: string, body: any) => {
     auctionId: nftData.auctionId,
     transactionHash: body.transactionHash.hash,
   });
+  Promise.resolve(addToHistory({
+    userId,
+    nftId: body.nftId,
+    typeOfEvent: "BIDDED_FOR",
+    meta: {},
+    timestamp: new Date()
+  })),
   data = {
     error: false,
     message: "Bid added successfully",
@@ -892,7 +966,8 @@ export const browseByCollection = async (
 
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -932,7 +1007,7 @@ export const browseByCollection = async (
     error: false,
     message: "Users All ArtWork Fetched Successfully",
     data: {
-      totalItems: 0,count: 0,
+      totalItems: 0, count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -974,7 +1049,8 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   artWorkList = artWorkList.map((data) => {
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -1022,7 +1098,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
     error: false,
     message: "All ArtWork Fetched Successfully",
     data: {
-      totalItems: 0,count: 0,
+      totalItems: 0, count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1038,12 +1114,12 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   return data;
 };
 
-export const getTrendingArtWork = async (userId: any,query: any, options: any) => {
+export const getTrendingArtWork = async (userId: any, query: any, options: any) => {
   logger.log(level.info, `>> getAllWithoutUserIdArtWork()`);
   let filter = {};
 
-  if(userId){
-    filter = {...filter, userId}
+  if (userId) {
+    filter = { ...filter, userId }
   }
   if (query.formOfSale && ["AUCTION", "NOT_FOR_SALE", "FIXEDPRICE"].includes(query.formOfSale)) {
     filter = { ...filter, formOfSale: query.formOfSale };
@@ -1054,7 +1130,8 @@ export const getTrendingArtWork = async (userId: any,query: any, options: any) =
   artWorkList = artWorkList.map((data) => {
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -1190,7 +1267,7 @@ export const getAllArtWork = async (
     error: false,
     message: "All ArtWork Fetched Successfully",
     data: {
-      totalItems: 0,count: 0,
+      totalItems: 0, count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1212,12 +1289,13 @@ export const getArtWorkDetails = async (filter: any) => {
   const pipeline = getArtWorkDetailsPipeline(filter);
 
   let artWorkDetails = await nftModel.aggregate(pipeline).exec();
-  
+
   if (artWorkDetails && artWorkDetails.length > 0) {
     artWorkDetails = artWorkDetails.map((data) => {
       if (data.formOfSale === "AUCTION") {
         if (
-          !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
+          !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+
         ) {
           data.currentAuction.auctionEnded = true;
         } else {
@@ -1275,42 +1353,42 @@ export const getArtWorkDetails = async (filter: any) => {
       }
     }
     //artWorkData = { ...artWorkData, highestBid };
- /*    if (filter.userId) {
-      const artWorkOwner = await nftModel.find({
-        art_work_id: filter.art_work_id,
-        $or: [
-          {
-            $and: [
-              { user_id: { $eq: filter.user_id } },
-              { current_owner_id: { $exists: false } },
-            ],
-          },
-          {
-            $and: [
-              { user_id: { $eq: filter.user_id } },
-              { current_owner_id: { $eq: filter.user_id } },
-            ],
-          },
-          {
-            $and: [
-              { user_id: { $ne: filter.user_id } },
-              { current_owner_id: { $eq: filter.user_id } },
-            ],
-          },
-        ],
-      });
-      let isBidActive = await bidModel.find({ ...filter, is_deleted: false });
-      let is_first_bid = true;
-      if (isBidActive && isBidActive.length > 0) {
-        is_first_bid = false;
-      }
-      artWorkData = { ...artWorkData, is_first_bid };
-      if (artWorkOwner && artWorkOwner.length > 0) {
-        artWorkData = { ...artWorkData, is_current_owner: true };
-      } else {
-        artWorkData = { ...artWorkData, is_current_owner: false };
-      }
-    } */
+    /*    if (filter.userId) {
+         const artWorkOwner = await nftModel.find({
+           art_work_id: filter.art_work_id,
+           $or: [
+             {
+               $and: [
+                 { user_id: { $eq: filter.user_id } },
+                 { current_owner_id: { $exists: false } },
+               ],
+             },
+             {
+               $and: [
+                 { user_id: { $eq: filter.user_id } },
+                 { current_owner_id: { $eq: filter.user_id } },
+               ],
+             },
+             {
+               $and: [
+                 { user_id: { $ne: filter.user_id } },
+                 { current_owner_id: { $eq: filter.user_id } },
+               ],
+             },
+           ],
+         });
+         let isBidActive = await bidModel.find({ ...filter, is_deleted: false });
+         let is_first_bid = true;
+         if (isBidActive && isBidActive.length > 0) {
+           is_first_bid = false;
+         }
+         artWorkData = { ...artWorkData, is_first_bid };
+         if (artWorkOwner && artWorkOwner.length > 0) {
+           artWorkData = { ...artWorkData, is_current_owner: true };
+         } else {
+           artWorkData = { ...artWorkData, is_current_owner: false };
+         }
+       } */
     const data = {
       error: false,
       message: "Art work details fetched succssfully",
@@ -1424,7 +1502,7 @@ export const getBidHistory = async (filter: any, query: any, options: any) => {
     error: false,
     message: "No Bid History",
     data: {
-      totalItems: 0,count: 0,
+      totalItems: 0, count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1526,7 +1604,8 @@ export const browseByBookmarkedNFT = async (
   artWorkList = artWorkList.map((data) => {
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.currentAuction.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -1566,7 +1645,7 @@ export const browseByBookmarkedNFT = async (
     error: false,
     message: "Users All Bookmarked NFT Fetched Successfully",
     data: {
-      totalItems: 0,count: 0,
+      totalItems: 0, count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1609,8 +1688,26 @@ export const getMyAllBids = async (
     count = totalCount[0].total;
     let data = {
       message: "All bids fetched successfully",
-      totalItems: count,
-      count: count,
+      data: {
+        totalItems: count,
+        count: count,
+        currentPage: Number(query.page),
+        itemPerPage: Number(query.limit),
+        totalPages:
+          Math.round(count / Number(query.limit)) < count / Number(query.limit)
+            ? Math.round(count / Number(query.limit)) + 1
+            : Math.round(count / Number(query.limit)),
+        currentItemCount: myBidsList.length,
+        lastPage: count / Number(query.limit) <= Number(query.page),
+        data: myBidsList,
+      }
+    };
+    return data;
+  }
+  let data = {
+    message: "All bids fetched successfully",
+    data: {
+      totalItems: 0, count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -1619,22 +1716,8 @@ export const getMyAllBids = async (
           : Math.round(count / Number(query.limit)),
       currentItemCount: myBidsList.length,
       lastPage: count / Number(query.limit) <= Number(query.page),
-      data: myBidsList,
-    };
-    return data;
-  }
-  let data = {
-    message: "All bids fetched successfully",
-    totalItems: 0,count: 0,
-    currentPage: Number(query.page),
-    itemPerPage: Number(query.limit),
-    totalPages:
-      Math.round(count / Number(query.limit)) < count / Number(query.limit)
-        ? Math.round(count / Number(query.limit)) + 1
-        : Math.round(count / Number(query.limit)),
-    currentItemCount: myBidsList.length,
-    lastPage: count / Number(query.limit) <= Number(query.page),
-    data: [],
+      data: [],
+    }
   };
   return data;
 };
@@ -1650,10 +1733,10 @@ export const pipelineForBidList = (
   let pipeline = [];
   pipeline = [
     ...pipeline,
-    { $match: { userId, auctionEnded: false } },
+    { $match: { bidderId: userId } },
     {
       $lookup: {
-        let: { "nftObjId": { "$toObjectId": "nftId" } },
+        let: { "nftObjId": { "$toObjectId": "$nftId" } },
         from: "nfts",
         pipeline: [
           { $match: { "$expr": { "$eq": ["$_id", "$$nftObjId"] } } }
@@ -1662,17 +1745,216 @@ export const pipelineForBidList = (
       }
     },
     { $unwind: "$nftData" },
+
+    {
+      $lookup: {
+        from: "nftlikes",
+        let: { "nftId": { "$toString": "$nftData._id" } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$nftId", "$$nftId"] },
+                  { $eq: ["$liked", true] },
+                  { $eq: ["$userId", userId] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "isLiked",
+      },
+    },
+    {
+      $lookup: {
+        let: { "userObjId": { "$toObjectId": "$nftData.auctionId" } },
+        from: "auctions",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+        ],
+        as: "auction"
+      }
+    },
+    {
+      $addFields: {
+        isLiked: {
+          $cond: {
+            if: { $gt: [{ $size: "$isLiked" }, 0] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+
+    {
+
+      $match: {
+        $or: [
+          { "nftData.contractType": "ERC721" },
+          {
+            $and: [{ "nftData.contractType": "ERC1155" }, { "nftData.saleQuantity": { $gt: 0 } }],
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        let: { "userObjId": { "$toObjectId": "$nftData.ownerId" } },
+        from: "users",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+        ],
+        as: "currentOwnerData"
+      }
+    },
+    {
+      $lookup: {
+        let: { "userObjId": { "$toObjectId": "$nftData.creatorId" } },
+        from: "users",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+        ],
+        as: "userData"
+      }
+    },
+    {
+      $lookup: {
+        from: "nftlikes",
+        let: { "nftId": { "$toString": "$nftData._id" } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$nftId", "$$nftId"] },
+                  { $eq: ["$liked", true] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "nftLikes",
+      },
+    },
+    {
+      $lookup: {
+        from: "categories",
+        let: { categoryId: "$nftData.nftCategory" },
+        pipeline: [
+          { $match: { $expr: { $in: ["$$categoryId", "$category.id"] } } },
+          { $unwind: "$category" },
+          { $match: { $expr: { $eq: ["$category.id", "$$categoryId"] } } },
+        ],
+        as: "categoryData",
+      },
+    },
+    { $unwind: "$categoryData" },
+    {
+      $lookup: {
+        from: "coins",
+        let: { coinId: "$nftData.saleCoin" },
+        pipeline: [
+          { $match: { $expr: { $in: ["$$coinId", "$coins.id"] } } },
+          { $unwind: "$coins" },
+          { $match: { $expr: { $eq: ["$coins.id", "$$coinId"] } } },
+        ],
+        as: "coinData",
+      },
+    },
+
     {
       $project: {
         nftId: 1,
         saleCoin: 1,
         bidAmount: { $toDouble: "$bidAmount" },
-        userId: 1,
+        bidderId: 1,
         transactionHash: 1,
         auctionEnded: 1,
         _id: 1,
-        createdAt: 1,
-        nftData: 1,
+        createdAt: 1,updatedAt: 1,
+
+        nftData: {
+          title: "$nftData.title",
+          isLiked: 1,
+          totalLikes: { $size: "$nftLikes" },
+          formOfSale: "$nftData.formOfSale",
+          file: "$nftData.file",
+          nftTokenId: "$nftData.nftTokenId",
+          fixedPrice: { $toDouble: "$nftData.fixedPrice" },
+          description: "$nftData.description",
+          royalty: "$nftData.royalty",
+          _id: "$nftData._id",
+          createdAt: "$nftData.createdAt",
+          categoryId: "$categoryData.category.id",
+          categoryName: "$categoryData.category.categoryName",
+          coinId: { $arrayElemAt: ["$coinData.coins.id", 0] },
+          coinName: { $arrayElemAt: ["$coinData.coins.coinName", 0] },
+          contractType: "$nftData.contractType",
+          saleQuantity: "$nftData.saleQuantity",
+          contractAddress: "$nftData.contractAddress",
+          mintNft: "$nftData.mintNft",
+          currentAuction: {
+            auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+
+            auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
+            auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
+            ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
+            auctionHighestBid: "$bids",
+            nftId: { $arrayElemAt: ["$auction.nftId", 0] },
+            difference: {
+              $subtract: [
+                {
+                  $divide: [
+                    {arrayElemAt: ["$auction.auctionEndHours", 0]},
+                    60 * 1000 * 60,
+                  ],
+                },
+                {
+                  $divide: [
+                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                    60 * 1000 * 60,
+                  ],
+                },
+              ],
+            },
+          },
+          creator: {
+            userId: { $arrayElemAt: ["$userData._id", 0] },
+            fullName: { $arrayElemAt: ["$userData.fullName", 0] },
+            username: { $arrayElemAt: ["$userData.username", 0] },
+            avatar: { $arrayElemAt: ["$userData.avatar", 0] },
+            bio: { $arrayElemAt: ["$userData.bio", 0] },
+            coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
+          },
+          currentOwner: {
+            userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
+            fullName: { $arrayElemAt: ["$currentOwnerData.fullName", 0] },
+            username: { $arrayElemAt: ["$currentOwnerData.username", 0] },
+            avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
+            bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
+            coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
+          },
+          isCreator: {
+            $cond: {
+              if: {
+                $and: [{ $eq: ["$nftData.creatorId", filter.userId] }],
+              },
+              then: true,
+              else: false,
+            },
+          },
+          isOwner: {
+            $cond: {
+              if: {
+                $and: [{ $eq: ["$nftData.ownerId", filter.userId] }],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
       },
     },
   ];
@@ -1692,15 +1974,61 @@ export const pipelineForBidList = (
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
-    pipeline = [...pipeline, { $sort: { createdAt: Number(filter.orderBy) } }];
+    pipeline = [...pipeline, { $sort: { updatedAt: Number(filter.orderBy) } }];
   }
 
-  if (filter.sortBy === "price") {
+  if (filter.sortBy === "PRICE") {
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
     pipeline = [...pipeline, { $sort: { fixedPrice: Number(filter.orderBy) } }];
   }
+
+  if (count) {
+    pipeline.push({ $count: "total" });
+  }
+  if (extraParams) {
+    if (extraParams.skip) pipeline.push({ $skip: Number(extraParams.skip) });
+    if (extraParams.limit) pipeline.push({ $limit: Number(extraParams.limit) });
+  }
+
+  return pipeline;
+};
+
+
+export const pipelineNftHistory = (
+  nftId: string,
+  extraParams: any,
+  count: boolean
+) => {
+
+  let pipeline = [];
+  pipeline = [
+    { $match: {nftId} },
+    {
+      $lookup: {
+        let: { "userObjId": { "$toObjectId": "$userId" } },
+        from: "users",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+        ],
+        as: "creator"
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        userId: 1,
+        fullName: { $arrayElemAt: ["$creator.fullName", 0] },
+        username: { $arrayElemAt: ["$creator.username", 0] },
+        avatar: { $arrayElemAt: ["$creator.avatar", 0] },
+        typeOfEvent: 1,
+        meta: 1,
+        timestamp: 1,
+      }
+    }
+  ];
+  pipeline = [...pipeline, { $sort: { timestamp: Number(-1) } }];
 
   if (count) {
     pipeline.push({ $count: "total" });

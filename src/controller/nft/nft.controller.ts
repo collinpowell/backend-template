@@ -408,13 +408,13 @@ export const getNFTHistory = async (
     return badRequestError(res, "Invalid NFT Id");
   }
 
-  try {
-    const result = await nftRepo.getNFTHistory(nftId);
-    if (result.error) {
-      return badRequestError(res, result.message);
-    }
+  const extraParams = standardStructureStringToJson(req.query);
+  const options = getOptionsPipelineJson(extraParams);
 
-    return successfulRequest(res, result);
+  try {
+    const result = await nftRepo.getNFTHistory(nftId, req.query, options);
+
+    return successfulRequest(res, Object(result));
 
   } catch (error) {
 

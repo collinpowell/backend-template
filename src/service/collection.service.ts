@@ -35,7 +35,7 @@ export const getMyCollectixonListPipeline = (
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
-    pipeline = [...pipeline, { $sort: { created_at: Number(filter.orderBy) } }];
+    pipeline = [...pipeline, { $sort: { updatedAt: Number(filter.orderBy) } }];
   }
 
   // ? Show most liked artwork in ascending and descending order
@@ -222,7 +222,9 @@ export const getMyCollectionListPipelineX = (
         title: 1,
         collectionData: 1,
         collectionId: 1,
-        createdAt: 1,
+        createdAt: 1,updatedAt: 1,
+
+
         totalLikes: { $size: "$collectionLikes" },
         creator: {
           userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -247,7 +249,7 @@ export const getMyCollectionListPipelineX = (
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
-    pipeline = [...pipeline, { $sort: { createdAt: Number(filter.orderBy) } }];
+    pipeline = [...pipeline, { $sort: { updatedAt: Number(filter.orderBy) } }];
   }
 
   // ? Show most liked artwork in ascending and descending order
@@ -378,8 +380,7 @@ export const getMyCollectionListPipeline = (
         totalLikes: { $size: "$collectionLikes" },
         isLiked: "$isLiked",
         nftCount: { $size: "$collectionData" },
-        createdAt: 1,
-        updatedAt: 1,
+        createdAt: 1,updatedAt: 1,
         creator: {
           userId: { $arrayElemAt: ["$userData._id", 0] },
           fullName: { $arrayElemAt: ["$userData.fullName", 0] },
@@ -403,7 +404,7 @@ export const getMyCollectionListPipeline = (
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
-    pipeline = [...pipeline, { $sort: { createdAt: Number(filter.orderBy) } }];
+    pipeline = [...pipeline, { $sort: { updatedAt: Number(filter.orderBy) } }];
   }
 
   // ? Show most liked artwork in ascending and descending order
@@ -533,8 +534,10 @@ export const getMyCollectionListPipelineY = (
         totalLikes: { $size: "$collectionLikes" },
         isLiked: "$isLiked",
         nftCount: { $size: "$collectionData" },
-        createdAt: 1,
-        updatedAt: 1,
+        createdAt: 1,updatedAt: 1,
+
+
+ 
         // creator: {
         //   userId: { $arrayElemAt: ["$userData._id", 0] },
         //   fullName: { $arrayElemAt: ["$userData.fullName", 0] },
@@ -558,7 +561,7 @@ export const getMyCollectionListPipelineY = (
     if (!filter.orderBy || Number(filter.orderBy) === 0) {
       filter.orderBy = -1;
     }
-    pipeline = [...pipeline, { $sort: { createdAt: Number(filter.orderBy) } }];
+    pipeline = [...pipeline, { $sort: { updatedAt: Number(filter.orderBy) } }];
   }
 
   // ? Show most liked artwork in ascending and descending order
@@ -639,8 +642,7 @@ export const getMyCollectionListPipeline1 = (
         totalLikes: { $size: "$collectionLikes" },
         isLiked: "$isLiked",
         nftCount: { $size: "$collectionData" },
-        createdAt: 1,
-        updatedAt: 1,
+        createdAt: 1,updatedAt: 1,
         creator: {
           userId: { $arrayElemAt: ["$userData._id", 0] },
           fullName: { $arrayElemAt: ["$userData.fullName", 0] },

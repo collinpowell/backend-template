@@ -8,6 +8,7 @@ import collectionModel from "../../model/collection";
 import { Storage } from "@google-cloud/storage";
 import * as accountService from "../../service/account.service";
 
+import mongoose from 'mongoose'
 
 const googleCloud = new Storage({
   projectId: process.env.PROJECT_ID,
@@ -254,35 +255,91 @@ export const editProfile = async (_id: string, body: any) => {
 
 export const connectWallet = async (_id: string, body: any) => {
   logger.log(level.info, `>> editProfile()`);
-
-  const userExist = await userModel.find({
+let userExist;
+  const userExistX = await userModel.find({
     _id,
     status: "ACTIVE",
   });
-  if (!userExist || userExist.length <= 0) {
+  if (!userExistX || userExistX.length <= 0) {
     const data = {
       error: true,
       message: "User not found",
     };
     return data;
   }
+  console.log(_id)
 
-  let updateData = {};
+  userExist = await userModel.find({
+    _id:{$ne:_id},
+    connectedWallet: {
+      $elemMatch: {
+        walletProvider: { $eq: body.walletProvider },
+        walletAddress: { $eq: body.walletAddress },
+      },
+    }
+  });
+  console.log(userExist)
 
+  if (userExist && userExist.length > 0) {
+    const data = {
+      error: true,
+      message: "Wallet already in use by another user",
+    };
+    return data;
+  }
 
-  if (body && body.walletId.length > 0) {
+  console.log("---1---")
+  userExist = await userModel.find({
+    _id,
+    connectedWallet: {
+      $elemMatch: {
+        walletProvider: { $eq: body.walletProvider },
+        walletAddress: { $ne: body.walletAddress },
+      },
+    }
+  });
+  console.log(userExist)
 
-    updateData = { ...updateData, connectedWallet: body };
+  if (userExist && userExist.length > 0) {
+    const data = {
+      error: true,
+      message: "Already Connected to different address " ,
+    };
+    return data;
+  }
+
+  userExist = await userModel.find({
+    _id,
+    connectedWallet: {
+      $elemMatch: {
+        walletProvider: { $eq: body.walletProvider },
+        walletAddress: { $eq: body.walletAddress },
+      },
+    }
+  });
+  console.log(userExist)
+
+  if (userExist && userExist.length > 0) {
+    const data = {
+      error: false,
+      message: "Connected Successfully",
+    };
+    return data;
+  } else {
+    let connectedWallet = [];
+    connectedWallet = userExistX[0]?.connectedWallet ? userExistX[0]?.connectedWallet : [];
+    connectedWallet.push(body)
+    await userModel.findOneAndUpdate({ _id }, { $set: { connectedWallet } });
+
+    const data = {
+      error: false,
+      message: "Profile Updated Successfully",
+    };
+    return data;
   }
 
 
-  await userModel.findOneAndUpdate({ _id }, { $set: updateData });
 
-  const data = {
-    error: false,
-    message: "Profile Updated Successfully",
-  };
-  return data;
 };
 
 export const getUserProfile = async (_id: any) => {
@@ -544,7 +601,7 @@ export const getTrendingUsers = async (query: any, options: any) => {
           ],
         });
         data.totalSold = await sold.count({
-          sellerUserId:data.userId
+          sellerUserId: data.userId
         });
         return data;
       })
@@ -587,7 +644,7 @@ export const getTrendingUsers = async (query: any, options: any) => {
     error: false,
     message: "All Top Creator Fetched successfully",
     data: {
-      totalItems: 0,count: 0,
+      totalItems: 0, count: 0,
       currentPage: Number(query.page),
       itemPerPage: Number(query.limit),
       totalPages:
@@ -616,12 +673,12 @@ export const getStatistics = async () => {
     {
       $group: {
         _id: "$sellerUserId",
-        orig_id: {$first: "$_id" },
-        count: {$sum: 1 }
+        orig_id: { $first: "$_id" },
+        count: { $sum: 1 }
       }
     },
     {
-      $count:"totalSellers"
+      $count: "totalSellers"
     }
   ]).exec()
 

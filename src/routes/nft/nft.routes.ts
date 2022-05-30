@@ -224,14 +224,14 @@ routes
  * @desc Bid for NFT 
  * @access Private
  * **/
-routes.route(PATH.AUCTION).post(nftController.purchaseArtWork);
+//routes.route(PATH.AUCTION).post(nftController.purchaseArtWork);
 
 /**
  * @api {POST} /api/nft/fixedsale/purchase
  * @desc Purchase Art 
  * @access Private
  * **/
-routes.route(PATH.FIXEDSALE).post(nftController.purchaseArtWork);
+//routes.route(PATH.FIXEDSALE).post(nftController.purchaseArtWork);
 
 /**
 * @api {GET} /api/nft/browsebookmarked

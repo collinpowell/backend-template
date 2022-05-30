@@ -5,14 +5,6 @@ export const highestBidPipeline = (nftId: string) => {
   pipeline = [
     ...pipeline,
     { $match: { nftId, status: "BID", auctionEnded: false } },
-    // {
-    //   $lookup: {
-    //     from: "users",
-    //     localField: "bidderId",
-    //     foreignField: "_id",
-    //     as: "userData",
-    //   },
-    // },
     {
       $lookup: {
         let: { "bidderId": { "$toObjectId": "$bidderId" } },
@@ -30,7 +22,9 @@ export const highestBidPipeline = (nftId: string) => {
         saleCoin: 1,
         bidAmount: { $toDouble: "$bidAmount" },
         bidderId: 1,
-        createdAt: 1,
+        createdAt: 1,updatedAt: 1,
+
+
         email: "$userData.email",
         username: "$userData.username",
         transactionHash: 1,
@@ -62,6 +56,7 @@ export const addBid = async (purchaseData: PurchaseInput) => {
     }
   });
 };
+
 
 export const bidHistoryPipeline = (
   art_work_id: any,
