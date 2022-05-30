@@ -124,9 +124,20 @@ export const addArtWork = async (
   inputJSON = { ...inputJSON, formOfSale: body.formOfSale };
 
   if (body.formOfSale === "AUCTION") {
+
+    if(new Date(Number(body.auctionEndHours)).getTime() <= new Date().getTime()){
+      data = { error: true, message: "Auction End Hour is not valid" };
+      return data;
+    }
+
+    const difference = new Date(Number(body.auctionEndHours)).getTime() - new Date().getTime();
+    //const difference = endDate - today;
+    const hours = parseInt((difference / (1000 * 60 * 60) % 24).toString());
+
+    console.log(hours)
     if (
       !Number(body.auctionEndHours) ||
-      Number(body.auctionEndHours) <= 0 || Number(body.auctionEndHours) >= 168
+      hours <= 0 || hours >= 168
     ) {
       data = { error: true, message: "Valid Auction end time is requied" };
       return data;
