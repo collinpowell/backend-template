@@ -343,7 +343,7 @@ export const editArtWork = async (
       Promise.resolve(addToHistory({
         userId: ownerId,
         nftId,
-        typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION": body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE":"MINTED",
+        typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION" : body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE" : "MINTED",
         meta: {},
         timestamp: new Date()
       }));
@@ -356,7 +356,7 @@ export const editArtWork = async (
       Promise.resolve(addToHistory({
         userId: ownerId,
         nftId,
-        typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION": body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE":"MINTED",
+        typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION" : body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE" : "MINTED",
         meta: {},
         timestamp: new Date()
       }));
@@ -380,7 +380,7 @@ export const editArtWork = async (
   Promise.resolve(addToHistory({
     userId: ownerId,
     nftId,
-    typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION": body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE":"MINTED",
+    typeOfEvent: body.formOfSale === "AUCTION" ? "PUT_ON_AUCTION" : body.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE" : "MINTED",
     meta: {},
     timestamp: new Date()
   }));
@@ -424,7 +424,7 @@ export const stopArtWorkSale = async (ownerId: string, nftId: any) => {
     { $set: { formOfSale: "NOT_FOR_SALE" } }
   );
   Promise.resolve(addToHistory({
-    userId:ownerId,
+    userId: ownerId,
     nftId,
     typeOfEvent: "REMOVED_FROM_SALE",
     meta: {},
@@ -498,7 +498,7 @@ export const getMyAllArtWork = async (
 
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+        data.currentAuction?.auctionEndHours && !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -929,10 +929,10 @@ const bidArtWork = async (nftData: any, userId: string, body: any) => {
     meta: {},
     timestamp: new Date()
   })),
-  data = {
-    error: false,
-    message: "Bid added successfully",
-  };
+    data = {
+      error: false,
+      message: "Bid added successfully",
+    };
   return data;
 };
 
@@ -966,7 +966,7 @@ export const browseByCollection = async (
 
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+        data.currentAuction?.auctionEndHours && !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
 
       ) {
         data.currentAuction.auctionEnded = true;
@@ -1049,8 +1049,7 @@ export const getAllWithoutUserIdArtWork = async (query: any, options: any) => {
   artWorkList = artWorkList.map((data) => {
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
-
+        data.currentAuction?.auctionEndHours && !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -1130,8 +1129,7 @@ export const getTrendingArtWork = async (userId: any, query: any, options: any) 
   artWorkList = artWorkList.map((data) => {
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
-
+        data.currentAuction?.auctionEndHours && !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -1230,7 +1228,7 @@ export const getAllArtWork = async (
   artWorkList = artWorkList.map((data) => {
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(data.auctionEndTime).isAfter(moment(new Date().toISOString()))
+        data.currentAuction?.auctionEndHours && !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
       ) {
         data.currentAuction.auctionEnded = true;
       } else {
@@ -1294,7 +1292,7 @@ export const getArtWorkDetails = async (filter: any) => {
     artWorkDetails = artWorkDetails.map((data) => {
       if (data.formOfSale === "AUCTION") {
         if (
-          !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+          data.currentAuction?.auctionEndHours && !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
 
         ) {
           data.currentAuction.auctionEnded = true;
@@ -1424,7 +1422,7 @@ export const getAuctionDetails = async (filter: any) => {
     let resp = []
     for (let i = 0; i < auction.length; i++) {
       if (
-        !moment(auction[i].auctionEndTime).isAfter(moment(new Date().toISOString()))
+        auction[i].auctionEndHours && !moment(new Date(auction[i].auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
       ) {
         auctionData = {
           ...auctionData,
@@ -1604,7 +1602,7 @@ export const browseByBookmarkedNFT = async (
   artWorkList = artWorkList.map((data) => {
     if (data.formOfSale === "AUCTION") {
       if (
-        !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
+        data.currentAuction?.auctionEndHours && !moment(new Date(data.currentAuction.auctionEndHours).toISOString()).isAfter(moment(new Date().toISOString()))
 
       ) {
         data.currentAuction.auctionEnded = true;
@@ -1873,7 +1871,7 @@ export const pipelineForBidList = (
         transactionHash: 1,
         auctionEnded: 1,
         _id: 1,
-        createdAt: 1,updatedAt: 1,
+        createdAt: 1, updatedAt: 1,
 
         nftData: {
           title: "$nftData.title",
@@ -1907,7 +1905,12 @@ export const pipelineForBidList = (
               $subtract: [
                 {
                   $divide: [
-                    {arrayElemAt: ["$auction.auctionEndHours", 0]},
+                    {
+                      $ifNull: [
+                        { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                        5
+                      ],
+                    },
                     60 * 1000 * 60,
                   ],
                 },
@@ -1919,6 +1922,7 @@ export const pipelineForBidList = (
                 },
               ],
             },
+
           },
           creator: {
             userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -2004,7 +2008,7 @@ export const pipelineNftHistory = (
 
   let pipeline = [];
   pipeline = [
-    { $match: {nftId} },
+    { $match: { nftId } },
     {
       $lookup: {
         let: { "userObjId": { "$toObjectId": "$userId" } },

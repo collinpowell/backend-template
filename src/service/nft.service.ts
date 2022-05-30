@@ -14,15 +14,15 @@ import { BigNumber } from 'ethers'
 
 export const addToHistory = async (history: HistoryType) => {
     return new Promise((resolve, reject) => {
-      try {
-        const ownerAdded = new nftHistoryModel(history);
-        const addedOwner = Promise.resolve(ownerAdded.save());
-        resolve(addedOwner);
-      } catch (err) {
-        reject(err);
-      }
+        try {
+            const ownerAdded = new nftHistoryModel(history);
+            const addedOwner = Promise.resolve(ownerAdded.save());
+            resolve(addedOwner);
+        } catch (err) {
+            reject(err);
+        }
     });
-  };
+};
 
 const ipfsClient = async () => {
     const ipfs = await create({
@@ -75,17 +75,17 @@ export const addArtWorkFunction = (nft: any, metaData: any, auction: any) => {
                 artWorkCreate.auctionId = auctionCreate._id
                 Promise.resolve(auctionCreate.save())
             }
-            const addedArtWork = Promise.resolve(artWorkCreate.save()).then((res) =>{
+            const addedArtWork = Promise.resolve(artWorkCreate.save()).then((res) => {
                 Promise.resolve(addToHistory({
                     userId: res.creatorId,
                     nftId: res._id,
-                    typeOfEvent: nft.formOfSale === "AUCTION" ? "PUT_ON_AUCTION": nft.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE":"MINTED",
+                    typeOfEvent: nft.formOfSale === "AUCTION" ? "PUT_ON_AUCTION" : nft.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE" : "MINTED",
                     meta: {},
                     timestamp: res.createdAt
-                  }));
+                }));
             });
 
-           
+
             // ipfs.io/ipfs/QmbSWW46MajGJBPRuXYutGATSnXZvY6MvUvvVLeg1SCQMu
             resolve(addedArtWork);
         } catch (err) {
@@ -175,7 +175,7 @@ export const getMyAllArtCreationsPipeline = (
                 description: 1,
                 royalty: 1,
                 _id: 1,
-                createdAt: 1,updatedAt: 1,
+                createdAt: 1, updatedAt: 1,
 
 
                 categoryId: "$categoryData.category.id",
@@ -188,7 +188,7 @@ export const getMyAllArtCreationsPipeline = (
                 mintNft: 1,
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-                    
+
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
@@ -196,20 +196,25 @@ export const getMyAllArtCreationsPipeline = (
                     auctionHighestBid: "$bids",
                     difference: {
                         $subtract: [
-                          {
-                            $divide: [
-                              {arrayElemAt: ["$auction.auctionEndHours", 0]},
-                              60 * 1000 * 60,
-                            ],
-                          },
-                          {
-                            $divide: [
-                              { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
-                              60 * 1000 * 60,
-                            ],
-                          },
+                            {
+                                $divide: [
+                                    {
+                                        $ifNull: [
+                                            { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                                            5
+                                        ],
+                                    },
+                                    60 * 1000 * 60,
+                                ],
+                            },
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                                    60 * 1000 * 60,
+                                ],
+                            },
                         ],
-                      },
+                    },
                 },
                 creator: {
                     userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -609,7 +614,7 @@ export const browseByCollectionPipeline = (
                 mintNft: "$nftData.mintNft",
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-                    
+
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
@@ -617,20 +622,25 @@ export const browseByCollectionPipeline = (
                     auctionHighestBid: "$bids",
                     difference: {
                         $subtract: [
-                          {
-                            $divide: [
-                              {arrayElemAt: ["$auction.auctionEndHours", 0]},
-                              60 * 1000 * 60,
-                            ],
-                          },
-                          {
-                            $divide: [
-                              { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
-                              60 * 1000 * 60,
-                            ],
-                          },
+                            {
+                                $divide: [
+                                    {
+                                        $ifNull: [
+                                            { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                                            5
+                                        ],
+                                    },
+                                    60 * 1000 * 60,
+                                ],
+                            },
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                                    60 * 1000 * 60,
+                                ],
+                            },
                         ],
-                      },
+                    },
                 },
                 creator: {
                     userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -701,7 +711,7 @@ export const browseByBookmarkPipeline = (
     }
     let pipeline = [];
 
-    if (filter.formOfSale === "AUCTION" || filter.formOfSale === "FIXEDPRICE" ) {
+    if (filter.formOfSale === "AUCTION" || filter.formOfSale === "FIXEDPRICE") {
         pipeline = [
             ...pipeline,
             { $match: { formOfSale: filter.formOfSale } },
@@ -874,7 +884,7 @@ export const browseByBookmarkPipeline = (
                 mintNft: "$nftData.mintNft",
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-                    
+
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
@@ -882,20 +892,25 @@ export const browseByBookmarkPipeline = (
                     nftId: { $arrayElemAt: ["$auction.nftId", 0] },
                     difference: {
                         $subtract: [
-                          {
-                            $divide: [
-                              {arrayElemAt: ["$auction.auctionEndHours", 0]},
-                              60 * 1000 * 60,
-                            ],
-                          },
-                          {
-                            $divide: [
-                              { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
-                              60 * 1000 * 60,
-                            ],
-                          },
+                            {
+                                $divide: [
+                                    {
+                                        $ifNull: [
+                                            { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                                            5
+                                        ],
+                                    },
+                                    60 * 1000 * 60,
+                                ],
+                            },
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                                    60 * 1000 * 60,
+                                ],
+                            },
                         ],
-                      },
+                    },
                 },
                 creator: {
                     userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -1085,7 +1100,7 @@ export const getAllArtWorkPipeline = (
                 description: 1,
                 royalty: 1,
                 _id: 1,
-                createdAt: 1,updatedAt: 1,
+                createdAt: 1, updatedAt: 1,
 
 
                 categoryId: "$categoryData.category.id",
@@ -1098,7 +1113,7 @@ export const getAllArtWorkPipeline = (
                 mintNft: 1,
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-                    
+
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
@@ -1106,20 +1121,25 @@ export const getAllArtWorkPipeline = (
                     auctionHighestBid: "$bids",
                     difference: {
                         $subtract: [
-                          {
-                            $divide: [
-                              {arrayElemAt: ["$auction.auctionEndHours", 0]},
-                              60 * 1000 * 60,
-                            ],
-                          },
-                          {
-                            $divide: [
-                              { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
-                              60 * 1000 * 60,
-                            ],
-                          },
+                            {
+                                $divide: [
+                                    {
+                                        $ifNull: [
+                                            { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                                            5
+                                        ],
+                                    },
+                                    60 * 1000 * 60,
+                                ],
+                            },
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                                    60 * 1000 * 60,
+                                ],
+                            },
                         ],
-                      },
+                    },
                 },
                 creator: {
                     userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -1338,7 +1358,7 @@ export const getTrendingArtWorkPipeline = (
                 description: 1,
                 royalty: 1,
                 _id: 1,
-                createdAt: 1,updatedAt: 1,
+                createdAt: 1, updatedAt: 1,
 
 
                 categoryId: "$categoryData.category.id",
@@ -1351,7 +1371,7 @@ export const getTrendingArtWorkPipeline = (
                 mintNft: 1,
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-                    
+
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
@@ -1359,20 +1379,25 @@ export const getTrendingArtWorkPipeline = (
                     auctionHighestBid: "$bids",
                     difference: {
                         $subtract: [
-                          {
-                            $divide: [
-                              {arrayElemAt: ["$auction.auctionEndHours", 0]},
-                              60 * 1000 * 60,
-                            ],
-                          },
-                          {
-                            $divide: [
-                              { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
-                              60 * 1000 * 60,
-                            ],
-                          },
+                            {
+                                $divide: [
+                                    {
+                                        $ifNull: [
+                                            { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                                            5
+                                        ],
+                                    },
+                                    60 * 1000 * 60,
+                                ],
+                            },
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                                    60 * 1000 * 60,
+                                ],
+                            },
                         ],
-                      },
+                    },
                 },
                 creator: {
                     userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -1415,7 +1440,7 @@ export const getTrendingArtWorkPipeline = (
 
     pipeline = [
         ...pipeline,
-        { $match: { totalLikes: {$ne:0 } }},
+        { $match: { totalLikes: { $ne: 0 } } },
     ];
     pipeline = [...pipeline, { $sort: { totalLikes: Number(-1) } }];
 
@@ -1520,7 +1545,7 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                 description: 1,
                 royalty: 1,
                 _id: 1,
-                createdAt: 1,updatedAt: 1,
+                createdAt: 1, updatedAt: 1,
 
 
                 categoryId: "$categoryData.category.id",
@@ -1533,7 +1558,7 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                 mintNft: 1,
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-                    
+
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
@@ -1541,20 +1566,25 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                     auctionHighestBid: "$bids",
                     difference: {
                         $subtract: [
-                          {
-                            $divide: [
-                              {arrayElemAt: ["$auction.auctionEndHours", 0]},
-                              60 * 1000 * 60,
-                            ],
-                          },
-                          {
-                            $divide: [
-                              { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
-                              60 * 1000 * 60,
-                            ],
-                          },
+                            {
+                                $divide: [
+                                    {
+                                        $ifNull: [
+                                            { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                                            5
+                                        ],
+                                    },
+                                    60 * 1000 * 60,
+                                ],
+                            },
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                                    60 * 1000 * 60,
+                                ],
+                            },
                         ],
-                      },
+                    },
                 },
                 creator: {
                     userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -1652,7 +1682,7 @@ export const getAuctionPipeline = (filter: any) => {
                 description: 1,
                 royalty: 1,
                 _id: 1,
-                createdAt: 1,updatedAt: 1,
+                createdAt: 1, updatedAt: 1,
 
 
                 categoryId: "$categoryData.category.id",
@@ -1665,7 +1695,7 @@ export const getAuctionPipeline = (filter: any) => {
                 mintNft: 1,
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-                    
+
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
@@ -1673,20 +1703,25 @@ export const getAuctionPipeline = (filter: any) => {
                     auctionHighestBid: "$bids",
                     difference: {
                         $subtract: [
-                          {
-                            $divide: [
-                              {arrayElemAt: ["$auction.auctionEndHours", 0]},
-                              60 * 1000 * 60,
-                            ],
-                          },
-                          {
-                            $divide: [
-                              { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
-                              60 * 1000 * 60,
-                            ],
-                          },
+                            {
+                                $divide: [
+                                    {
+                                        $ifNull: [
+                                            { $arrayElemAt: ["$auction.auctionEndHours", 0] },
+                                            5
+                                        ],
+                                    },
+                                    60 * 1000 * 60,
+                                ],
+                            },
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), { $arrayElemAt: ["$auction.createdAt", 0] }] },
+                                    60 * 1000 * 60,
+                                ],
+                            },
                         ],
-                      },
+                    },
                 },
                 creator: {
                     userId: { $arrayElemAt: ["$userData._id", 0] },
@@ -1744,7 +1779,7 @@ export const getSellerOtherArtworkPipeline = (art_work_id, seller_id, maxCount) 
         },
         {
             $project: {
-                _id:1,
+                _id: 1,
                 title: 1,
                 file: 1,
                 nftTokenId: 1
@@ -1817,40 +1852,40 @@ export const getBidHistoryPipeline = (
     logger.log(level.info, `>> getAllArtWorkPipeline()`);
     let pipeline = [];
 
-    pipeline =  [
+    pipeline = [
         { $match: { nftId: filter.nftId, auctionId: filter.auctionId } },
         {
-          $lookup: {
-            let: { "userObjId": { "$toObjectId": "$bidderId" } },
-            from: "users",
-            pipeline: [
-              { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
-            ],
-            as: "bidderX"
-          }
+            $lookup: {
+                let: { "userObjId": { "$toObjectId": "$bidderId" } },
+                from: "users",
+                pipeline: [
+                    { $match: { "$expr": { "$eq": ["$_id", "$$userObjId"] } } }
+                ],
+                as: "bidderX"
+            }
         },
         {
-          $project: {
-            id: "$_id",
-            _id: 0,
-            nftId: 1,
-            bidder: {
-              userId: { $arrayElemAt: ["$bidderX._id", 0] },
-              fullName: { $arrayElemAt: ["$bidderX.fullName", 0] },
-              username: { $arrayElemAt: ["$bidderX.username", 0] },
-              avatar: { $arrayElemAt: ["$bidderX.avatar", 0] },
-              bio: { $arrayElemAt: ["$bidderX.bio", 0] },
-              coverImage: { $arrayElemAt: ["$bidderX.coverImage", 0] },
-            },
-            transactionHash: 1,
-            bidAmount: 1,
-            status: 1,
-            createdAt: 1,updatedAt: 1,
+            $project: {
+                id: "$_id",
+                _id: 0,
+                nftId: 1,
+                bidder: {
+                    userId: { $arrayElemAt: ["$bidderX._id", 0] },
+                    fullName: { $arrayElemAt: ["$bidderX.fullName", 0] },
+                    username: { $arrayElemAt: ["$bidderX.username", 0] },
+                    avatar: { $arrayElemAt: ["$bidderX.avatar", 0] },
+                    bio: { $arrayElemAt: ["$bidderX.bio", 0] },
+                    coverImage: { $arrayElemAt: ["$bidderX.coverImage", 0] },
+                },
+                transactionHash: 1,
+                bidAmount: 1,
+                status: 1,
+                createdAt: 1, updatedAt: 1,
 
 
-          }
+            }
         }
-      ]
+    ]
 
     pipeline = [...pipeline, { $sort: { createdAt: Number(-1) } }];
 
