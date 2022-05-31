@@ -283,7 +283,7 @@ export const getAllUsersCollection = async (req: Request, res: Response) => {
               query,
               options
             );
-      
+
             //return res.status(201).json({ data: result });
             return successfulRequest(res, Object(result))
 
@@ -310,16 +310,70 @@ export const getUserCollection = async (
   logger.log(level.debug, `>> getMyCollection()`);
   const extraParams = standardStructureStringToJson(req.query);
   const options = getOptionsPipelineJson(extraParams);
-  try {
-    const result = await collectionRepo.getUserCollection(
-      req.params.collectionid
-    );
+  if (
+    req.headers["authorization"] === undefined ||
+    !req.headers["authorization"]
+  ) {
+    try {
+      let query = { collectionId: req.params.collectionid};
 
-    //res.status(201).json({ data: result });
-    return successfulRequest(res, Object(result))
-  } catch (error) {
-    logger.log(level.error, `<< getMyCollection()`);
-    serverError(res, error);
+      const result = await collectionRepo.getUserCollection(
+       query
+      );
+
+      //res.status(201).json({ data: result });
+      return successfulRequest(res, Object(result))
+    } catch (error) {
+      logger.log(level.error, `<< getMyCollection()`);
+      serverError(res, error);
+    }
+  }else {
+    const authorization = req.headers["authorization"];
+    const tokenSplitBy = " ";
+    if (authorization) {
+
+      let token = authorization.split(tokenSplitBy);
+      let length = token.length;
+      const tokenLength = 2;
+
+      if (length == tokenLength && token[0].toLowerCase() === "bearer") {
+        let accessToken = token[1];
+        const errors = validationResult(req);
+        try {
+
+          if (!errors.isEmpty()) {
+            return badRequestError(res, errors.array()[0].msg);
+          }
+          console.log(authorization)
+
+          const userData: DecodedToken = await auth.verifyToken(accessToken);
+
+          logger.log(level.debug, `UserAuthenticationMiddleware()`);
+
+          const [userDoc] = await userModel.find({ email: userData.email });
+          console.log(userDoc)
+
+          if (userDoc && userDoc.status.toString() === "ACTIVE") {
+            let query = { authUserId: userDoc.id, collectionId: req.params.collectionid };
+            const result = await collectionRepo.getUserCollection(
+              query
+            );
+
+            //return res.status(201).json({ data: result });
+            return successfulRequest(res, Object(result))
+
+          }
+        } catch (error) {
+          if (error.toString().includes("jwt expired")) {
+            //res.status(410).json({ error: { message: "Token is expired" } });
+            res.status(410).json({ statuscode: 410, body: "", message: "Token is expired" });
+
+          }
+          logger.log(level.error, `appAuthMiddleware ${error}`);
+        }
+        authError(res);
+      }
+    }
   }
 };
 

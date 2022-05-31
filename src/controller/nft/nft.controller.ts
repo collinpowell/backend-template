@@ -654,7 +654,7 @@ export const getArtWorkDetails = async (req: Request, res: Response) => {
         return badRequestError(res, result.message);
       }
 
-      const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.params.nftid);
+      //const sellerOtherArtworks = await nftRepo.getSellerOtherArtworks(req.params.nftid);
       // return res.status(201).json({ data: { ...result, seller_other_artworks: sellerOtherArtworks } });
       //result.data.sellerOtherArtworks = sellerOtherArtworks
       return successfulRequest(res, Object(result));

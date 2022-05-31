@@ -1786,6 +1786,16 @@ export const pipelineForBidList = (
       }
     },
     {
+      $lookup: {
+          let: { "userObjId": "$nftData.auctionId" },
+          from: "bids",
+          pipeline: [
+              { $match: { "$expr": { "$eq": ["$auctionId", "$$userObjId"] } } }
+          ],
+          as: "bids"
+      }
+  },
+    {
       $addFields: {
         isLiked: {
           $cond: {
@@ -1880,6 +1890,7 @@ export const pipelineForBidList = (
         bidAmount: { $toDouble: "$bidAmount" },
         bidderId: 1,
         transactionHash: 1,
+        status: 1,
         auctionEnded: 1,
         _id: 1,
         createdAt: 1, updatedAt: 1,
@@ -1910,7 +1921,7 @@ export const pipelineForBidList = (
             auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
             auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
             ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
-            auctionHighestBid: "$bids",
+            auctionHighestBid: {$max:"$bids.bidAmount"},
             nftId: { $arrayElemAt: ["$auction.nftId", 0] },
             difference: {
               $subtract: [

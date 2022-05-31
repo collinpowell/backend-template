@@ -188,12 +188,11 @@ export const getMyAllArtCreationsPipeline = (
                 mintNft: 1,
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
                     nftId: { $arrayElemAt: ["$auction.nftId", 0] },
-                    auctionHighestBid: "$bids",
+                    auctionHighestBid: {$max:"$bids.bidAmount"},
                     difference: {
                         $subtract: [
                             {
@@ -282,7 +281,7 @@ export const getMyAllArtCreationsPipeline = (
     }
 
     // ? Show most liked artwork in ascending and descending order
-    if (filter.sortBy === "price") {
+    if (filter.sortBy === "PRICE") {
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
         }
@@ -352,7 +351,7 @@ const commonArtworkPipeline = [
     },
     {
         $lookup: {
-            let: { "userObjId": { "$toObjectId": "$auctionId" } },
+            let: { "userObjId": "$auctionId" },
             from: "bids",
             pipeline: [
                 { $match: { "$expr": { "$eq": ["$auctionId", "$$userObjId"] } } }
@@ -619,7 +618,7 @@ export const browseByCollectionPipeline = (
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
                     nftId: { $arrayElemAt: ["$auction.nftId", 0] },
-                    auctionHighestBid: "$bids",
+                    auctionHighestBid: {$max:"$bids.bidAmount"},
                     difference: {
                         $subtract: [
                             {
@@ -766,7 +765,7 @@ export const browseByBookmarkPipeline = (
         },
         {
             $lookup: {
-                let: { "userObjId": { "$toObjectId": "$nftData.auctionId" } },
+                let: { "userObjId": "$nftData.auctionId" },
                 from: "bids",
                 pipeline: [
                     { $match: { "$expr": { "$eq": ["$auctionId", "$$userObjId"] } } }
@@ -888,7 +887,7 @@ export const browseByBookmarkPipeline = (
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
-                    auctionHighestBid: "$bids",
+                    auctionHighestBid: {$max:"$bids.bidAmount"},
                     nftId: { $arrayElemAt: ["$auction.nftId", 0] },
                     difference: {
                         $subtract: [
@@ -1016,7 +1015,7 @@ export const getAllArtWorkPipeline = (
     }
 
     if (filter.auth) {
-        console.log("Sasdas")
+        //console.log("Sasdas")
         pipeline = [
             ...pipeline,
             {
@@ -1101,8 +1100,6 @@ export const getAllArtWorkPipeline = (
                 royalty: 1,
                 _id: 1,
                 createdAt: 1, updatedAt: 1,
-
-
                 categoryId: "$categoryData.category.id",
                 categoryName: "$categoryData.category.categoryName",
                 coinId: { $arrayElemAt: ["$coinData.coins.id", 0] },
@@ -1113,12 +1110,11 @@ export const getAllArtWorkPipeline = (
                 mintNft: 1,
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
                     nftId: { $arrayElemAt: ["$auction.nftId", 0] },
-                    auctionHighestBid: "$bids",
+                    auctionHighestBid: {$max:"$bids.bidAmount"},
                     difference: {
                         $subtract: [
                             {
@@ -1191,6 +1187,7 @@ export const getAllArtWorkPipeline = (
     if (
         filter.nftCategory
     ) {
+        console.log(filter.nftCategory)
         pipeline = [
             ...pipeline,
             { $match: { categoryId: Number(filter.nftCategory) } },
@@ -1376,7 +1373,7 @@ export const getTrendingArtWorkPipeline = (
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
                     nftId: { $arrayElemAt: ["$auction.nftId", 0] },
-                    auctionHighestBid: "$bids",
+                    auctionHighestBid: {$max:"$bids.bidAmount"},
                     difference: {
                         $subtract: [
                             {
@@ -1546,8 +1543,6 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                 royalty: 1,
                 _id: 1,
                 createdAt: 1, updatedAt: 1,
-
-
                 categoryId: "$categoryData.category.id",
                 categoryName: "$categoryData.category.categoryName",
                 coinId: { $arrayElemAt: ["$coinData.coins.id", 0] },
@@ -1558,12 +1553,12 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                 mintNft: 1,
                 currentAuction: {
                     auctionEndHours: { $arrayElemAt: ["$auction.auctionEndHours", 0] },
-
+                    // auctionId: { $arrayElemAt: ["$auction._id", 0] },
                     auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
                     nftId: { $arrayElemAt: ["$auction.nftId", 0] },
-                    auctionHighestBid: "$bids",
+                    auctionHighestBid: {$max:"$bids.bidAmount"},
                     difference: {
                         $subtract: [
                             {
@@ -1700,7 +1695,7 @@ export const getAuctionPipeline = (filter: any) => {
                     auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
                     ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
                     nftId: { $arrayElemAt: ["$auction.nftId", 0] },
-                    auctionHighestBid: "$bids",
+                    auctionHighestBid: {$max:"$bids.bidAmount"},
                     difference: {
                         $subtract: [
                             {

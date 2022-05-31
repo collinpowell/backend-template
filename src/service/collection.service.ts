@@ -587,7 +587,7 @@ export const getMyCollectionListPipelineY = (
 };
 
 export const getMyCollectionListPipeline1 = (
-  _id: any,
+  query: any,
 ) => {
   logger.log(level.info, `>> getMyCollectionListPipeline()`);
 
@@ -595,9 +595,46 @@ export const getMyCollectionListPipeline1 = (
 
   pipeline = [
     ...pipeline,
-    { $match: { $expr : { $eq: [ '$_id' , { $toObjectId: _id } ] } } }
+    { $match: { $expr : { $eq: [ '$_id' , { $toObjectId: query.collectionId } ] } } }
   ];
-
+  if (query.authUserId) {
+    pipeline = [
+      ...pipeline,
+      {
+        $lookup: {
+          from: "collectionlikes",
+          let: { collectionId: { "$toString": "$_id" } },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$collectionId", "$$collectionId"] },
+                    { $eq: ["$liked", true] },
+                    {
+                      $eq: ["$userId", query.authUserId],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "isLiked",
+        },
+      },
+      {
+        $addFields: {
+          isLiked: {
+            $cond: {
+              if: { $gt: [{ $size: "$isLiked" }, 0] },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+    ];
+  }
 
   pipeline = [
     ...pipeline,
@@ -650,7 +687,6 @@ export const getMyCollectionListPipeline1 = (
           avatar: { $arrayElemAt: ["$userData.avatar", 0] },
           bio: { $arrayElemAt: ["$userData.bio", 0] },
           coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-          email: { $arrayElemAt: ["$userData.email", 0] }
         }
       },
     }

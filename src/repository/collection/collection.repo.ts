@@ -671,16 +671,16 @@ export const removeNFT = async (
   return data;
 };
 
-export const getUserCollection = async (param: any,) => {
+export const getUserCollection = async (query: any,) => {
   logger.log(level.info, `>> getAllUsersCollection()`);
 
   let data = { error: false, message: "", data: {} };
-  if (!param) {
+  if (!query.collectionId) {
     data = { error: true, message: "Collection ID is required", data: {} };
     return data;
   }
 
-  const pipeline = getMyCollectionListPipeline1(param);
+  const pipeline = getMyCollectionListPipeline1(query);
   let collectionList = await collectionModel.aggregate(pipeline).exec();
 
   if (!collectionList || collectionList.length <= 0) {
