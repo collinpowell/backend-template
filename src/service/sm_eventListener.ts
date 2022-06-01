@@ -106,6 +106,12 @@ const MintoContract = [
         "internalType": "string",
         "name": "userId",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "sold",
+        "type": "bool"
       }
     ],
     "name": "BuyOrBid",
@@ -166,6 +172,11 @@ const MintoContract = [
         "internalType": "bool",
         "name": "accept",
         "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "userId",
+        "type": "string"
       }
     ],
     "name": "acceptOffer",
@@ -831,7 +842,7 @@ let contract = new ethers.Contract(
   signerEther
 );
 
-contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, events) => {
+contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) => {
 
   Promise.resolve(events.getTransaction()).then((event) => {
     console.log("------Here 1");
@@ -839,8 +850,6 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, events) => {
     const nftTokenId = tokenId;
 
     console.log("------Here 2");
-
-
     new Promise((resolve, reject) => {
       try {
         console.log("------Here 3");
@@ -871,10 +880,15 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, events) => {
               try {
                 console.log("------Here Bid");
 
-                Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
-                  console.log(result);
-                });
-
+                if (!sold && !bid) {
+                  Promise.resolve(nftRepo.rejectArtWork(id, body)).then((result) => {
+                    console.log(result);
+                  });
+                } else {
+                  Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
+                    console.log(result);
+                  });
+                }
 
               } catch (error) {
                 logger.log(level.error, `<< purchaseArtWork() Bid Won error=${error}`);
@@ -885,9 +899,16 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, events) => {
             try {
               console.log("------Here Buy");
 
-              Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
-                console.log(result);
-              });
+              if (!sold && !bid) {
+                Promise.resolve(nftRepo.rejectArtWork(id, body)).then((result) => {
+                  console.log(result);
+                });
+              } else {
+                Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
+                  console.log(result);
+                });
+              }
+
 
             } catch (error) {
               logger.log(level.error, `<< purchaseArtWork() Fixedprice error=${error}`);

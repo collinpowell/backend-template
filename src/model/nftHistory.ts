@@ -14,7 +14,7 @@ const schema = {
     nftId: String,
     typeOfEvent: {
         type: String,
-        enum: ["MINTED","LIKED","UNLIKED" ,"REMOVED_FROM_SALE","PURCHASED","BURNED","BIDDED_FOR","PUT_ON_FIXEDSALE","PUT_ON_AUCTION","WON_AUCTION"],
+        enum: ["MINTED","LIKED","UNLIKED" ,"REMOVED_FROM_SALE","REJECTED","PURCHASED","BURNED","BIDDED_FOR","PUT_ON_FIXEDSALE","PUT_ON_AUCTION","WON_AUCTION"],
         default: "MINTED",
     },
     meta: Object,

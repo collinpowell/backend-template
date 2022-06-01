@@ -795,6 +795,61 @@ export const getNFTHistory = async (nftId: any,
 
 };
 
+export const rejectArtWork = async (userId: string, body: any) => {
+  logger.log(level.info, `>> purchaseArtWork()`);
+  let data = { error: false, message: "" };
+
+  const [artWorkData] = await Promise.all([
+    nftModel.find({
+      formOfSale: { $ne: "NOT_FOR_SALE" },
+      _id: body.nftId,
+    }),
+  ]);
+  console.log("----------1---------", artWorkData);
+
+  if (!artWorkData || artWorkData.length <= 0) {
+    data = { error: true, message: "NFT not found" };
+    return data;
+  }
+
+    // ? Check for current owner too
+    let artWorkSeller = [];
+    if (
+      !artWorkData[0].ownerId ||
+      artWorkData[0].ownerId === null ||
+      artWorkData[0].ownerId === undefined
+    ) {
+      data = { error: true, message: "Art work must have an owner" };
+      return data;
+    } else {
+      artWorkSeller = await userModel.find({
+        _id: artWorkData[0].ownerId,
+      });
+    }
+
+    await Promise.all([
+      nftModel.findOneAndUpdate(
+        { _id: body.nftId },
+        {
+          $set: {
+            formOfSale: "NOT_FOR_SALE",
+          },
+        }
+      ),
+      Promise.resolve(addToHistory({
+        userId,
+        nftId: body.nftId,
+        typeOfEvent: "REJECTED",
+        meta: {},
+        timestamp: new Date()
+      })),
+
+
+    ]);
+    data = { error: false, message: "Art work purchased successfully" };
+    return data;
+  
+};
 
 export const purchaseArtWork = async (userId: string, body: any) => {
   logger.log(level.info, `>> purchaseArtWork()`);
