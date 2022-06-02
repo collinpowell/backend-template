@@ -843,7 +843,7 @@ let contract = new ethers.Contract(
 );
 
 contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) => {
-
+  console.log(tokenId, auction, bid, amount, userId, sold)
   Promise.resolve(events.getTransaction()).then((event) => {
     console.log("------Here 1");
 
