@@ -349,7 +349,7 @@ export const bookmarkNFT = async (
   }
 };
 
-export const purchaseArtWork = async (
+/* export const purchaseArtWork = async (
   req: IGetUserAuthInfoRequest,
   res: Response
 ) => {
@@ -369,7 +369,7 @@ export const purchaseArtWork = async (
     logger.log(level.error, `<< purchaseArtWork() error=${error}`);
     serverError(res, error);
   }
-};
+}; */
 
 export const getOwnersHistory = async (
   req: Request,
