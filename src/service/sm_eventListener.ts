@@ -854,7 +854,7 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) =>
       try {
         console.log("------Here 3");
         Promise.resolve(nftModel.find({ nftTokenId })).then((artWorkData) => {
-          console.log(artWorkData);
+          //console.log(artWorkData);
 
           if (!artWorkData || artWorkData.length <= 0) {
             console.log("No art work found");
@@ -873,42 +873,36 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) =>
           //console.log(tokenId, auction, bid, amount, userId, event);
 
           console.log(body);
-          console.log(artWorkData[0]);
 
           if (auction) {
             if (bid) {
               try {
                 console.log("------Here Bid");
 
-                if (!sold && !bid) {
-                  Promise.resolve(nftRepo.rejectArtWork(id, body)).then((result) => {
-                    console.log(result);
-                  });
-                } else {
-                  Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
-                    console.log(result);
-                  });
-                }
+                Promise.resolve(nftRepo.purchaseArtWork(id, body,artWorkData[0])).then((result) => {
+                  console.log(result);
+                });
 
               } catch (error) {
                 logger.log(level.error, `<< purchaseArtWork() Bid Won error=${error}`);
               }
+            } else if (!sold) {
+              Promise.resolve(nftRepo.rejectBid(id, body,artWorkData[0])).then((result) => {
+                console.log(result);
+              });
+            } else {
+              Promise.resolve(nftRepo.bidAccepted(id, body,artWorkData[0])).then((result) => {
+                console.log(result);
+              });
             }
           } else {
 
             try {
               console.log("------Here Buy");
 
-              if (!sold && !bid) {
-                Promise.resolve(nftRepo.rejectArtWork(id, body)).then((result) => {
-                  console.log(result);
-                });
-              } else {
-                Promise.resolve(nftRepo.purchaseArtWork(id, body)).then((result) => {
-                  console.log(result);
-                });
-              }
-
+              Promise.resolve(nftRepo.purchaseArtWork(id, body,artWorkData[0])).then((result) => {
+                console.log(result);
+              });
 
             } catch (error) {
               logger.log(level.error, `<< purchaseArtWork() Fixedprice error=${error}`);

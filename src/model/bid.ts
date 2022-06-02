@@ -8,7 +8,7 @@ const schema = {
   bidAmount: { type: String },
   bidderId: String,
   transactionHash: String,
-  status: { type: String, enum: ["BID","ALLOTED","REFUNDED"], default: "BID" },
+  status: { type: String, enum: ["BID","ALLOTED","REFUNDED","REJECTED"], default: "BID" },
 };
 
 const biddingSchema = new Schema(schema, { timestamps: true});

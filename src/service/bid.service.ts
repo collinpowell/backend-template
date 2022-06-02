@@ -4,7 +4,7 @@ export const highestBidPipeline = (nftId: string) => {
   let pipeline = [];
   pipeline = [
     ...pipeline,
-    { $match: { nftId, status: "BID", auctionEnded: false } },
+    { $match: { nftId, status: "BID" } },
     {
       $lookup: {
         let: { "bidderId": { "$toObjectId": "$bidderId" } },

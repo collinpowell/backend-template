@@ -125,7 +125,7 @@ export const addArtWork = async (
 
   if (body.formOfSale === "AUCTION") {
 
-    if(new Date(Number(body.auctionEndHours)).getTime() <= new Date().getTime()){
+    if (new Date(Number(body.auctionEndHours)).getTime() <= new Date().getTime()) {
       data = { error: true, message: "Auction End Hour is not valid" };
       return data;
     }
@@ -795,97 +795,162 @@ export const getNFTHistory = async (nftId: any,
 
 };
 
-export const rejectArtWork = async (userId: string, body: any) => {
-  logger.log(level.info, `>> purchaseArtWork()`);
+export const bidAccepted = async (userId: string, body: any, artWorkData: any) => {
+  logger.log(level.info, `>> bidAccepted()`);
   let data = { error: false, message: "" };
-
-  const [artWorkData] = await Promise.all([
-    nftModel.find({
-      formOfSale: { $ne: "NOT_FOR_SALE" },
-      _id: body.nftId,
-    }),
-  ]);
-  console.log("----------1---------", artWorkData);
-
-  if (!artWorkData || artWorkData.length <= 0) {
-    data = { error: true, message: "NFT not found" };
-    return data;
-  }
-
-    // ? Check for current owner too
-    let artWorkSeller = [];
+  let artWorkSeller = [];
     if (
-      !artWorkData[0].ownerId ||
-      artWorkData[0].ownerId === null ||
-      artWorkData[0].ownerId === undefined
+      !artWorkData.ownerId ||
+      artWorkData.ownerId === null ||
+      artWorkData.ownerId === undefined
     ) {
       data = { error: true, message: "Art work must have an owner" };
       return data;
     } else {
       artWorkSeller = await userModel.find({
-        _id: artWorkData[0].ownerId,
+        _id: artWorkData.ownerId,
       });
     }
+
+    console.log("-------2------", artWorkSeller);
+
+    const artWorkResell = await ownerPurchaseModel
+      .find({
+        nftId: body.nftId,
+        userId: artWorkSeller[0].userId,
+      })
+      .sort({ createAt: -1 });
+
+    console.log("-------3------", artWorkResell);
 
     await Promise.all([
       nftModel.findOneAndUpdate(
         { _id: body.nftId },
         {
           $set: {
+            ownerId: userId,
             formOfSale: "NOT_FOR_SALE",
+            saleCoin: null,
+            fixedPrice: null,
           },
         }
       ),
+      bidModel.findOneAndUpdate(
+        { status: "BID", nftId: artWorkData._id, auctionId: artWorkData.auctionId },
+        {
+          $set: {
+            status: "ALLOTED"
+          },
+        }
+      ).catch(error => {
+        console.log(error)
+        console.log("Not Updated, Not Found")
+    
+      }).then((res) => {
+        console.log("Previous Bid Updated", res)
+      }),
       Promise.resolve(addToHistory({
         userId,
         nftId: body.nftId,
-        typeOfEvent: "REJECTED",
+        typeOfEvent: "WON_AUCTION",
         meta: {},
         timestamp: new Date()
       })),
+      addOwnerHistory({
+        userId,
+        nftId: body.nftId,
+        coin: artWorkData.saleCoin,
+        price: artWorkData.fixedPrice,
+        creatorUserId: artWorkData.creatorId,
+        sellerUserId: artWorkData.ownerId,
+        transactionHash: body.transactionHash.transactionHash,
+        currentOwnerAddress: body.transactionHash.from,
+        purchaseType: "AUCTION",
+      }),
 
 
     ]);
     data = { error: false, message: "Art work purchased successfully" };
     return data;
+}
+
+export const rejectBid = async (userId: string, body: any, artWorkData: any) => {
+  logger.log(level.info, `>> rejectBid()`);
+  let data = { error: false, message: "" };
+
+  console.log("----------1---------", artWorkData._id);
+
+  // ? Check for current owner too
+
+  if (
+    !artWorkData.ownerId ||
+    artWorkData.ownerId === null ||
+    artWorkData.ownerId === undefined
+  ) {
+    data = { error: true, message: "Art work must have an owner" };
+    return data;
+  }
+  await Promise.all([
+    nftModel.findOneAndUpdate(
+      { _id: body.nftId },
+      {
+        $set: {
+          formOfSale: "NOT_FOR_SALE",
+        },
+      }
+    ),
+    bidModel.findOneAndUpdate(
+      { status: "BID", nftId: artWorkData._id, auctionId: artWorkData.auctionId },
+      {
+        $set: {
+          status: "REJECTED"
+        },
+      }
+    ).catch(error => {
+      console.log(error)
+      console.log("Not Updated, Not Found")
   
+    }).then((res) => {
+      console.log("Previous Bid Updated", res)
+    }),
+    Promise.resolve(addToHistory({
+      userId,
+      nftId: body.nftId,
+      typeOfEvent: "BID_REJECTED",
+      meta: {},
+      timestamp: new Date()
+    })),
+
+
+  ]);
+  data = { error: false, message: "Art work purchased successfully" };
+  return data;
+
 };
 
-export const purchaseArtWork = async (userId: string, body: any) => {
+export const purchaseArtWork = async (userId: string, body: any, artWorkData: any) => {
   logger.log(level.info, `>> purchaseArtWork()`);
   let data = { error: false, message: "" };
 
-  const [artWorkData] = await Promise.all([
-    nftModel.find({
-      formOfSale: { $ne: "NOT_FOR_SALE" },
-      _id: body.nftId,
-    }),
-  ]);
-  console.log("----------1---------", artWorkData);
-
-  if (!artWorkData || artWorkData.length <= 0) {
-    data = { error: true, message: "NFT not found" };
-    return data;
-  }
-
+  console.log("----------1---------", artWorkData._id);
 
   if (body.formOfSale === "FIXEDPRICE") {
 
     // ? Check for current owner too
     let artWorkSeller = [];
     if (
-      !artWorkData[0].ownerId ||
-      artWorkData[0].ownerId === null ||
-      artWorkData[0].ownerId === undefined
+      !artWorkData.ownerId ||
+      artWorkData.ownerId === null ||
+      artWorkData.ownerId === undefined
     ) {
       data = { error: true, message: "Art work must have an owner" };
       return data;
     } else {
       artWorkSeller = await userModel.find({
-        _id: artWorkData[0].ownerId,
+        _id: artWorkData.ownerId,
       });
     }
-    let totalPrice = Number(artWorkData[0].fixedPrice);
+    let totalPrice = Number(artWorkData.fixedPrice);
     console.log("-------2------", artWorkSeller);
     console.log("-------3------", totalPrice);
 
@@ -910,10 +975,10 @@ export const purchaseArtWork = async (userId: string, body: any) => {
           },
         }
       ),
-      collectionModel.updateMany(
-        { collectionData: { $elemMatch: { nftId: body.nftId } } },
-        { $set: { isDeleted: true } }
-      ),
+      // collectionModel.updateMany(
+      //   { collectionData: { $elemMatch: { nftId: body.nftId } } },
+      //   { $set: { status: "DELETED" } }
+      // ),
       Promise.resolve(addToHistory({
         userId,
         nftId: body.nftId,
@@ -924,10 +989,10 @@ export const purchaseArtWork = async (userId: string, body: any) => {
       addOwnerHistory({
         userId,
         nftId: body.nftId,
-        coin: artWorkData[0].saleCoin,
-        price: artWorkData[0].fixedPrice,
-        creatorUserId: artWorkData[0].creatorId,
-        sellerUserId: artWorkData[0].ownerId,
+        coin: artWorkData.saleCoin,
+        price: artWorkData.fixedPrice,
+        creatorUserId: artWorkData.creatorId,
+        sellerUserId: artWorkData.ownerId,
         transactionHash: body.transactionHash.transactionHash,
         currentOwnerAddress: body.transactionHash.from,
         purchaseType: "FIXEDPRICE",
@@ -939,7 +1004,7 @@ export const purchaseArtWork = async (userId: string, body: any) => {
     return data;
   }
   if (body.formOfSale === "AUCTION") {
-    const makeaBidFunc = await bidArtWork(artWorkData[0], userId, body);
+    const makeaBidFunc = await bidArtWork(artWorkData, userId, body);
     return makeaBidFunc;
   }
 };
@@ -953,32 +1018,20 @@ const bidArtWork = async (nftData: any, userId: string, body: any) => {
     return data;
   }
 
-  // ? Auction is ended or not
-  /* if (
-    !moment(nftData.auctionEndTime).isAfter(
-      moment(new Date().toISOString())
-    )
-  ) {
-    data = { error: true, message: "Auction ended" };
-    return data;
-  } */
+  await bidModel.findOneAndUpdate(
+    { status: "BID", nftId: nftData._id, auctionId: nftData.auctionId },
+    {
+      $set: {
+        status: "REFUNDED"
+      },
+    }
+  ).catch(error => {
+    console.log(error)
+    console.log("Not Updated, Not Found")
 
-  // ? Get the highest big of art work
-  let pipeline = highestBidPipeline(nftData._id);
-  const currentBid = await bidModel.aggregate(pipeline);
-  if (
-    (currentBid &&
-      currentBid.length > 0 &&
-      Number(currentBid[0].bidAmount) >= body.bidAmount) ||
-    nftData.auctionStartPrice >= body.bidAmount
-  ) {
-    data = {
-      error: true,
-      message: "Bid Must be greater than last bid and auction start price",
-    };
-    return data;
-  }
-
+  }).then((res) => {
+    console.log("Previous Bid Updated", res)
+  })
   // ? Add bid
   await addBid({
     bidderId: userId,
@@ -1842,14 +1895,14 @@ export const pipelineForBidList = (
     },
     {
       $lookup: {
-          let: { "userObjId": "$nftData.auctionId" },
-          from: "bids",
-          pipeline: [
-              { $match: { "$expr": { "$eq": ["$auctionId", "$$userObjId"] } } }
-          ],
-          as: "bids"
+        let: { "userObjId": "$nftData.auctionId" },
+        from: "bids",
+        pipeline: [
+          { $match: { "$expr": { "$eq": ["$auctionId", "$$userObjId"] } } }
+        ],
+        as: "bids"
       }
-  },
+    },
     {
       $addFields: {
         isLiked: {
@@ -1976,7 +2029,7 @@ export const pipelineForBidList = (
             auctionStartPrice: { $arrayElemAt: ["$auction.auctionStartPrice", 0] },
             auctionEnded: { $arrayElemAt: ["$auction.auctionEnded", 0] },
             ownerId: { $arrayElemAt: ["$auction.ownerId", 0] },
-            auctionHighestBid: {$max:"$bids.bidAmount"},
+            auctionHighestBid: { $max: "$bids.bidAmount" },
             nftId: { $arrayElemAt: ["$auction.nftId", 0] },
             difference: {
               $subtract: [
