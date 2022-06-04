@@ -269,7 +269,7 @@ export const getMyAllArtCreationsPipeline = (
         if (!filter.orderBy || Number(filter.orderBy) === 0) {
             filter.orderBy = -1;
         }
-        pipeline = [...pipeline, { $sort: { created_at: Number(filter.orderBy) } }];
+        pipeline = [...pipeline, { $sort: { updatedAt: Number(filter.orderBy) } }];
     }
 
     // ? Show most liked artwork in ascending and descending order
@@ -1819,7 +1819,7 @@ export const getPipelineForPurchaseHistory = (art_work_id: string) => {
                 price: 1,
                 user_id: 1,
                 art_work_id: 1,
-                created_at: 1,
+                updatedAt: 1,
                 parent_art_work_id: 1,
                 quantity: 1,
                 transactionHash: 1,

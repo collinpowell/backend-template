@@ -581,15 +581,26 @@ export const uploadToIPFS = async (
     return data;
   }
 
-  if (body.title && body.title.trim().length > 20) {
+  if (body.title && body.title.trim().length > 200) {
     data = {
       error: true,
       message:
-        "Art work title length must be less than equals to 20 characters",
+        "Art work title length must be less than equals to 200 characters",
       data: null
     };
     return data;
   }
+
+  if (body.description && body.description.trim().length > 2000) {
+    data = {
+      error: true,
+      message:
+        "Art work descriptions length must be less than equals to 2000 characters",
+      data: null
+    };
+    return data;
+  }
+
 
 
   inputJSON = {
@@ -1446,7 +1457,7 @@ export const getArtWorkDetails = async (filter: any) => {
           coin_name,
           price: data.price,
           user_id: data.user_id,
-          purchased_at: data.created_at,
+          purchased_at: data.updatedAt,
           nickname: data.nickname,
           email: data.email,
           about_me: data.about_me,

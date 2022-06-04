@@ -69,7 +69,7 @@ export const getOptionsJson = (extraParams: any) => {
   if (extraParams.sort) {
     json.sort = extraParams.sort;
   } else {
-    json.sort = "-created_at";
+    json.sort = "-updatedAt";
   }
   return json;
 };

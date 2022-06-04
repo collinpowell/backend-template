@@ -95,7 +95,7 @@ export const bidHistoryPipeline = (
         sale_price: { $toDouble: "$sale_price" },
         user_id: 1,
         bid_id: 1,
-        created_at: 1,
+        updatedAt: 1,
         transactionHash: "$transactionHash.transactionHash",
         coin_id: { $arrayElemAt: ["$coinData.coins.id", 0] },
         coin_name: { $arrayElemAt: ["$coinData.coins.coin_name", 0] },
@@ -104,7 +104,7 @@ export const bidHistoryPipeline = (
         profile_image: "$userData.profile_image",
       },
     },
-    { $sort: { created_at: -1 } },
+    { $sort: { updatedAt: -1 } },
   ];
 
   if (count) {
