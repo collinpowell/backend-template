@@ -7,7 +7,7 @@
     "start:prod": "NODE_ENV=production ts-node dist/app.js",
     "start:dev": "NODE_ENV=development ts-node-dev src/app.ts",
     "start:test": "NODE_ENV=test ts-node dist/app.js",
-    "start": "ts-node dist/app.js",
+    "start": "NODE_ENV=test ts-node dist/app.js",
     "build": "tsc -p ."
   },
   "keywords": [],
