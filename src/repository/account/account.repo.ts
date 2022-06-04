@@ -682,8 +682,7 @@ export const getStatistics = async () => {
     }
   ]).exec()
 
-  console.log(totalSellers)
-  stats = { ...stats, totalSeller: totalSellers[0].totalSellers }
+  stats = { ...stats, totalSeller: totalSellers[0]?.totalSellers ? totalSellers[0]?.totalSellers : 0 }
 
 
   const data = {
