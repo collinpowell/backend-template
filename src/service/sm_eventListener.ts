@@ -2,9 +2,11 @@ import { ethers } from "ethers";
 import nftModel from "../model/nft";
 import { level, logger } from "../config/logger";
 import * as nftRepo from "../repository/nft/nft.repo";
+import {environments,NODE_ENV} from "../constant/environments"
 
 const ethProvider = new ethers.providers.JsonRpcProvider(
-  "https://matic-mumbai.chainstacklabs.com"
+    environments.PROD == NODE_ENV ? process.env.POLYGON_RPC_MAINNET :
+        process.env.POLYGON_RPC_TESTNET
 );
 
 const MintoContract = [
@@ -837,7 +839,8 @@ const signerEther = new ethers.Wallet(
 
 
 let contract = new ethers.Contract(
-  process.env.TEST,
+  environments.PROD == NODE_ENV ? process.env.CONTRACT_ADDRESS_MAINNET :
+        process.env.CONTRACT_ADDRESS_TESTNET,
   MintoContract,
   signerEther
 );

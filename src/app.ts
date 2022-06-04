@@ -20,10 +20,9 @@ import "./service/sm_eventListener"
 const app = express();
 
 Sentry.init({
-  dsn: "https://a84bdb8bfbe84a199ff502924f1089e1@o1015251.ingest.sentry.io/6382715",
+  dsn: process.env.SENTRY,
   // or pull from params
   // dsn: params.SENTRY_DSN,
-  environment: "Minto",
   integrations: [
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
@@ -35,20 +34,18 @@ Sentry.init({
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
+  autoSessionTracking: true
   // or pull from params
   // tracesSampleRate: parseFloat(params.SENTRY_TRACES_SAMPLE_RATE),
 });
 
 app.use(
   Sentry.Handlers.requestHandler({
-    serverName: false,
-    user: ["email"],
+    ip: true,
+    user: true
   })
 );
 
-// RequestHandler creates a separate execution context using domains, so that every
-// transaction/span/breadcrumb is attached to its own Hub instance
-app.use(Sentry.Handlers.requestHandler());
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler());
 
@@ -57,8 +54,19 @@ app.get("/", function rootHandler(req, res) {
   res.end("Hello world!");
 });
 
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
+});
+
 // The error handler must be before any other error middleware and after all controllers
-app.use(Sentry.Handlers.errorHandler());
+app.use(Sentry.Handlers.errorHandler({
+  shouldHandleError(error) {
+    // Capture all 404 and 500 errors
+    if (error.status === 404 || error.status === 500) {
+      return true;
+    }
+    return false;
+  }}));
 
 // Optional fallthrough error handler
 app.use(function onError(err, req, res, next) {

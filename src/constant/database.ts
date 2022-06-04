@@ -5,5 +5,5 @@ export const constants = {
   environments.DEV == NODE_ENV ? process.env.MONGO_URL_DEV :
     environments.PROD == NODE_ENV ? process.env.MONGO_URL_PROD :
       environments.TEST == NODE_ENV ? process.env.MONGO_URL_TEST :
-        process.env.MONGO_URL_PROD
+        process.env.MONGO_URL_TEST
 };

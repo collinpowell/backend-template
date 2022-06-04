@@ -7,6 +7,7 @@ import {
   encrypt,
   decrypt
 } from "../../utils/utility";
+import { environments, NODE_ENV } from "../../constant/environments"
 
 import { level, logger } from "../../config/logger";
 import userModel, {
@@ -444,7 +445,7 @@ export const verificationEmail = async (
   );
   verificationTemplate = verificationTemplate.replace(
     /ACTIVATION_LINK/g,
-    "https://mintonft.vercel.app/activate/"+email+"/"+ verificationCode
+    "https://mintonft.vercel.app/activate/" + email + "/" + verificationCode
   );
 
   await transporter.sendMail({
@@ -465,7 +466,10 @@ export const forgetPasswordEmail = async (
     path.resolve("./src/template/Password_Reset/index.html"),
     "utf8"
   );
-  const resetPasswordEndPoint = `${process.env.USER_END_POINT}/passwordreset/${resetPasswordToken}`;
+
+
+  const resetPasswordEndPoint = `${environments.PROD == NODE_ENV ? process.env.USER_END_POINT_MAINNET :
+    process.env.USER_END_POINT_TESTNET}/passwordreset/${resetPasswordToken}`;
   let verificationTemplate = html.replace(/APP_USERNAME/g, email);
   verificationTemplate = verificationTemplate.replace(
     /RESET_PASSWORD_LINK/g,
@@ -641,7 +645,7 @@ export const changeEmail = async (
   );
   changeEmailTemplate = changeEmailTemplate.replace(
     /RESET_PASSWORD_LINK/g,
-    "https://mintoui.vercel.app/changeemail/"+email+"/"+verificationCode
+    "https://mintoui.vercel.app/changeemail/" + email + "/" + verificationCode
   );
 
   await transporter.sendMail({
