@@ -710,13 +710,6 @@ export const browseByBookmarkPipeline = (
     }
     let pipeline = [];
 
-    if (filter.formOfSale === "AUCTION" || filter.formOfSale === "FIXEDPRICE") {
-        pipeline = [
-            ...pipeline,
-            { $match: { formOfSale: filter.formOfSale } },
-        ];
-    }
-
     pipeline = [
         ...pipeline,
 
@@ -957,6 +950,12 @@ export const browseByBookmarkPipeline = (
             },
         },
     ]
+    if (filter.formOfSale === "AUCTION" || filter.formOfSale === "FIXEDPRICE" || filter.formOfSale === "NOT_FOR_SALE") {
+        pipeline = [
+            ...pipeline,
+            { $match: { formOfSale: filter.formOfSale } },
+        ];
+    }
     if (count) {
         pipeline.push({ $count: "total" });
     }
