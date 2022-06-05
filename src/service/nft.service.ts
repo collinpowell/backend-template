@@ -1542,6 +1542,7 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                 fixedPrice: { $toDouble: "$fixedPrice" },
                 description: 1,
                 royalty: 1,
+                metadataUrl: 1,
                 _id: 1,
                 createdAt: 1, updatedAt: 1,
                 categoryId: "$categoryData.category.id",

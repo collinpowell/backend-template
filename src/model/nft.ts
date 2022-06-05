@@ -49,6 +49,7 @@ const schema = {
     required: true,
   },
   file: String,
+  metadataUrl: String,
   description: { type: String },
   properties: [
     { _id: false, key: String, value: String },

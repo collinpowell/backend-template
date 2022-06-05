@@ -106,6 +106,7 @@ export const addArtWork = async (
     mintResponse: JSON.parse(body.mintResponse),
     contractType: body.contractType,
     totalSaleQuantity: 1,
+    metadataUrl:"http://ipfs.io/ipfs/"+ body.metaData,
     mintNft: Number(body.mintNft),
   };
   if (Number(body.mintNft) === 0) {
