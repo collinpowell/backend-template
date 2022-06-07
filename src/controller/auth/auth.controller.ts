@@ -97,9 +97,8 @@ export const loginUser = async (req: Request, res: Response) => {
 export const googleLogin = async (req: Request, res: Response) => {
   logger.log(level.debug, `>> googleLogin()`);
   try {
-    const { googleId, idToken } = req.body;
+    const { idToken } = req.body;
     const result = await authRepo.googleLogin(
-      googleId,
       idToken
     );
     if (result.error) {

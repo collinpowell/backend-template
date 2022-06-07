@@ -232,20 +232,12 @@ export const loginUser = async (loginInput: LoginInput) => {
 };
 
 export const googleLogin = async (
-  googleId: string,
   idToken: string,
 ) => {
   logger.log(level.info, `>> googleLogin()`);
   try {
     const { userid, email, name } = await authService.googleUserVerify(idToken)
 
-    if (userid !== googleId) {
-      const data = {
-        error: true,
-        message: "Authentication failed",
-      };
-      return data;
-    }
     const userData = await userModel.find({ email: email });
     if (
       userData &&
