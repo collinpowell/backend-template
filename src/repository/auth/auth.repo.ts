@@ -335,6 +335,7 @@ export const googleLogin = async (
     };
     return data;
   } catch (err) {
+    console.log(err);
     const data = {
       error: true,
       message: "Invalid Token",

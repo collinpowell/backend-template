@@ -42,12 +42,11 @@ export const addGoogleUser = async (user: AddGoogleUserInput) => {
 };
 
 export const googleUserVerify = async (token: string) => {
-  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  });
-  const payload = ticket.getPayload();
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID,process.env.GOOGLE_CLIENT_SECRET);
+  const ticket = await client.getTokenInfo(token);
+
+  console.log(ticket)
+  const payload = ticket;
   const userid = payload["sub"];
   const email = payload["email"];
   const name = payload["name"];
