@@ -615,11 +615,9 @@ export const uploadToIPFS = async (
 
   inputJSON = {
     ...inputJSON,
-    title: body.title,
     name: body.title,
     description: body.description,
     nftCategory: body.nftCategory,
-    properties: JSON.parse(body.properties),
     attributes: attributes
   };
 

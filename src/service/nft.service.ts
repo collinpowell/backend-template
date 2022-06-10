@@ -52,8 +52,29 @@ export const addNFTService = async (nft: any, metaData: string, auction: any) =>
     };
     // http://ipfs.io/ipfs/
     const result = await (await fetch("http://ipfs.io/ipfs/" + metaData)).json();
-    result.nftCategory = nft.nftCategory;
-    await addArtWorkFunction(nft, result, auction);
+
+    //console.log(result);
+    let properties = [];
+    if (result.attributes) {
+        result.attributes.map((data) => {
+            properties.push({
+                key: data.trait_type,
+                value: data.value
+            });
+        })
+    }
+
+    const realSult = {
+        title: result.name,
+        description: result.description,
+        nftCategory: result.nftCategory,
+        file: result.image,
+        properties: properties
+    }
+    //console.log(realSult);
+
+    realSult.nftCategory = nft.nftCategory;
+    await addArtWorkFunction(nft, realSult, auction);
     return;
 }
 
@@ -62,9 +83,7 @@ export const addArtWorkFunction = (nft: any, metaData: any, auction: any) => {
         auction = { ...auction };
     }
 
-    
     nft = { ...nft, ...metaData };
-
 
     return new Promise((resolve, reject) => {
         try {
@@ -425,7 +444,6 @@ export const uploadToIPFSService = async (nftDetails: any, files: FileTypes[]) =
 
             const metaData = {
                 ...nftDetails,
-                file: "http://ipfs.io/ipfs/" + result.path,
                 image: "http://ipfs.io/ipfs/" + result.path
             }
 
