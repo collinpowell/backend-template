@@ -106,7 +106,7 @@ export const addArtWork = async (
     mintResponse: JSON.parse(body.mintResponse),
     contractType: body.contractType,
     totalSaleQuantity: 1,
-    metadataUrl:"http://ipfs.io/ipfs/"+ body.metaData,
+    metadataUrl: "http://ipfs.io/ipfs/" + body.metaData,
     mintNft: Number(body.mintNft),
   };
   if (Number(body.mintNft) === 0) {
@@ -602,14 +602,25 @@ export const uploadToIPFS = async (
     return data;
   }
 
+  let attributes = [];
 
+  if (body.properties) {
+    JSON.parse(body.properties).map((data) => {
+      attributes.push({
+        trait_type: data.key,
+        value: data.value
+      });
+    })
+  }
 
   inputJSON = {
     ...inputJSON,
     title: body.title,
+    name: body.title,
     description: body.description,
     nftCategory: body.nftCategory,
     properties: JSON.parse(body.properties),
+    attributes: attributes
   };
 
   const result = await uploadToIPFSService(inputJSON, files);
@@ -811,79 +822,79 @@ export const bidAccepted = async (userId: string, body: any, artWorkData: any) =
   logger.log(level.info, `>> bidAccepted()`);
   let data = { error: false, message: "" };
   let artWorkSeller = [];
-    if (
-      !artWorkData.ownerId ||
-      artWorkData.ownerId === null ||
-      artWorkData.ownerId === undefined
-    ) {
-      data = { error: true, message: "Art work must have an owner" };
-      return data;
-    } else {
-      artWorkSeller = await userModel.find({
-        _id: artWorkData.ownerId,
-      });
-    }
-
-    console.log("-------2------", artWorkSeller);
-
-    const artWorkResell = await ownerPurchaseModel
-      .find({
-        nftId: body.nftId,
-        userId: artWorkSeller[0].userId,
-      })
-      .sort({ createAt: -1 });
-
-    console.log("-------3------", artWorkResell);
-
-    await Promise.all([
-      nftModel.findOneAndUpdate(
-        { _id: body.nftId },
-        {
-          $set: {
-            ownerId: userId,
-            formOfSale: "NOT_FOR_SALE",
-            saleCoin: null,
-            fixedPrice: null,
-          },
-        }
-      ),
-      bidModel.findOneAndUpdate(
-        { status: "BID", nftId: artWorkData._id, auctionId: artWorkData.auctionId },
-        {
-          $set: {
-            status: "ALLOTED"
-          },
-        }
-      ).catch(error => {
-        console.log(error)
-        console.log("Not Updated, Not Found")
-    
-      }).then((res) => {
-        console.log("Previous Bid Updated", res)
-      }),
-      Promise.resolve(addToHistory({
-        userId,
-        nftId: body.nftId,
-        typeOfEvent: "WON_AUCTION",
-        meta: {},
-        timestamp: new Date()
-      })),
-      addOwnerHistory({
-        userId,
-        nftId: body.nftId,
-        coin: artWorkData.saleCoin,
-        price: artWorkData.fixedPrice,
-        creatorUserId: artWorkData.creatorId,
-        sellerUserId: artWorkData.ownerId,
-        transactionHash: body.transactionHash.transactionHash,
-        currentOwnerAddress: body.transactionHash.from,
-        purchaseType: "AUCTION",
-      }),
-
-
-    ]);
-    data = { error: false, message: "Art work purchased successfully" };
+  if (
+    !artWorkData.ownerId ||
+    artWorkData.ownerId === null ||
+    artWorkData.ownerId === undefined
+  ) {
+    data = { error: true, message: "Art work must have an owner" };
     return data;
+  } else {
+    artWorkSeller = await userModel.find({
+      _id: artWorkData.ownerId,
+    });
+  }
+
+  console.log("-------2------", artWorkSeller);
+
+  const artWorkResell = await ownerPurchaseModel
+    .find({
+      nftId: body.nftId,
+      userId: artWorkSeller[0].userId,
+    })
+    .sort({ createAt: -1 });
+
+  console.log("-------3------", artWorkResell);
+
+  await Promise.all([
+    nftModel.findOneAndUpdate(
+      { _id: body.nftId },
+      {
+        $set: {
+          ownerId: userId,
+          formOfSale: "NOT_FOR_SALE",
+          saleCoin: null,
+          fixedPrice: null,
+        },
+      }
+    ),
+    bidModel.findOneAndUpdate(
+      { status: "BID", nftId: artWorkData._id, auctionId: artWorkData.auctionId },
+      {
+        $set: {
+          status: "ALLOTED"
+        },
+      }
+    ).catch(error => {
+      console.log(error)
+      console.log("Not Updated, Not Found")
+
+    }).then((res) => {
+      console.log("Previous Bid Updated", res)
+    }),
+    Promise.resolve(addToHistory({
+      userId,
+      nftId: body.nftId,
+      typeOfEvent: "WON_AUCTION",
+      meta: {},
+      timestamp: new Date()
+    })),
+    addOwnerHistory({
+      userId,
+      nftId: body.nftId,
+      coin: artWorkData.saleCoin,
+      price: artWorkData.fixedPrice,
+      creatorUserId: artWorkData.creatorId,
+      sellerUserId: artWorkData.ownerId,
+      transactionHash: body.transactionHash.transactionHash,
+      currentOwnerAddress: body.transactionHash.from,
+      purchaseType: "AUCTION",
+    }),
+
+
+  ]);
+  data = { error: false, message: "Art work purchased successfully" };
+  return data;
 }
 
 export const rejectBid = async (userId: string, body: any, artWorkData: any) => {
@@ -921,7 +932,7 @@ export const rejectBid = async (userId: string, body: any, artWorkData: any) => 
     ).catch(error => {
       console.log(error)
       console.log("Not Updated, Not Found")
-  
+
     }).then((res) => {
       console.log("Previous Bid Updated", res)
     }),

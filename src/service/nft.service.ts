@@ -60,8 +60,9 @@ export const addNFTService = async (nft: any, metaData: string, auction: any) =>
 export const addArtWorkFunction = (nft: any, metaData: any, auction: any) => {
     if (nft.formOfSale === "AUCTION") {
         auction = { ...auction };
-
     }
+
+    
     nft = { ...nft, ...metaData };
 
 
@@ -424,7 +425,8 @@ export const uploadToIPFSService = async (nftDetails: any, files: FileTypes[]) =
 
             const metaData = {
                 ...nftDetails,
-                file: "http://ipfs.io/ipfs/" + result.path
+                file: "http://ipfs.io/ipfs/" + result.path,
+                image: "http://ipfs.io/ipfs/" + result.path
             }
 
             let metaResult = await ipfs.add(JSON.stringify(metaData), options);
