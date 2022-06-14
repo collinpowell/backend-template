@@ -1032,7 +1032,7 @@ contract.on("ExternalTransfer", (tokenId, auction, onSale, from, to, events) => 
             if (result && result.length > 0) {
               userId = result[0].id
             } else {
-              userId = to
+              userId = process.env.EXTERNAL_USER_ID
             }
 
             if (onSale) {

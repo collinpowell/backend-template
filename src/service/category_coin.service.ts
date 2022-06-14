@@ -1,5 +1,6 @@
 import categoryModel from "../model/category";
 import coinModel from "../model/coin";
+import userModel from "../model/user";
 
 export interface CategoryInput {
   id: number;
@@ -42,3 +43,17 @@ export const addCoinData = async (coin: CoinData) => {
     }
   });
 };
+
+export const addExternalUserData = async (user) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const userAdded = new userModel(user);
+      console.log("External User ID: "+userAdded.id)
+      const addedUser = Promise.resolve(userAdded.save());
+      resolve(addedUser);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+

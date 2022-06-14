@@ -87,7 +87,7 @@ const schema = {
   },
   role: {
     type: String,
-    enum: ["USER", "ADMIN"],
+    enum: ["USER", "ADMIN","EXTERNAL"],
     default: "USER",
   },
   authProvider: { 

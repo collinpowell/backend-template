@@ -881,7 +881,7 @@ export const transferOwnership = async (userId: string, body: any, artWorkData: 
       }
     ),
     Promise.resolve(addToHistory({
-      userId,
+      userId:purchaseType == "EXTERNAL" ? artWorkData.ownerId:userId,
       nftId: body.nftId,
       typeOfEvent,
       meta: {},
@@ -891,7 +891,7 @@ export const transferOwnership = async (userId: string, body: any, artWorkData: 
       userId,
       nftId: body.nftId,
       coin: artWorkData.saleCoin,
-      price: artWorkData.fixedPrice,
+      price: purchaseType == "EXTERNAL" ? 0:artWorkData.fixedPrice,
       creatorUserId: artWorkData.creatorId,
       sellerUserId: artWorkData.ownerId,
       transactionHash: body.transactionHash.transactionHash,

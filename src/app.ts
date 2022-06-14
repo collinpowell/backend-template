@@ -14,6 +14,7 @@ import apiRoutes from "./routes/index";
 
 import { constants as APP_CONST } from "./constant/application";
 import "./pre-data/category";
+import "./pre-data/externalUser";
 import "./service/sm_eventListener"
 
 
