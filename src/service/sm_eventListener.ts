@@ -1,12 +1,14 @@
 import { ethers } from "ethers";
 import nftModel from "../model/nft";
+import userModel from "../model/user";
+import bidModel from "../model/bid";
 import { level, logger } from "../config/logger";
 import * as nftRepo from "../repository/nft/nft.repo";
-import {environments,NODE_ENV} from "../constant/environments"
+import { environments, NODE_ENV } from "../constant/environments"
 
 const ethProvider = new ethers.providers.JsonRpcProvider(
-    environments.PROD == NODE_ENV ? process.env.POLYGON_RPC_MAINNET :
-        process.env.POLYGON_RPC_TESTNET
+  environments.PROD == NODE_ENV ? process.env.POLYGON_RPC_MAINNET :
+    process.env.POLYGON_RPC_TESTNET
 );
 
 const MintoContract = [
@@ -21,6 +23,16 @@ const MintoContract = [
         "internalType": "address payable",
         "name": "_admin",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "name_",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "symbol_",
+        "type": "string"
       }
     ],
     "stateMutability": "nonpayable",
@@ -117,6 +129,43 @@ const MintoContract = [
       }
     ],
     "name": "BuyOrBid",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "auction",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "onSale",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "ExternalTransfer",
     "type": "event"
   },
   {
@@ -700,6 +749,19 @@ const MintoContract = [
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "uri",
+        "type": "string"
+      }
+    ],
+    "name": "setBaseUri",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_serviceFeePercentage",
         "type": "uint256"
@@ -840,7 +902,7 @@ const signerEther = new ethers.Wallet(
 
 let contract = new ethers.Contract(
   environments.PROD == NODE_ENV ? process.env.CONTRACT_ADDRESS_MAINNET :
-        process.env.CONTRACT_ADDRESS_TESTNET,
+    process.env.CONTRACT_ADDRESS_TESTNET,
   MintoContract,
   signerEther
 );
@@ -882,7 +944,7 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) =>
               try {
                 console.log("------Here Bid");
 
-                Promise.resolve(nftRepo.purchaseArtWork(id, body,artWorkData[0])).then((result) => {
+                Promise.resolve(nftRepo.purchaseArtWork(id, body, artWorkData[0])).then((result) => {
                   console.log(result);
                 });
 
@@ -890,11 +952,11 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) =>
                 logger.log(level.error, `<< purchaseArtWork() Bid Won error=${error}`);
               }
             } else if (!sold) {
-              Promise.resolve(nftRepo.rejectBid(id, body,artWorkData[0])).then((result) => {
+              Promise.resolve(nftRepo.rejectBid(id, body, artWorkData[0])).then((result) => {
                 console.log(result);
               });
             } else {
-              Promise.resolve(nftRepo.bidAccepted(id, body,artWorkData[0])).then((result) => {
+              Promise.resolve(nftRepo.bidAccepted(id, body, artWorkData[0])).then((result) => {
                 console.log(result);
               });
             }
@@ -903,7 +965,7 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) =>
             try {
               console.log("------Here Buy");
 
-              Promise.resolve(nftRepo.purchaseArtWork(id, body,artWorkData[0])).then((result) => {
+              Promise.resolve(nftRepo.purchaseArtWork(id, body, artWorkData[0])).then((result) => {
                 console.log(result);
               });
 
@@ -912,6 +974,85 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) =>
             }
 
           }
+          resolve("success");
+
+        });
+
+      } catch (err) {
+        logger.log(level.error, `<< Error() Error error=${err}`);
+        reject(err);
+      }
+    });
+
+  });
+
+
+
+});
+
+contract.on("ExternalTransfer", (tokenId, auction, onSale, from, to, events) => {
+  console.log(tokenId, auction, onSale, from, to,)
+  Promise.resolve(events.getTransaction()).then((event) => {
+    console.log("------Here 1");
+
+    const nftTokenId = tokenId;
+
+    console.log("------Here 2");
+    new Promise((resolve, reject) => {
+      try {
+        console.log("------Here 3");
+        Promise.resolve(nftModel.find({ nftTokenId })).then((artWorkData) => {
+          //console.log(artWorkData);
+
+          if (!artWorkData || artWorkData.length <= 0) {
+            console.log("No art work found");
+            return;
+
+          }
+
+          const body = {
+            formOfSale: artWorkData[0].formOfSale,
+            nftId: artWorkData[0]._id,
+            saleQuantity: artWorkData[0].saleQuantity,
+            transactionHash: event,
+            from,
+            to
+          }
+
+          console.log(body);
+
+          Promise.resolve(userModel.find({
+            connectedWallet: {
+              $elemMatch: {
+                walletAddress: { $eq: to },
+              },
+            }
+          })).then((result) => {
+            let userId;
+            if (result && result.length > 0) {
+              userId = result[0].id
+            } else {
+              userId = to
+            }
+
+            if (onSale) {
+              if (auction) {
+
+                Promise.resolve(bidModel.find(
+                  { status: "BID", nftId: artWorkData[0]._id, auctionId: artWorkData[0].auctionId })).then((result) => {
+                    if (result && result.length > 0) {
+                      Promise.resolve(nftRepo.rejectBid(result[0].bidderId, body, artWorkData[0])).then((result) => {
+                        console.log("Ownweship Transfered");
+                      });
+                    }
+                  });
+              }
+            }
+            Promise.resolve(nftRepo.transferOwnership(userId, body, artWorkData[0], "EXTERNALTX", "EXTERNAL")).then((result) => {
+              console.log("Ownweship Transfered");
+            });
+          });
+
           resolve("success");
 
         });

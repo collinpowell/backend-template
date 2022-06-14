@@ -102,6 +102,8 @@ export const addArtWork = async (
     ...inputJSON,
     ownerId: _id,
     creatorId: _id,
+    ownerAddress: JSON.parse(body.mintResponse).from,
+    creatorAddress: JSON.parse(body.mintResponse).from,
     nftCategory: body.nftCategory,
     mintResponse: JSON.parse(body.mintResponse),
     contractType: body.contractType,
@@ -844,36 +846,44 @@ export const bidAccepted = async (userId: string, body: any, artWorkData: any) =
 
   console.log("-------3------", artWorkResell);
 
+  bidModel.findOneAndUpdate(
+    { status: "BID", nftId: artWorkData._id, auctionId: artWorkData.auctionId },
+    {
+      $set: {
+        status: "ALLOTED"
+      },
+    }
+  ).catch(error => {
+    console.log(error)
+    console.log("Not Updated, Not Found")
+
+  }).then((res) => {
+    console.log("Previous Bid Updated", res)
+  }),
+
+    await transferOwnership(userId, body, artWorkData, "WON_AUCTION", "AUCTION");
+  data = { error: false, message: "Art work purchased successfully" };
+  return data;
+}
+
+export const transferOwnership = async (userId: string, body: any, artWorkData: any, typeOfEvent: string, purchaseType: string) => {
   await Promise.all([
     nftModel.findOneAndUpdate(
       { _id: body.nftId },
       {
         $set: {
           ownerId: userId,
+          ownerAddress: body.transactionHash.from,
           formOfSale: "NOT_FOR_SALE",
           saleCoin: null,
           fixedPrice: null,
         },
       }
     ),
-    bidModel.findOneAndUpdate(
-      { status: "BID", nftId: artWorkData._id, auctionId: artWorkData.auctionId },
-      {
-        $set: {
-          status: "ALLOTED"
-        },
-      }
-    ).catch(error => {
-      console.log(error)
-      console.log("Not Updated, Not Found")
-
-    }).then((res) => {
-      console.log("Previous Bid Updated", res)
-    }),
     Promise.resolve(addToHistory({
       userId,
       nftId: body.nftId,
-      typeOfEvent: "WON_AUCTION",
+      typeOfEvent,
       meta: {},
       timestamp: new Date()
     })),
@@ -886,14 +896,13 @@ export const bidAccepted = async (userId: string, body: any, artWorkData: any) =
       sellerUserId: artWorkData.ownerId,
       transactionHash: body.transactionHash.transactionHash,
       currentOwnerAddress: body.transactionHash.from,
-      purchaseType: "AUCTION",
+      purchaseType,
     }),
 
 
   ]);
-  data = { error: false, message: "Art work purchased successfully" };
-  return data;
 }
+
 
 export const rejectBid = async (userId: string, body: any, artWorkData: any) => {
   logger.log(level.info, `>> rejectBid()`);
@@ -933,14 +942,14 @@ export const rejectBid = async (userId: string, body: any, artWorkData: any) => 
 
     }).then((res) => {
       console.log("Previous Bid Updated", res)
-    }),
-    Promise.resolve(addToHistory({
-      userId,
-      nftId: body.nftId,
-      typeOfEvent: "BID_REJECTED",
-      meta: {},
-      timestamp: new Date()
-    })),
+      Promise.resolve(addToHistory({
+        userId,
+        nftId: body.nftId,
+        typeOfEvent: "BID_REJECTED",
+        meta: {},
+        timestamp: new Date()
+      }))
+    })
 
 
   ]);
@@ -984,43 +993,8 @@ export const purchaseArtWork = async (userId: string, body: any, artWorkData: an
 
     console.log("-------4------", artWorkResell);
 
-    await Promise.all([
-      nftModel.findOneAndUpdate(
-        { _id: body.nftId },
-        {
-          $set: {
-            ownerId: userId,
-            formOfSale: "NOT_FOR_SALE",
-            saleCoin: null,
-            fixedPrice: null,
-          },
-        }
-      ),
-      // collectionModel.updateMany(
-      //   { collectionData: { $elemMatch: { nftId: body.nftId } } },
-      //   { $set: { status: "DELETED" } }
-      // ),
-      Promise.resolve(addToHistory({
-        userId,
-        nftId: body.nftId,
-        typeOfEvent: "PURCHASED",
-        meta: {},
-        timestamp: new Date()
-      })),
-      addOwnerHistory({
-        userId,
-        nftId: body.nftId,
-        coin: artWorkData.saleCoin,
-        price: artWorkData.fixedPrice,
-        creatorUserId: artWorkData.creatorId,
-        sellerUserId: artWorkData.ownerId,
-        transactionHash: body.transactionHash.transactionHash,
-        currentOwnerAddress: body.transactionHash.from,
-        purchaseType: "FIXEDPRICE",
-      }),
+    await transferOwnership(userId, body, artWorkData, "PURCHASED", "FIXEDPRICE");
 
-
-    ]);
     data = { error: false, message: "Art work purchased successfully" };
     return data;
   }

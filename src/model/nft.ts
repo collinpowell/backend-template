@@ -55,6 +55,9 @@ const schema = {
     { _id: false, key: String, value: String },
   ],
   ownerId: String,
+  creatorId: String,
+  creatorAddress: String,
+  ownerAddress: String,
   nftCategory: {
     type: Number,
     required: true,
@@ -74,7 +77,6 @@ const schema = {
   saleCoin: { type: Number },
   mintNft: { type: Number },
   fixedPrice: { type: String },
-  creatorId: String,
   auctionId: { type: String },
   royalty: [{ _id: false, percentage: Number, walletAddress: String }],
   status: { type: String, enum: ["ACTIVE", "DELETED"], default: "ACTIVE" },
