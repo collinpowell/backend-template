@@ -909,17 +909,19 @@ let contract = new ethers.Contract(
 
 contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) => {
   console.log(tokenId, auction, bid, amount, userId, sold)
+  console.log("BuyOrBid")
   Promise.resolve(events.getTransaction()).then((event) => {
     console.log("------Here 1");
 
-    const nftTokenId = tokenId;
+    const nftTokenId = Number(tokenId);
 
     console.log("------Here 2");
+    console.log(nftTokenId);
     new Promise((resolve, reject) => {
       try {
         console.log("------Here 3");
         Promise.resolve(nftModel.find({ nftTokenId })).then((artWorkData) => {
-          //console.log(artWorkData);
+          console.log(artWorkData);
 
           if (!artWorkData || artWorkData.length <= 0) {
             console.log("No art work found");
@@ -991,11 +993,13 @@ contract.on("BuyOrBid", (tokenId, auction, bid, amount, userId, sold, events) =>
 });
 
 contract.on("ExternalTransfer", (tokenId, auction, onSale, from, to, events) => {
-  console.log(tokenId, auction, onSale, from, to,)
+  console.log(tokenId, auction, onSale, from, to)
+  console.log("ExternalTransfer")
+
   Promise.resolve(events.getTransaction()).then((event) => {
     console.log("------Here 1");
 
-    const nftTokenId = tokenId;
+    const nftTokenId = Number(tokenId);
 
     console.log("------Here 2");
     new Promise((resolve, reject) => {

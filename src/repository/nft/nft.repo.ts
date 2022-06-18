@@ -2056,6 +2056,7 @@ export const pipelineForBidList = (
             avatar: { $arrayElemAt: ["$userData.avatar", 0] },
             bio: { $arrayElemAt: ["$userData.bio", 0] },
             coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
+            creatorAddress: "$nftData.creatorAddress"
           },
           currentOwner: {
             userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -2064,6 +2065,7 @@ export const pipelineForBidList = (
             avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
             bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
             coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
+            ownerAddress: "$nftData.ownerAddress"
           },
           isCreator: {
             $cond: {
