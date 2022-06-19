@@ -25,6 +25,9 @@ import * as authService from "../../service/auth.service";
 import transporter from "../../utils/transport";
 import user from "../../model/user";
 
+import { constants as APP_CONST } from "../../constant/application";
+
+
 const nanoid = customAlphabet(process.env.CUSTOM_NUMBER, 8);
 
 export interface accessTokenData {
@@ -438,7 +441,7 @@ export const verificationEmail = async (
   );
   verificationTemplate = verificationTemplate.replace(
     /ACTIVATION_LINK/g,
-    "https://mintonft.vercel.app/activate/" + email + "/" + verificationCode
+    APP_CONST.FRONTENDURL+ "/activate/" + email + "/" + verificationCode
   );
 
   await transporter.sendMail({
@@ -461,8 +464,7 @@ export const forgetPasswordEmail = async (
   );
 
 
-  const resetPasswordEndPoint = `${environments.PROD == NODE_ENV ? process.env.USER_END_POINT_MAINNET :
-    process.env.USER_END_POINT_TESTNET}/passwordreset/${resetPasswordToken}`;
+  const resetPasswordEndPoint = `${APP_CONST.FRONTENDURL}/passwordreset/${resetPasswordToken}`;
   let verificationTemplate = html.replace(/APP_USERNAME/g, email);
   verificationTemplate = verificationTemplate.replace(
     /RESET_PASSWORD_LINK/g,
@@ -638,7 +640,7 @@ export const changeEmail = async (
   );
   changeEmailTemplate = changeEmailTemplate.replace(
     /RESET_PASSWORD_LINK/g,
-    "https://mintoui.vercel.app/changeemail/" + email + "/" + verificationCode
+    APP_CONST.FRONTENDURL+"/changeemail/" + email + "/" + verificationCode
   );
 
   await transporter.sendMail({
