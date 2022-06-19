@@ -8,7 +8,7 @@ import nftHistory from "../../model/nftHistory";
 import ownerHistory1155Model from "../../model/nftOwnersHistory";
 import nftBookmarks from "../../model/nftBookmarks";
 import auctionModel from "../../model/auction"
-
+import ipfsClient from "../../constant/ipfs"
 import {
   addNFTService,
   uploadToIPFSService,
@@ -454,6 +454,8 @@ export const stopArtWorkSale = async (ownerId: string, nftId: any) => {
 
 export const burnNFT = async (ownerId: string, nftId: any) => {
   logger.log(level.info, `>> stopArtWorkSale()`);
+  let ipfs = await ipfsClient();
+
   const artWorkExist = await nftModel.find({ _id: nftId, ownerId, formOfSale: "NOT_FOR_SALE" });
   let data = { error: false, message: "" };
   if (!artWorkExist || artWorkExist.length <= 0) {
@@ -464,10 +466,24 @@ export const burnNFT = async (ownerId: string, nftId: any) => {
     return data;
   }
 
-  await nftModel.findOneAndUpdate(
+  const res = await nftModel.findOneAndUpdate(
     { ownerId, _id: nftId },
     { $set: { status: "DELETED" } }
   );
+
+  const file = res.file.split('/')[4];
+  const metadataUrl = res.metadataUrl.split('/')[4];
+
+  console.log(metadataUrl)
+  console.log(file)
+  
+  ipfs.pin.rm(metadataUrl).then((res) => {
+    console.log(res);
+  });
+  ipfs.pin.rm(file).then((res) => {
+    console.log(res);
+  });
+
   await addToHistory({
     userId: artWorkExist[0].creatorId,
     nftId: artWorkExist[0]._id,
@@ -881,7 +897,7 @@ export const transferOwnership = async (userId: string, body: any, artWorkData: 
       }
     ),
     Promise.resolve(addToHistory({
-      userId:purchaseType == "EXTERNAL" ? artWorkData.ownerId:userId,
+      userId: purchaseType == "EXTERNAL" ? artWorkData.ownerId : userId,
       nftId: body.nftId,
       typeOfEvent,
       meta: {},
@@ -891,7 +907,7 @@ export const transferOwnership = async (userId: string, body: any, artWorkData: 
       userId,
       nftId: body.nftId,
       coin: artWorkData.saleCoin,
-      price: purchaseType == "EXTERNAL" ? 0:artWorkData.fixedPrice,
+      price: purchaseType == "EXTERNAL" ? 0 : artWorkData.fixedPrice,
       creatorUserId: artWorkData.creatorId,
       sellerUserId: artWorkData.ownerId,
       transactionHash: body.transactionHash.transactionHash,

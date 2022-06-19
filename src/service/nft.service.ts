@@ -1,15 +1,13 @@
 import { level, logger } from "../config/logger";
-import { create } from "ipfs-http-client";
 import nftModel, { FileTypes } from "../model/nft";
 import nftHistoryModel, { HistoryType } from "../model/nftHistory";
 import auctionModel from "../model/auction"
 import mongoose from "mongoose";
-import moment from "moment-timezone";
 import fs from "fs";
 import fetch from "node-fetch";
 import { BigNumber } from 'ethers'
-
-
+import { environments, NODE_ENV } from "../constant/environments"
+import ipfsClient from "../constant/ipfs"
 
 
 export const addToHistory = async (history: HistoryType) => {
@@ -24,14 +22,17 @@ export const addToHistory = async (history: HistoryType) => {
     });
 };
 
-const ipfsClient = async () => {
-    const ipfs = await create({
-        host: "ipfs.infura.io",
-        port: 5001,
-        protocol: "https",
-    });
-    return ipfs;
-};
+// const ipfsClient = async () => {
+//     const ipfs = await create({
+//         host: "ipfs.infura.io",
+//         port: 5001,
+//         protocol: "https",
+//     });
+//     return ipfs;
+// };
+
+
+
 export const addNFTService = async (nft: any, metaData: string, auction: any) => {
 
     let tokenId = 0;
@@ -443,6 +444,12 @@ export const uploadToIPFSService = async (nftDetails: any, files: FileTypes[]) =
             };
 
             let result = await ipfs.add(data, options);
+            if (!(environments.DEV == NODE_ENV)) {
+                ipfs.pin.add(result.path).then((res) => {
+                    console.log(res);
+                });
+            }
+
 
             const metaData = {
                 ...nftDetails,
@@ -452,7 +459,11 @@ export const uploadToIPFSService = async (nftDetails: any, files: FileTypes[]) =
             let metaResult = await ipfs.add(JSON.stringify(metaData), options);
 
             console.log(metaResult.path);
-
+            if (!(environments.DEV == NODE_ENV)) {
+                ipfs.pin.add(metaResult.path).then((res) => {
+                    console.log(res);
+                });
+            }
             //ipfs.io/ipfs/QmYp24NxCCoBybmyJbD4WF3Xcs3awf6dzcHhUfZunivyCJ
 
             //console.log(result.path);
