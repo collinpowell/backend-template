@@ -256,7 +256,7 @@ export const googleLogin = async (
       console.log(username);
       await authService.addGoogleUser({
         username: username,
-        fullName: name,
+        fullName: username,
         googleId: userid,
         authProvider: 'GOOGLE',
         email,
