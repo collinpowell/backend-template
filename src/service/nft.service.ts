@@ -241,7 +241,7 @@ export const getMyAllArtCreationsPipeline = (
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    creatorAddress: 1
+                    creatorAddress: "$creatorAddress",
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -250,7 +250,7 @@ export const getMyAllArtCreationsPipeline = (
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    ownerAddress: 1
+                    ownerAddress: "$ownerAddress"
                 },
                 isCreator: {
                     $cond: {
@@ -1183,7 +1183,7 @@ export const getAllArtWorkPipeline = (
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    creatorAddress: 1
+                    creatorAddress: "$creatorAddress",
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -1192,7 +1192,7 @@ export const getAllArtWorkPipeline = (
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    ownerAddress: 1
+                    ownerAddress: "$ownerAddress",
                 },
                 isCreator: {
                     $cond: {
@@ -1444,7 +1444,7 @@ export const getTrendingArtWorkPipeline = (
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    creatorAddress: 1
+                    creatorAddress: "$creatorAddress",
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -1453,7 +1453,7 @@ export const getTrendingArtWorkPipeline = (
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    ownerAddress: 1
+                    ownerAddress: "$ownerAddress"
 
                 },
                 isCreator: {
@@ -1633,7 +1633,7 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    creatorAddress: 1
+                    creatorAddress: "$creatorAddress",
 
                 },
                 currentOwner: {
@@ -1643,7 +1643,7 @@ export const getArtWorkDetailsPipeline = (filter: any) => {
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    ownerAddress: 1
+                    ownerAddress: "$ownerAddress"
 
                 },
                 isCreator: {
@@ -1772,7 +1772,7 @@ export const getAuctionPipeline = (filter: any) => {
                     avatar: { $arrayElemAt: ["$userData.avatar", 0] },
                     bio: { $arrayElemAt: ["$userData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$userData.coverImage", 0] },
-                    creatorAddress: 1
+                    creatorAddress: "$creatorAddress",
                 },
                 currentOwner: {
                     userId: { $arrayElemAt: ["$currentOwnerData._id", 0] },
@@ -1781,7 +1781,7 @@ export const getAuctionPipeline = (filter: any) => {
                     avatar: { $arrayElemAt: ["$currentOwnerData.avatar", 0] },
                     bio: { $arrayElemAt: ["$currentOwnerData.bio", 0] },
                     coverImage: { $arrayElemAt: ["$currentOwnerData.coverImage", 0] },
-                    ownerAddress: 1
+                    ownerAddress: "$ownerAddress"
                 },
                 isCreator: {
                     $cond: {
