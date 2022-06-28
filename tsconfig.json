@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "./dist",
+
+    "strict": false,
+    "esModuleInterop": true,
+
+    "sourceRoot": "./src",
+    "inlineSourceMap": true,
+
+    "noImplicitAny": false,
+    "types": ["core-js"],
+    "moduleResolution": "node",
+    "experimentalDecorators": true
+  },
+  "include": ["./src/**/*"],
+  "exclude": ["node_modules"]
+}
