@@ -476,7 +476,7 @@ export const burnNFT = async (ownerId: string, nftId: any) => {
 
   console.log(metadataUrl)
   console.log(file)
-  
+
   ipfs.pin.rm(metadataUrl).then((res) => {
     console.log(res);
   });
@@ -870,7 +870,7 @@ export const bidAccepted = async (userId: string, body: any, artWorkData: any) =
       },
     }
   )
-    await transferOwnership(userId, body, artWorkData, "WON_AUCTION", "AUCTION", bid.bidderAddress);
+  await transferOwnership(userId, body, artWorkData, "WON_AUCTION", "AUCTION", bid.bidderAddress);
   data = { error: false, message: "Art work purchased successfully" };
   return data;
 }
@@ -1002,7 +1002,7 @@ export const purchaseArtWork = async (userId: string, body: any, artWorkData: an
 
     console.log("-------4------", artWorkResell);
 
-    await transferOwnership(userId, body, artWorkData, "PURCHASED", "FIXEDPRICE",null);
+    await transferOwnership(userId, body, artWorkData, "PURCHASED", "FIXEDPRICE", null);
 
     data = { error: false, message: "Art work purchased successfully" };
     return data;
