@@ -486,7 +486,7 @@ export const burnNFT = async (ownerId: string, nftId: any) => {
 
   await addToHistory({
     userId: artWorkExist[0].creatorId,
-    nftId: artWorkExist[0]._id,
+    nftId: artWorkExist[0].id,
     typeOfEvent: "BURNED",
     meta: {},
     timestamp: new Date()
@@ -1427,40 +1427,6 @@ export const getArtWorkDetails = async (filter: any) => {
 
       return data;
     });
-    let ownerHistory = await getArtWorkPurchaseHistory(filter.art_work_id);
-
-    let purchaseHistory = [];
-    if (ownerHistory && ownerHistory.data && ownerHistory.data.length > 0) {
-      ownerHistory.data.map((data) => {
-        let transactionHash;
-        if (data.transactionHash.transactionHash) {
-          transactionHash = data.transactionHash.transactionHash;
-        }
-        if (data.transactionHash.hash) {
-          transactionHash = data.transactionHash.hash;
-        }
-        let coin_name = "";
-        if (data.coin === 0) {
-          coin_name = "ETH";
-        }
-        if (data.coin === 1) {
-          coin_name = "Polygon";
-        }
-        purchaseHistory.push({
-          coin: data.coin,
-          coin_name,
-          price: data.price,
-          user_id: data.user_id,
-          purchased_at: data.updatedAt,
-          nickname: data.nickname,
-          email: data.email,
-          about_me: data.about_me,
-          user_profile: data.user_profile,
-          user_cover: data.user_cover,
-          transactionHash,
-        });
-      });
-    }
 
     let artWorkData = {
       ...artWorkDetails[0],
@@ -1561,7 +1527,7 @@ export const getAuctionDetails = async (filter: any) => {
       auctionData = {
         ...auctionData,
         auctionId: auction[i]._id,
-        auctionEndHour: auction[i].auctionEndHour,
+        auctionEndHour: auction[i].auctionEndHours,
         auctionStartPrice: auction[i].auctionStartPrice,
         currentOwnerId: artWorkDetails[i].ownerId,
         buyNowPrice: artWorkDetails[i].fixedPrice,
@@ -1647,53 +1613,6 @@ export const getSellerOtherArtworks = async (nftId: string) => {
   let similarArtWork = await nftModel.aggregate(pipeline).exec();
   return similarArtWork;
 }
-
-export const getArtWorkPurchaseHistory = async (art_work_id: any) => {
-  logger.log(level.info, `>> getArtWorkPurchaseHistory()`);
-  const artWorkData = await nftModel.find({ art_work_id });
-  if (artWorkData[0].contract_type === "erc_721") {
-    const pipeline = getPipelineForPurchaseHistory(art_work_id);
-    let ownerHistory = await ownerHistoryModel.aggregate(pipeline);
-
-    if (ownerHistory && ownerHistory.length > 0) {
-      ownerHistory = ownerHistory.map((data) => {
-        data.email = decryptText(data.email);
-        return data;
-      });
-      const data = {
-        message: "Purchase History Fetch Sucessfully",
-        data: ownerHistory,
-      };
-      return data;
-    }
-    const data = {
-      message: "Purchase History Fetch Sucessfully",
-      data: [],
-    };
-    return data;
-  }
-  if (artWorkData[0].contract_type === "erc_1155") {
-    const pipeline = getPipelineForPurchaseHistory(art_work_id);
-    let ownerHistory = await ownerHistory1155Model.aggregate(pipeline);
-
-    if (ownerHistory && ownerHistory.length > 0) {
-      ownerHistory = ownerHistory.map((data) => {
-        data.email = decryptText(data.email);
-        return data;
-      });
-      const data = {
-        message: "Purchase History Fetch Sucessfully",
-        data: ownerHistory,
-      };
-      return data;
-    }
-    const data = {
-      message: "Purchase History Fetch Sucessfully",
-      data: [],
-    };
-    return data;
-  }
-};
 
 
 export const browseByBookmarkedNFT = async (

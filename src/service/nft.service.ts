@@ -91,18 +91,18 @@ export const addArtWorkFunction = (nft: any, metaData: any, auction: any) => {
 
             const artWorkCreate = new nftModel(nft);
             if (nft.formOfSale === "AUCTION") {
-                auction = { ...auction, nftId: artWorkCreate._id };
+                auction = { ...auction, nftId: artWorkCreate.id };
                 const auctionCreate = new auctionModel(auction);
-                artWorkCreate.auctionId = auctionCreate._id
+                artWorkCreate.auctionId = auctionCreate.id
                 Promise.resolve(auctionCreate.save())
             }
             const addedArtWork = Promise.resolve(artWorkCreate.save()).then((res) => {
                 Promise.resolve(addToHistory({
                     userId: res.creatorId,
-                    nftId: res._id,
+                    nftId: res.id,
                     typeOfEvent: nft.formOfSale === "AUCTION" ? "PUT_ON_AUCTION" : nft.formOfSale === "FIXEDPRICE" ? "PUT_ON_FIXEDSALE" : "MINTED",
                     meta: {},
-                    timestamp: res.createdAt
+                    timestamp: new Date()
                 }));
             });
 

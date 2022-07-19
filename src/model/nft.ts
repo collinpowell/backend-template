@@ -77,13 +77,18 @@ const schema = {
   saleCoin: { type: Number },
   mintNft: { type: Number },
   fixedPrice: { type: String },
+  saleQuantity: { type: String },
   auctionId: { type: String },
   royalty: [{ _id: false, percentage: Number, walletAddress: String }],
   status: { type: String, enum: ["ACTIVE", "DELETED"], default: "ACTIVE" },
   mintResponse: { type: Object },
 };
 
-const nftSchema = new Schema(schema, { timestamps: true });
+const nftSchema = new Schema(schema, {
+  toObject: { getters: true },
+  toJSON: { getters: true },
+  timestamps: true
+});
 
 export default model("nft", nftSchema);
 
