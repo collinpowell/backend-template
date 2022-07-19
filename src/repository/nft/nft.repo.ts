@@ -862,34 +862,27 @@ export const bidAccepted = async (userId: string, body: any, artWorkData: any) =
 
   console.log("-------3------", artWorkResell);
 
-  bidModel.findOneAndUpdate(
+  const bid = await bidModel.findOneAndUpdate(
     { status: "BID", nftId: artWorkData._id, auctionId: artWorkData.auctionId },
     {
       $set: {
         status: "ALLOTED"
       },
     }
-  ).catch(error => {
-    console.log(error)
-    console.log("Not Updated, Not Found")
-
-  }).then((res) => {
-    console.log("Previous Bid Updated", res)
-  }),
-
-    await transferOwnership(userId, body, artWorkData, "WON_AUCTION", "AUCTION");
+  )
+    await transferOwnership(userId, body, artWorkData, "WON_AUCTION", "AUCTION", bid.bidderAddress);
   data = { error: false, message: "Art work purchased successfully" };
   return data;
 }
 
-export const transferOwnership = async (userId: string, body: any, artWorkData: any, typeOfEvent: string, purchaseType: string) => {
+export const transferOwnership = async (userId: string, body: any, artWorkData: any, typeOfEvent: string, purchaseType: string, bidderAddress: string) => {
   await Promise.all([
     nftModel.findOneAndUpdate(
       { _id: body.nftId },
       {
         $set: {
           ownerId: userId,
-          ownerAddress: body.transactionHash.from,
+          ownerAddress: bidderAddress ? bidderAddress : body.transactionHash.from,
           formOfSale: "NOT_FOR_SALE",
           saleCoin: null,
           fixedPrice: null,
@@ -1009,7 +1002,7 @@ export const purchaseArtWork = async (userId: string, body: any, artWorkData: an
 
     console.log("-------4------", artWorkResell);
 
-    await transferOwnership(userId, body, artWorkData, "PURCHASED", "FIXEDPRICE");
+    await transferOwnership(userId, body, artWorkData, "PURCHASED", "FIXEDPRICE",null);
 
     data = { error: false, message: "Art work purchased successfully" };
     return data;
@@ -1051,6 +1044,7 @@ const bidArtWork = async (nftData: any, userId: string, body: any) => {
     bidAmount: body.bidAmount,
     auctionId: nftData.auctionId,
     transactionHash: body.transactionHash.hash,
+    bidderAddress: body.transactionHash.from,
   });
   Promise.resolve(addToHistory({
     userId,

@@ -43,6 +43,7 @@ interface PurchaseInput {
   auctionId: string;
   bidAmount: string;
   transactionHash?: any;
+  bidderAddress?: string;
 }
 
 export const addBid = async (purchaseData: PurchaseInput) => {
