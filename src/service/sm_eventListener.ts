@@ -1052,7 +1052,7 @@ contract.on("ExternalTransfer", (tokenId, auction, onSale, from, to, events) => 
                   });
               }
             }
-            Promise.resolve(nftRepo.transferOwnership(userId, body, artWorkData[0], "EXTERNALTX", "EXTERNAL")).then((result) => {
+            Promise.resolve(nftRepo.transferOwnership(userId, body, artWorkData[0], "EXTERNALTX", "EXTERNAL",null)).then((result) => {
               console.log("Ownweship Transfered");
             });
           });

@@ -6,6 +6,7 @@ const schema = {
   auctionId:{ type:String},
   saleCoin: { type: Number },
   bidAmount: { type: String },
+  bidderAddress: { type: String },
   bidderId: String,
   transactionHash: String,
   status: { type: String, enum: ["BID","ALLOTED","REFUNDED","REJECTED"], default: "BID" },
