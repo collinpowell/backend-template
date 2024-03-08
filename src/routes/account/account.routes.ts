@@ -7,7 +7,6 @@ import { upload } from "../../service/multer/profile";
 const PATH = {
   ROOT: "/",
   MYPROFILE: "/myprofile",
-  CONNECTWALLET: "/connectwallet",
   USERPROFILE: "/getuserprofile",
   UPLOADAVATAR: "/uploadavatar",
   UPLOADCOVER: "/uploadcover",
@@ -48,17 +47,6 @@ routes
     name: 'coverImage', maxCount: 1
   }]),accountController.editProfile);
   
-
-
-/**
-* @api {GET} /api/account/connectwallet
-* @desc Wallet
-* @access Private
-* **/
-routes
-  .route(PATH.CONNECTWALLET)
-  .put(accountController.connectWallet)
-
 
 // /**
 // * @api {PUT} /api/account/uploadavatar

@@ -17,6 +17,18 @@ interface AddGoogleUserInput {
   authProvider: string;
 }
 
+export const addUserPredata = async (user: any) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const userCreate = new userModel(user);
+      const addedUser = Promise.resolve(userCreate.save());
+      resolve(addedUser);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
 export const addUser = async (user: AddUserInput) => {
   return new Promise((resolve, reject) => {
     try {

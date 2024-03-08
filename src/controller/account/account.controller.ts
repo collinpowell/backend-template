@@ -3,7 +3,6 @@ import { level, logger } from "../../config/logger";
 import * as accountRepo from "../../repository/account/account.repo";
 
 import { IGetUserAuthInfoRequest } from "../../middleware/authentication";
-import nftModel from "../../model/nft";
 
 import {
   badRequestError,

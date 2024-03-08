@@ -55,7 +55,6 @@ export interface UserData {
   resetPasswordToken?: string;
   tokenCreatedAt?: string;
   verificationCreatedAt?: string;
-  connectedWallet: any;
   avatar: string;
   coverImage: string;
   bio: string;
@@ -110,33 +109,12 @@ const schema = {
     set: encryptText,
     get: decryptText,
   },
-  connectedWallet: [{ _id: false, walletProvider: String, walletAddress: String }],
   avatar: String,
   coverImage: String,
   kycStatus: { 
     type: String,
     enum: ["PENDING", "ACCEPTED", "REJECTED"],
     default: "PENDING"
-  },
-  totalCreations: {
-    type: Number,
-    //required: true,
-  },
-  totalNftOwned: {
-    type: Number,
-    //required: true,
-  },
-  totalInSale: {
-    type: Number,
-    //required: true,
-  },
-  totalInAuction: {
-    type: Number,
-    //required: true,
-  },
-  totalCollections: {
-    type: Number,
-    //required: true,
   },
 };
 

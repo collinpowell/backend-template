@@ -16,9 +16,6 @@ import userModel, {
   LoginInput
 } from "../../model/user";
 
-import nftModel from "../../model/nft";
-import collectionModel from "../../model/collection";
-
 import JWTAuth from "../../service/jwt_auth/jwt_auth";
 
 import * as authService from "../../service/auth.service";
@@ -28,7 +25,7 @@ import user from "../../model/user";
 import { constants as APP_CONST } from "../../constant/application";
 
 
-const nanoid = customAlphabet(process.env.CUSTOM_NUMBER, 8);
+const nanoid = customAlphabet(process.env.CUSTOM_NUMBER || "123", 8);
 
 export interface accessTokenData {
   id: string;
@@ -205,12 +202,7 @@ export const loginUser = async (loginInput: LoginInput) => {
 
   const auth = new JWTAuth();
   const accessToken = await auth.createToken(tokenPayload);
-  const [totalCreations, totalCollections] = await Promise.all([
-    nftModel.find({ userId: userData[0]._id }).count(),
-    collectionModel
-      .find({ userId: userData[0]._id })
-      .count(),
-  ]);
+
   const data = {
     error: false,
     message: "Login Successful",
@@ -225,10 +217,7 @@ export const loginUser = async (loginInput: LoginInput) => {
       updatedAt: userData[0].updatedAt,
       status: 'ACTIVE',
       authProvider: userData[0].authProvider,
-      accessToken,
-      connectedWallet: userData[0].connectedWallet,
-      totalCreations,
-      totalCollections,
+      accessToken
     },
   };
   return data;
@@ -274,12 +263,6 @@ export const googleLogin = async (
       };
       const auth = new JWTAuth();
       const accessToken = await auth.createToken(tokenPayload);
-      const [totalCreations, totalCollections] = await Promise.all([
-        nftModel.find({ creatorId: userDetails[0]._id }).count(),
-        collectionModel
-          .find({ ownerId: userDetails[0]._id })
-          .count(),
-      ]);
       const data = {
         error: false,
         message: "User Registered successfully",
@@ -294,10 +277,7 @@ export const googleLogin = async (
           updatedAt: userDetails[0].updatedAt,
           status: 'ACTIVE',
           authProvider: userDetails[0].authProvider,
-          accessToken,
-          connectedWallet: userDetails[0].connectedWallet,
-          totalCreations,
-          totalCollections,
+          accessToken
         },
       };
       return data;
@@ -310,12 +290,6 @@ export const googleLogin = async (
     };
     const auth = new JWTAuth();
     const accessToken = await auth.createToken(tokenPayload);
-    const [totalCreations, totalCollections] = await Promise.all([
-      nftModel.find({ creatorId: userData[0]._id }).count(),
-      collectionModel
-        .find({ ownerId: userData[0]._id })
-        .count(),
-    ]);
     const data = {
       error: false,
       message: "Login Successful",
@@ -330,10 +304,7 @@ export const googleLogin = async (
         updatedAt: userData[0].updatedAt,
         status: 'ACTIVE',
         authProvider: userData[0].authProvider,
-        accessToken,
-        connectedWallet: userData[0].connectedWallet,
-        totalCreations,
-        totalCollections,
+        accessToken
       },
     };
     return data;

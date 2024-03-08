@@ -5,8 +5,8 @@ import crypto from "crypto";
 import { constants as ERROR_CONST } from "../constant/error";
 import qs from "qs";
 
-const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
-const iv = Buffer.from(process.env.IV_KEY, "hex");
+const key = Buffer.from(process.env.ENCRYPTION_KEY || "abc", "hex");
+const iv = Buffer.from(process.env.IV_KEY  || "abc", "hex");
 
 interface errorObject {
   statuscode: number;

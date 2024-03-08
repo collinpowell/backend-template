@@ -1,5 +1,5 @@
 {
-  "name": "minto-nft-api",
+  "name": "backend-template",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
@@ -53,8 +53,6 @@
     "@types/cors": "^2.8.12",
     "@types/morgan": "^1.9.3",
     "ts-node-dev": "^2.0.0"
-  },
-  "engines": {
-    "node": "16.15.1"
   }
 }
+

@@ -1,8 +1,8 @@
 import { createLogger, format, transports } from "winston";
 const { combine, timestamp, label, printf } = format;
 
-const LOG_LABEL = "MINTO-NFT";
-const LOG_TIMEZONE = "Asia/Kolkata";
+const LOG_LABEL = "TEMPLATE";
+const LOG_TIMEZONE = "Africa/Lagos";
 const LOCALE = "en-US";
 
 const timezoned = () => {

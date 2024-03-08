@@ -1,7 +1,6 @@
 import { logger, level } from "../config/logger";
-import { addExternalUserData } from "../service/category_coin.service";
 import userModel from "../model/user";
-
+import { addUserPredata } from "../service/auth.service";
 (async () => {
   try {
     logger.log(level.info, `Pre External User`);
@@ -18,7 +17,7 @@ import userModel from "../model/user";
     const userExist = await userModel.find({username:'externaluser'});
     if (!userExist || userExist.length <= 0) {
 
-      const addedUser = await addExternalUserData(externalUser);
+      const addedUser = await addUserPredata(externalUser);
 
     }
     return true;

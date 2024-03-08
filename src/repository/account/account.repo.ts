@@ -2,9 +2,6 @@ import * as fs from "fs";
 import { level, logger } from "../../config/logger";
 
 import userModel from "../../model/user";
-import nftModel from "../../model/nft";
-import sold from "../../model/nftOwnersHistory";
-import collectionModel from "../../model/collection";
 import { Storage } from "@google-cloud/storage";
 import * as accountService from "../../service/account.service";
 
@@ -18,7 +15,7 @@ const googleCloud = new Storage({
   },
 });
 
-const profileBucket = googleCloud.bucket(process.env.GOOGLE_BUCKET);
+const profileBucket = googleCloud.bucket(process.env.GOOGLE_BUCKET || "none");
 
 export const userAccount = async (_id: any) => {
   logger.log(level.info, `>> userAccount()`);
@@ -28,86 +25,7 @@ export const userAccount = async (_id: any) => {
   });
 
   if (userData && userData.length > 0) {
-    const [totalCreations, totalCollections] = await Promise.all([
-      nftModel
-        .find({
-          $or: [
-            {
-              $and: [
-                { contract_type: { $eq: "ERC721" } },
-                { ownerId: { $eq: _id } },
-                { creatorId: { $eq: _id } },
-              ],
-            },
-            {
-              $and: [
-                { contract_type: { $eq: "ERC721" } },
-                { ownerId: { $eq: _id } },
-                { creatorId: { $ne: _id } },
-              ],
-            },
-            {
-              $and: [
-                { contract_type: { $eq: "ERC721" } },
-                { ownerId: { $ne: _id } },
-                { creatorId: { $eq: _id } },
-              ],
-            },
-            {
-              $and: [
-                { contract_type: { $eq: "ERC1155" } },
-                { ownerId: { $eq: _id } },
-                { creatorId: { $eq: _id } },
-              ],
-            },
-            {
-              $and: [
-                { contract_type: { $eq: "ERC1155" } },
-                { ownerId: { $ne: _id } },
-                { creatorId: { $eq: _id } },
-              ],
-            },
-          ],
-        })
-        .count(),
-      collectionModel.find({ ownerId: _id }).count(),
-    ]);
-    const totalNftOwned = await nftModel.count({
-      $or: [
-        {
-          $and: [
-            { contract_type: { $eq: "ERC721" } },
-            { ownerId: { $eq: _id } },
-          ],
-        },
-        {
-          $and: [
-            { contract_type: { $eq: "ERC1155" } },
-            { ownerId: { $eq: _id } },
-          ],
-        },
-      ],
-    });
-    const totalInSale = await nftModel.count({
-      $or: [
-        {
-          $and: [
-            { ownerId: { $eq: _id } },
-            { formOfSale: { $eq: "FIXEDPRICE" } },
-          ],
-        }
-      ],
-    });
-    const totalInAuction = await nftModel.count({
-      $or: [
-        {
-          $and: [
-            { ownerId: { $eq: _id } },
-            { formOfSale: { $eq: "AUCTION" } },
-          ],
-        }
-      ],
-    });
+   
 
     const userJson = {
       userId: userData[0]._id,
@@ -120,16 +38,10 @@ export const userAccount = async (_id: any) => {
       updatedAt: userData[0].updatedAt,
       status: userData[0].status,
       authProvider: userData[0].authProvider,
-      totalCreations,
-      totalNftOwned,
-      totalInSale,
-      totalInAuction,
-      totalCollections,
       mobileNumber: userData[0].mobileNumber,
       avatar: userData[0].avatar,
       bio: userData[0].bio,
       coverImage: userData[0].coverImage,
-      connectedWallet: userData[0].connectedWallet,
     };
     const data = {
       error: false,
@@ -253,94 +165,6 @@ export const editProfile = async (_id: string, body: any) => {
   return data;
 };
 
-export const connectWallet = async (_id: string, body: any) => {
-  logger.log(level.info, `>> editProfile()`);
-let userExist;
-  const userExistX = await userModel.find({
-    _id,
-    status: "ACTIVE",
-  });
-  if (!userExistX || userExistX.length <= 0) {
-    const data = {
-      error: true,
-      message: "User not found",
-    };
-    return data;
-  }
-  console.log(_id)
-
-  userExist = await userModel.find({
-    _id:{$ne:_id},
-    connectedWallet: {
-      $elemMatch: {
-        walletProvider: { $eq: body.walletProvider },
-        walletAddress: { $eq: body.walletAddress },
-      },
-    }
-  });
-  console.log(userExist)
-
-  if (userExist && userExist.length > 0) {
-    const data = {
-      error: true,
-      message: "Wallet already in use by another user",
-    };
-    return data;
-  }
-
-  console.log("---1---")
-  userExist = await userModel.find({
-    _id,
-    connectedWallet: {
-      $elemMatch: {
-        walletProvider: { $eq: body.walletProvider },
-        walletAddress: { $ne: body.walletAddress },
-      },
-    }
-  });
-  console.log(userExist)
-
-  if (userExist && userExist.length > 0) {
-    const data = {
-      error: true,
-      message: "Already Connected to different address " ,
-    };
-    return data;
-  }
-
-  userExist = await userModel.find({
-    _id,
-    connectedWallet: {
-      $elemMatch: {
-        walletProvider: { $eq: body.walletProvider },
-        walletAddress: { $eq: body.walletAddress },
-      },
-    }
-  });
-  console.log(userExist)
-
-  if (userExist && userExist.length > 0) {
-    const data = {
-      error: false,
-      message: "Connected Successfully",
-    };
-    return data;
-  } else {
-    let connectedWallet = [];
-    connectedWallet = userExistX[0]?.connectedWallet ? userExistX[0]?.connectedWallet : [];
-    connectedWallet.push(body)
-    await userModel.findOneAndUpdate({ _id }, { $set: { connectedWallet } });
-
-    const data = {
-      error: false,
-      message: "Profile Updated Successfully",
-    };
-    return data;
-  }
-
-
-
-};
 
 export const getUserProfile = async (_id: any) => {
   logger.log(level.info, `>> userAccount()`);
@@ -349,86 +173,6 @@ export const getUserProfile = async (_id: any) => {
   });
 
   if (userData && userData.length > 0) {
-    const [totalCreations, totalCollections] = await Promise.all([
-      nftModel
-        .find({
-          $or: [
-            {
-              $and: [
-                { contract_type: { $eq: "ERC721" } },
-                { ownerId: { $eq: _id } },
-                { creatorId: { $eq: _id } },
-              ],
-            },
-            {
-              $and: [
-                { contract_type: { $eq: "ERC721" } },
-                { ownerId: { $eq: _id } },
-                { creatorId: { $ne: _id } },
-              ],
-            },
-            {
-              $and: [
-                { contract_type: { $eq: "ERC721" } },
-                { ownerId: { $ne: _id } },
-                { creatorId: { $eq: _id } },
-              ],
-            },
-            {
-              $and: [
-                { contract_type: { $eq: "ERC1155" } },
-                { ownerId: { $eq: _id } },
-                { creatorId: { $eq: _id } },
-              ],
-            },
-            {
-              $and: [
-                { contract_type: { $eq: "ERC1155" } },
-                { ownerId: { $ne: _id } },
-                { creatorId: { $eq: _id } },
-              ],
-            },
-          ],
-        })
-        .count(),
-      collectionModel.find({ _id }).count(),
-    ]);
-    const totalNftOwned = await nftModel.count({
-      $or: [
-        {
-          $and: [
-            { contract_type: { $eq: "ERC721" } },
-            { ownerId: { $eq: _id } },
-          ],
-        },
-        {
-          $and: [
-            { contract_type: { $eq: "ERC1155" } },
-            { ownerId: { $eq: _id } },
-          ],
-        },
-      ],
-    });
-    const totalInSale = await nftModel.count({
-      $or: [
-        {
-          $and: [
-            { ownerId: { $eq: _id } },
-            { formOfSale: { $eq: "FIXEDPRICE" } },
-          ],
-        }
-      ],
-    });
-    const totalInAuction = await nftModel.count({
-      $or: [
-        {
-          $and: [
-            { ownerId: { $eq: _id } },
-            { formOfSale: { $eq: "AUCTION" } },
-          ],
-        }
-      ],
-    });
 
     const userJson = {
       userId: userData[0]._id,
@@ -440,12 +184,6 @@ export const getUserProfile = async (_id: any) => {
       createdAt: userData[0].createdAt,
       updatedAt: userData[0].updatedAt,
       status: userData[0].status,
-      //authProvider: userData[0].authProvider,
-      totalCreations,
-      totalNftOwned,
-      totalInSale,
-      totalInAuction,
-      totalCollections,
       avatar: userData[0].avatar,
       bio: userData[0].bio,
       coverImage: userData[0].coverImage,
@@ -574,122 +312,4 @@ export const uploadCoverPromise = async (_id, file) => {
       console.log("successfully Deleted");
     });
   });
-};
-
-export const getTrendingUsers = async (query: any, options: any) => {
-  logger.log(level.info, `>> getTrendingUsers()`);
-  let pipeline = query.type === 'CREATOR' ? accountService.creatorsListPipeline(options, false) : accountService.sellersListPipeline(options, false);
-  let userList = await userModel.aggregate(pipeline);
-  console.log(userList);
-  if (userList && userList.length > 0) {
-    await Promise.all(
-      userList.map(async (data) => {
-        data.totalCreations = await nftModel.count({
-          $or: [
-            {
-              $and: [
-                { contractType: { $eq: "ERC721" } },
-                { creatorId: { $eq: data.userId } },
-              ],
-            },
-            {
-              $and: [
-                { contractType: { $eq: "ERC1155" } },
-                { creatorId: { $eq: data.userId } },
-              ],
-            },
-          ],
-        });
-        data.totalSold = await sold.count({
-          sellerUserId: data.userId
-        });
-        return data;
-      })
-    );
-
-    userList.sort((a, b) => {
-      if (a.totalCreations > b.totalCreations) {
-        return -1;
-      }
-      if (a.totalCreations < b.totalCreations) {
-        return 1;
-      }
-      return 0;
-    })
-
-    let countPipeline = query.type === 'CREATOR' ? accountService.creatorsListPipeline(options, true) : accountService.sellersListPipeline(options, true);
-    let count = 0;
-    const totalCount = await userModel.aggregate(countPipeline);
-    count = totalCount[0].total;
-    const data = {
-      error: false,
-      message: "All Top Creator Fetched successfully",
-      data: {
-        totalItems: count,
-        count: count,
-        currentPage: Number(query.page),
-        itemPerPage: Number(query.limit),
-        totalPages:
-          Math.round(count / Number(query.limit)) < count / Number(query.limit)
-            ? Math.round(count / Number(query.limit)) + 1
-            : Math.round(count / Number(query.limit)),
-        currentItemCount: userList.length,
-        lastPage: count / Number(query.limit) <= Number(query.page),
-        data: userList,
-      }
-    };
-    return data;
-  }
-  const data = {
-    error: false,
-    message: "All Top Creator Fetched successfully",
-    data: {
-      totalItems: 0, count: 0,
-      currentPage: Number(query.page),
-      itemPerPage: Number(query.limit),
-      totalPages:
-        Math.round(0 / Number(query.limit)) < 0 / Number(query.limit)
-          ? Math.round(0 / Number(query.limit)) + 1
-          : Math.round(0 / Number(query.limit)),
-      currentItemCount: userList.length,
-      lastPage: 0 / Number(query.limit) <= Number(query.page),
-      data: [],
-    }
-  };
-  return data;
-};
-
-
-export const getStatistics = async () => {
-  logger.log(level.debug, `>> getStatistics()`);
-  let stats = {}
-  const totalMints = await nftModel.find({ status: 'ACTIVE' }).count()
-  stats = { ...stats, totalNftMinted: totalMints }
-
-  const totalSold = await sold.find().count()
-  stats = { ...stats, totalNftSold: totalSold }
-
-  const totalSellers = await sold.aggregate([
-    {
-      $group: {
-        _id: "$sellerUserId",
-        orig_id: { $first: "$_id" },
-        count: { $sum: 1 }
-      }
-    },
-    {
-      $count: "totalSellers"
-    }
-  ]).exec()
-
-  stats = { ...stats, totalSeller: totalSellers[0]?.totalSellers ? totalSellers[0]?.totalSellers : 0 }
-
-
-  const data = {
-    error: false,
-    message: "Marketplace Statistics fetched Successfully",
-    data: stats,
-  };
-  return data;
-
 };
