@@ -77,23 +77,6 @@ export const editProfile = async (
   }
 };
 
-export const connectWallet = async (
-  req: IGetUserAuthInfoRequest,
-  res: Response
-) => {
-  logger.log(level.info, `>> editProfile()`);
-  const { id } = req.currentUser;
-  try {
-    const result = await accountRepo.connectWallet(id, req.body);
-    if (result.error) {
-      return badRequestError(res, result.message);
-    }
-    return successfulRequest(res, result)
-  } catch (error) {
-    logger.log(level.error, `<< editProfile() error=${error}`);
-    serverError(res, error);
-  }
-};
 
 export const uploadProfile = async (
   req: IGetUserAuthInfoRequest,
@@ -182,36 +165,5 @@ export const uploadCoverImage = async (
       message: ""
     };
     return data;
-  }
-};
-
-
-export const getTrendingUsers = async (req: Request, res: Response) => {
-  logger.log(level.debug, `>> getTrendingUsers()`);
-  const extraParams = standardStructureStringToJson(req.query);
-  const options = getOptionsPipelineJson(extraParams);
-  try {
-    const result = await accountRepo.getTrendingUsers(req.query, options);
-    if (result.error) {
-      return badRequestError(res, result.message);
-    }
-    return successfulRequest(res, Object(result))
-  } catch (error) {
-    logger.log(level.error, `<< getTrendingUsers() error=${error}`);
-    serverError(res,error);
-  }
-};
-
-export const getStatistics = async (req: Request, res: Response) => {
-  logger.log(level.debug, `>> getStatistics()`);
-   try {
-    const result = await accountRepo.getStatistics();
-    if (result.error) {
-      return badRequestError(res, result.message);
-    }
-    return successfulRequest(res, Object(result))
-  } catch (error) {
-    logger.log(level.error, `<< getStatistics() error=${error}`);
-    serverError(res,error);
   }
 };

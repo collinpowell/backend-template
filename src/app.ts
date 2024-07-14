@@ -1,17 +1,17 @@
 import httpContext from "express-http-context";
 import express from "express";
-import middlewaresConfig from "./config/middlewares";
 
-import * as bodyParser from "body-parser";
+
 import { config } from "dotenv";
 config() // Configure .env
+import middlewaresConfig from "./config/middlewares";
 
 import "./config/database";
 
 import apiRoutes from "./routes/index";
 
 import { constants as APP_CONST } from "./constant/application";
-import "./pre-data/externalUser";
+//import "./pre-data/externalUser";
 
 
 const app = express();
@@ -20,16 +20,6 @@ const app = express();
 app.get("/", function rootHandler(req, res) {
   res.end("Hello world!");
 });
-
-
-// app.use(bodyParser.json({ limit: "50mb", type: "application/json" }));
-// app.use(
-//   bodyParser.urlencoded({
-//     extended: true,
-//     limit: "50mb",
-//     parameterLimit: 50000
-//   })
-// );
 
 app.use(express.static("public"));
 

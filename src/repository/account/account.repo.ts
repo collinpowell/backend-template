@@ -1,21 +1,7 @@
 import * as fs from "fs";
 import { level, logger } from "../../config/logger";
-
 import userModel from "../../model/user";
-import { Storage } from "@google-cloud/storage";
-import * as accountService from "../../service/account.service";
-
-import mongoose from 'mongoose'
-
-const googleCloud = new Storage({
-  projectId: process.env.PROJECT_ID,
-  credentials: {
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY,
-  },
-});
-
-const profileBucket = googleCloud.bucket(process.env.GOOGLE_BUCKET || "none");
+import cloudinary from "../../config/bucket";
 
 export const userAccount = async (_id: any) => {
   logger.log(level.info, `>> userAccount()`);
@@ -233,29 +219,29 @@ export const uploadProfile = async (_id: string, file: any, body: any) => {
 
 export const uploadProfilePromise = async (_id, file) => {
   let updateData = {};
-  const profileData = fs.readFileSync(file.path);
-  const blobProfile = profileBucket.file(`profile-${file.filename}`);
 
   return new Promise((resolve, reject) => {
-    const blobStream = blobProfile.createWriteStream({ resumable: false });
-    blobStream.on("error", (err) => {
-      fs.unlink(file.path, () => {
-        console.log("successfully Deleted");
+    const res = cloudinary.uploader.upload(file.path);
+    res
+      .then(async (data) => {
+        console.log(data.secure_url);
+        updateData = {
+          ...updateData,
+          avatar: data.secure_url,
+        };
+        await userModel.findOneAndUpdate({ _id }, { $set: updateData });
+        fs.unlink(file.path, () => {
+          console.log("Success successfully Deleted");
+        });
+        resolve(updateData);
+      })
+      .catch((err) => {
+        console.log(err);
+        fs.unlink(file.path, () => {
+          console.log("end successfully Deleted");
+        });
+        reject(err);
       });
-    });
-
-    blobStream.on("finish", async () => {
-      updateData = {
-        ...updateData,
-        avatar: `https://storage.googleapis.com/${profileBucket.name}/${blobProfile.name}`,
-      };
-      await userModel.findOneAndUpdate({ _id }, { $set: updateData });
-      resolve(updateData);
-    });
-    blobStream.end(profileData);
-    fs.unlink(file.path, () => {
-      console.log("successfully Deleted");
-    });
   });
 };
 
@@ -283,33 +269,30 @@ export const uploadCoverImage = async (_id: string, file: any) => {
   return data;
 };
 
+
 export const uploadCoverPromise = async (_id, file) => {
   let updateData = {};
-  const coverData = fs.readFileSync(file.path);
-  const blobCover = profileBucket.file(`cover-${file.filename}`);
-  const blobStream = blobCover.createWriteStream();
-
   return new Promise((resolve, reject) => {
-    blobStream.on("error", (err) => {
-      fs.unlink(file.path, () => {
-        console.log("successfully Deleted");
+    const res = cloudinary.uploader.upload(file.path);
+    res
+      .then(async (data) => {
+        console.log(data.secure_url);
+        updateData = {
+          ...updateData,
+          coverImage: data.secure_url,
+        };
+        await userModel.findOneAndUpdate({ _id }, { $set: updateData });
+        fs.unlink(file.path, () => {
+          console.log("Success successfully Deleted");
+        });
+        resolve(updateData);
+      })
+      .catch((err) => {
+        console.log(err);
+        fs.unlink(file.path, () => {
+          console.log("end successfully Deleted");
+        });
+        reject(err);
       });
-    });
-
-    blobStream.on("finish", async () => {
-      console.log(
-        `https://storage.googleapis.com/${profileBucket.name}/${blobCover.name}`
-      );
-      updateData = {
-        ...updateData,
-        coverImage: `https://storage.googleapis.com/${profileBucket.name}/${blobCover.name}`,
-      };
-      await userModel.findOneAndUpdate({ _id }, { $set: updateData });
-      resolve(updateData);
-    });
-    blobStream.end(coverData);
-    fs.unlink(file.path, () => {
-      console.log("successfully Deleted");
-    });
   });
 };

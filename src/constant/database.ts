@@ -1,9 +1,9 @@
 import {environments,NODE_ENV} from "./environments"
 
 export const constants = {
-  MONGO_URL: 
-  environments.DEV == NODE_ENV ? process.env.MONGO_URL_DEV :
-    environments.PROD == NODE_ENV ? process.env.MONGO_URL_PROD :
-      environments.TEST == NODE_ENV ? process.env.MONGO_URL_TEST :
-        process.env.MONGO_URL_TEST
+  MONGODB_URI: 
+  environments.DEV == NODE_ENV ? process.env.MONGODB_URI:
+    environments.PROD == NODE_ENV ? process.env.MONGODB_URI:
+      environments.TEST == NODE_ENV ? process.env.MONGODB_URI :
+        process.env.MONGODB_URI
 };

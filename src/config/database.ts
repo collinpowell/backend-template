@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { logger, level } from "./logger";
 import { constants as DB_CONST } from "../constant/database";
 
-const URL = DB_CONST.MONGO_URL;
+const URL = DB_CONST.MONGODB_URI;
 
 const MONGO_OPTIONS = {
   useUnifiedTopology: true,
@@ -11,6 +11,7 @@ const MONGO_OPTIONS = {
   autoIndex: false,
 };
 
+mongoose.set("strictQuery", false);
 mongoose
   .connect(URL, MONGO_OPTIONS)
   .then((result) => {
